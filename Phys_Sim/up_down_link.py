@@ -3,12 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #### adjustable parameters ####
-Gt = int(input("Transmitter gain (dB): "))      # antenna gain in dBi
-Pt = int(input("Transmit power (W): "))   # transmit power in W
-f = int(input("Transmit frequency (Hz): "))   # frequency in Hz
-B = int(input("Transmit signal bandwidth (Hz): "))     # bandwidth in Hz
-Gr = int(input("Receiver gain (dB): "))      # antenna gain in dBi
-R = int(input("Distance from ground station to space station: ")) # distance in m 
+Gt = float(input("Transmitter gain (dB): "))      # antenna gain in dBi
+Pt = float(input("Transmit power (W): "))   # transmit power in W
+f = float(input("Transmit frequency (Hz): "))   # frequency in Hz
+B = float(input("Transmit signal bandwidth (Hz): "))     # bandwidth in Hz
+Gr = float(input("Receiver gain (dB): "))      # antenna gain in dBi
+R = float(input("Distance from ground station to space station: ")) # distance in m 
 
 #### predefined parameters ####
 T = 290             # noise temperature
