@@ -2,6 +2,12 @@ from nicegui import ui
 import numpy as np
 import sim_link_budget 
 
+#################################################
+#
+#   Author: Trevor Wiseman
+#
+#################################################
+
 # Function to calculate and display results
 def calculate_uplink(Gt_value, Pt_value, f_value, B_value, Gr_value, R_value):
     # Call the compute_parameters function

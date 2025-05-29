@@ -1,6 +1,12 @@
 # imports
 import numpy as np
 
+#################################################
+#
+#   Author: Trevor Wiseman
+#
+#################################################
+
 #### predefined parameters ####
 T = 290             # noise temperature
 k = 1.38*10**-23    # Boltzmann's constant in J/K
