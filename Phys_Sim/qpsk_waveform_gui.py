@@ -6,6 +6,7 @@ Purpose: Experiment with generating QPSK waveform with a sequence of 4 bits
 import numpy as np
 import matplotlib.pyplot as plt
 from nicegui import ui
+
 def generate_qpsk_waveform(bits, symbol_frequency, sample_rate):
     """
     Generate a QPSK waveform from a sequence of bits.
@@ -43,46 +44,36 @@ def generate_qpsk_waveform(bits, symbol_frequency, sample_rate):
 
     return t, qpsk_waveform
 
-def plot(t, qpsk_output):
-    """
-    Plot the QPSK waveform.
-    Args:
-        qpsk_output (tuple): A tuple containing time vector and QPSK waveform.
-    """
-    plt.figure(figsize=(10, 4))
-    plt.plot(t, qpsk_output, label='QPSK Waveform')
-    plt.title('QPSK Waveform')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Amplitude')
-    plt.grid()
-    plt.show()
-
-def demodulate_qpsk(waveform, frequency, sample_rate):
-    """
-    Demodulate a QPSK waveform to retrieve the original bit sequence.
-    Args:
-        waveform (np.ndarray): The QPSK waveform to demodulate.
-        frequency (float): The frequency of the QPSK signal.
-        sample_rate (int): The sample rate of the signal.
-    Returns:
-        list: The demodulated bit sequence.
-    """
-    # TODO - Implement QPSK demodulation
-    pass
 
 def main():
     # TODO - Implement GUI for user input
-    bit_sequence = input("Enter a sequence of bits (e.g., 1100): ")
+    user_input = ui.input(label='Enter bits: ',
+                          placeholder = 'e.g., 1100')
+    sumbit_button = ui.button('submit', on_click=lambda: use_data())
+    def use_data():
+        bit_sequence = user_input.value
+        # Convert string input to list of integers
+        bit_sequence = [int(bit) for bit in bit_sequence.strip()]
+        # Generate QPSK waveform
+        t, qpsk_waveform = generate_qpsk_waveform(bit_sequence, symbol_frequency=1000, sample_rate=1000000)
+        # Plot the waveform
+        with ui.matplotlib(figsize=(20, 4)) as fig:
+            plt.plot(t, qpsk_waveform, label='QPSK Waveform')
+            plt.title('QPSK Waveform')
+            plt.xlabel('Time (s)')
+            plt.ylabel('Amplitude')
+            plt.grid()
+            plt.legend()
+            plt.show()
+    #bit_sequence = input("Enter a sequence of bits (e.g., 1100): ") 
     
-    print(type(bit_sequence))
-    # Convert string input to list of integers
-    bit_sequence = [int(bit) for bit in bit_sequence.strip()]    
-    # Generate QPSK waveform
-    t, qpsk_waveform = generate_qpsk_waveform(bit_sequence, symbol_frequency=1000, sample_rate=1000000)
+    # print(type(bit_sequence))
+    # # Convert string input to list of integers
+    # bit_sequence = [int(bit) for bit in bit_sequence.strip()]    
+    # # Generate QPSK waveform
+    # t, qpsk_waveform = generate_qpsk_waveform(bit_sequence, symbol_frequency=1000, sample_rate=1000000)
     # Plot the waveform
-    plot(t, qpsk_waveform)
+    ui.run()
 
-
-if __name__ == "__main__":
-    main()
+main()
 
