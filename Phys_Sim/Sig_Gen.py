@@ -1,8 +1,7 @@
 class SigGen:
-    def __init__(self, freq=1.0, amp=1.0, phase=0.0):
+    def __init__(self, freq=1.0, amp=1.0):
         self.freq = freq  # Frequency in Hz
         self.amp = amp    # Amplitude
-        self.phase = phase  # Phase in radians
 
     def generate_qpsk(self, bits, sample_rate, symbol_rate):
         """
