@@ -31,7 +31,6 @@ def bit_reader(r):
     bits = np.zeros((len(r), 2), dtype=int) # an array of bits
     for i in range(len(r)):
         angle = np.angle(r[i], deg=True) # get the angle of the symbol
-        print("angle: ", angle)
         if (angle >= 0 and angle < 90): # 45 degrees
             bits[i][0] = 0
             bits[i][1] = 0
@@ -46,19 +45,3 @@ def bit_reader(r):
             bits[i][1] = 0
     
     return bits
-
-######## Test Code ########
-# x_symbols = random_symbol_generator() # generate QPSK symbols
-# r = noise_adder(x_symbols) # add noise to the symbols
-# bits = bit_reader(r) # convert symbols to bits
-
-# # print the symbols and bits
-# print("Print QPSK symbols with noise:")
-# print(r)
-# print("Print QPSK symbols:")
-# print(bits)
-
-# # Plot the noisy QPSK symbols
-# plt.plot(np.real(r), np.imag(r), '.')
-# plt.grid(True)
-# plt.show()
