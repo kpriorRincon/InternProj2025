@@ -70,7 +70,6 @@ def demodulate_qpsk(waveform, frequency, sample_rate):
     # TODO - Implement QPSK demodulation
     pass
 
-
 def main():
     # TODO - Implement GUI for user input
     bit_sequence = input("Enter a sequence of bits (e.g., 1100): ")
