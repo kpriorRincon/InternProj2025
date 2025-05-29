@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from nicegui import ui
 
-def generate_qpsk_waveform(bits, symbol_frequency, sample_rate):
+def generate_qpsk_waveform(bits, symbol_rate, sample_rate):
     """
     Generate a QPSK waveform from a sequence of bits.
     Args:
@@ -16,7 +16,7 @@ def generate_qpsk_waveform(bits, symbol_frequency, sample_rate):
         tuple: Time vector and QPSK waveform. 
     """
     # TODO - Implement QPSK modulation
-    carrier_frequency = symbol_frequency * 2  # Example carrier frequency, can be adjusted
+    carrier_frequency = symbol_rate * 2  # Example carrier frequency, can be adjusted
     if len(bits) % 2 != 0:
         raise ValueError("Bit sequence must have an even length.")
 
@@ -30,7 +30,7 @@ def generate_qpsk_waveform(bits, symbol_frequency, sample_rate):
     #seperate into odd and even and map to complex symbols
     symbols = [mapping[(bits[i], bits[i + 1])] for i in range(0, len(bits), 2)]
 
-    samples_per_symbol = int(sample_rate / symbol_frequency)
+    samples_per_symbol = int(sample_rate / symbol_rate)
     #time vector for the wave form defined start at 0 end at the length of the symbols times samples per symbol
     # and spaced by the sample rate
     t = np.arange(0, len(symbols) * samples_per_symbol) / sample_rate
