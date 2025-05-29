@@ -27,28 +27,51 @@ def generate_qpsk_waveform(bits, symbol_frequency, sample_rate):
         (1, 1): (-1 - 1j) / np.sqrt(2),
         (1, 0): (1 - 1j) / np.sqrt(2)
     }
+    #seperate into odd and even and map to complex symbols
     symbols = [mapping[(bits[i], bits[i + 1])] for i in range(0, len(bits), 2)]
 
     samples_per_symbol = int(sample_rate / symbol_frequency)
+    #time vector for the wave form defined start at 0 end at the length of the symbols times samples per symbol
+    # and spaced by the sample rate
     t = np.arange(0, len(symbols) * samples_per_symbol) / sample_rate
-    qpsk_waveform = np.zeros_like(t)
 
+    # Initialize the QPSK waveform
+    qpsk_waveform = np.zeros_like(t)
+    #for loop that tracks the index of the symbol and the symbol itself
     for i, symbol in enumerate(symbols):
-        phase_offset = np.angle(symbol)  # Phase offset for the symbol
+        #compute the phase offset for the symbol
+        phase_offset = np.angle(symbol)
         idx_start = i * samples_per_symbol
         idx_end = idx_start + samples_per_symbol
-        time_slice = t[idx_start:idx_end]
+        time_slice = t[idx_start:idx_end] # time slice for the current symbol
         qpsk_waveform[idx_start:idx_end] = (
+            #eqn from Haupt pg 86
             np.sqrt(2)*np.cos(2*carrier_frequency*np.pi * time_slice + phase_offset)
         )
-
     return t, qpsk_waveform
 
 
 def main():
-    # TODO - Implement GUI for user input
+    """
+    main()
+    Launches a user interface for QPSK waveform generation and visualization.
+    This function creates a simple GUI that prompts the user to enter a sequence of bits.
+    Upon submission, it converts the input string into a list of integers, generates the
+    corresponding QPSK waveform using the provided bit sequence, and displays the waveform
+    using a matplotlib plot embedded in the UI.
+    Workflow:
+        1. Prompts the user for a bit sequence (e.g., '1100').
+        2. Converts the input string to a list of integers.
+        3. Generates the QPSK waveform using the specified symbol frequency and sample rate.
+        4. Plots the generated waveform in the UI.
+    Note:
+        - Requires the `generate_qpsk_waveform` function to be defined elsewhere.
+        - Assumes the presence of a UI framework with `ui.input`, `ui.button`, `ui.matplotlib`, and `ui.run`.
+    """
+
     user_input = ui.input(label='Enter bits: ',
                           placeholder = 'e.g., 1100')
+    user_input.props('type', 'text')
     sumbit_button = ui.button('submit', on_click=lambda: use_data())
     def use_data():
         bit_sequence = user_input.value
@@ -65,14 +88,7 @@ def main():
             plt.grid()
             plt.legend()
             plt.show()
-    #bit_sequence = input("Enter a sequence of bits (e.g., 1100): ") 
-    
-    # print(type(bit_sequence))
-    # # Convert string input to list of integers
-    # bit_sequence = [int(bit) for bit in bit_sequence.strip()]    
-    # # Generate QPSK waveform
-    # t, qpsk_waveform = generate_qpsk_waveform(bit_sequence, symbol_frequency=1000, sample_rate=1000000)
-    # Plot the waveform
+    #run the UI
     ui.run()
 
 main()
