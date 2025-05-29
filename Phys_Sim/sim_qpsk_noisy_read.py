@@ -3,9 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 ######## Constants ########
-num_symbols = 20 # total number of symbols to generate
+num_symbols = 1000 # total number of symbols to generate
 
 ######## Functions ########
+
+# generate random QPSK symbols
 def random_symbol_generator():
     # generate random QPSK symbols
     x_int = np.random.randint(0, 4, num_symbols) # 0 to 3
@@ -14,6 +16,14 @@ def random_symbol_generator():
     x_symbols = np.cos(x_radians) + 1j*np.sin(x_radians) # this produces our QPSK complex symbols
     return x_symbols
 
+# add noise to the symbols
+def noise_adder(x_symbols, noise_power=0.1):
+    n = (np.random.randn(num_symbols) + 1j*np.random.randn(num_symbols))/np.sqrt(2) # AWGN with unity power
+    phase_noise = np.random.randn(len(x_symbols)) * 0.1 # adjust multiplier for "strength" of phase noise
+    r = x_symbols * np.exp(1j*phase_noise) + n * np.sqrt(noise_power)
+    return r
+
+# read the bits from the noisy QPSK symbols
 def bit_reader(x_symbols):
     bits = np.zeros((len(x_symbols), 2), dtype=int) # an array of bits
     for i in range(len(x_symbols)):
@@ -33,12 +43,6 @@ def bit_reader(x_symbols):
             bits[i][1] = 0
     
     return bits
-
-def noise_adder(x_symbols):
-    n = (np.random.randn(num_symbols) + 1j*np.random.randn(num_symbols))/np.sqrt(2) # AWGN with unity power
-    noise_power = 0.01
-    r = x_symbols + n * np.sqrt(noise_power)
-    return r
 
 ######## Test Code ########
 x_symbols = random_symbol_generator() # generate QPSK symbols

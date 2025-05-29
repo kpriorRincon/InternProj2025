@@ -1,11 +1,11 @@
 from nicegui import ui
 import numpy as np
-import up_down_link 
+import sim_link_budget 
 
 # Function to calculate and display results
 def calculate_uplink(Gt_value, Pt_value, f_value, B_value, Gr_value, R_value):
     # Call the compute_parameters function
-    lam, Pn, Pr, SNR_dB, H = up_down_link.compute_parameters(Gt_value, Pt_value, f_value, B_value, Gr_value, R_value)
+    lam, Pn, Pr, SNR_dB, H = sim_link_budget.compute_parameters(Gt_value, Pt_value, f_value, B_value, Gr_value, R_value)
 
     # Update the result labels with the computed values
     result_labels['Wavelength (m)'].text = f"Wavelength (m): {lam:.6f}"
@@ -16,14 +16,14 @@ def calculate_uplink(Gt_value, Pt_value, f_value, B_value, Gr_value, R_value):
 
 def calculate_arrival_time(R_value):
     # Call the arrival_time function
-    time = up_down_link.arrival_time(R_value)
+    time = sim_link_budget.arrival_time(R_value)
 
     # update the results labels with the computed values
     result_labels['Arrival Time (s)'].text = f"Arrival Time (s): {time:.6f}"
 
 def calculate_frequency_doppler_shift(v_value, f_value, psi):
     # Call the frequency_doppler_shift function
-    fmax = up_down_link.frequency_doppler_shift(v_value, f_value, psi)
+    fmax = sim_link_budget.frequency_doppler_shift(v_value, f_value, psi)
 
     # update the results labels with the computed values
     result_labels['Doppler Shifted Frequency (Hz)'].text = f"Doppler Shifted Frequency (Hz): {fmax:.2f}"
