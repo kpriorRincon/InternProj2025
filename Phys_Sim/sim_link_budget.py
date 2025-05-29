@@ -7,7 +7,7 @@ import numpy as np
 #
 #################################################
 
-#### predefined parameters ####
+#### constant globals ####
 T = 290             # noise temperature
 k = 1.38*10**-23    # Boltzmann's constant in J/K
 c0 = 3e8            # speed of light
@@ -19,7 +19,7 @@ def compute_parameters(Gt, Pt, f, B, Gr, R):
     Pr = 10**(Gt / 10) * 10**(Gr/10) * Pt * (lam / (4 * np.pi * R))**2  # received power
     SNR = Pr / Pn                                                       # signal to noise ratio
     SNR_dB = 10 * np.log10(SNR)                                         # convert to dB
-    H = B * np.log2(1 + SNR)             
+    H = B * np.log2(1 + SNR)                                            # channel capacity in bits/s     
     return lam, Pn, Pr, SNR_dB, H
 
 def arrival_time(R):
