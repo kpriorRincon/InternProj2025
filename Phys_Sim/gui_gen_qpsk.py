@@ -26,13 +26,15 @@ def main():
         - Assumes the presence of a UI framework with `ui.input`, `ui.button`, `ui.matplotlib`, and `ui.run`.
     """
 
-    user_input = ui.input(label='Enter bits: ',
-                          placeholder = 'e.g., 1100')
+    user_input = ui.input(label='Enter a message: ',
+                          placeholder = 'e.g., hello')
     sumbit_button = ui.button('submit', on_click=lambda: use_data())
     def use_data():
-        bit_sequence = user_input.value
+        message = user_input.value
+        #convert message to binary using Skylar's code: 
+        message_binary = ''.join(format(ord(x), '08b') for x in message)
         # Convert string input to list of integers
-        bit_sequence = [int(bit) for bit in bit_sequence.strip()]
+        bit_sequence = [int(bit) for bit in message_binary.strip()]
         if not all(bit in (0, 1) for bit in bit_sequence):
             ui.notify('Please enter a valid even number of bits (0s and 1s).')
             return
