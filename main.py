@@ -1,5 +1,5 @@
 # this file will be used to run the GUI
-import sys
-sys.path.appednd('/GitHub/INTERNPROJ2025/Phys_Sim/')
 from nicegui import ui
-import SigGen as sig_gen
+from Phys_Sim import Sig_Gen as sig_gen
+from Phys_Sim import sim_qpsk_noisy_demod as qnd
+from Phys_Sim import sim_link_budget as lb
