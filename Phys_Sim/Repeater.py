@@ -26,7 +26,7 @@ class Repeater:
         """
         # Implement filtering logic here
         pass
-    
+
     def amplify(self, gain, input_signal):
         """
         Amplifies the signal by a specified gain.
