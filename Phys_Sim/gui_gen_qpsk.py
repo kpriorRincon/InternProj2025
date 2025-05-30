@@ -50,6 +50,8 @@ def main():
             5. Plots the generated waveform with appropriate labels and grid.
         """
 
+        #close any existing plots:
+        plt.close('all')
         # Properly cast input values to the correct types
         freq_val = int(freq.value)
         amp_val = int(amp.value)
@@ -70,7 +72,7 @@ def main():
         with ui.matplotlib(figsize=(20, 4)) as fig:
         
             plt.plot(t, qpsk_waveform)
-            plt.ylim(-1.5/np.sqrt(2)*sig_gen.amp, 1.5/np.sqrt(2)*sig_gen.amp)
+            plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
             for lines in t_vertical_lines:
                 #add vertical lines at the symbol boundaries
                 if lines < len(t):
@@ -86,13 +88,12 @@ def main():
                     #debug
                     #print(formatted_pair)
                     x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
-                    y_dist = 0.807*sig_gen.amp # 0.807 is the amplitude of the QPSK waveform
+                    y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
                     plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
             plt.title(f'QPSK Waveform for {message}')
             plt.xlabel('Time (s)')
             plt.ylabel('Amplitude')
             plt.grid()
-            plt.legend()
             plt.show()
     #run the UI
     ui.run(native=True)
