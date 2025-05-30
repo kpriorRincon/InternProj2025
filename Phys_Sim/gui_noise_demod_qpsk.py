@@ -1,6 +1,6 @@
 from nicegui import ui
 import plotly.graph_objects as go
-import sim_qpsk_noisy_read as sqnr
+import Phys_Sim.sim_qpsk_noisy_demod as sqnr
 
 #################################################
 #
