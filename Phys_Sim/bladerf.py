@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+#testing
 symbol_rate = 10e6 #10M symbols per sec
 f_carrier = 910e6 #10e3
 fs = 4e9 #100e3 #sample frequency
