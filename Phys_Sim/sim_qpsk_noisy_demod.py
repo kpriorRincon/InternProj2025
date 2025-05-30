@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import Sig_Gen as SigGen
+from scipy.signal import hilbert
 
 ######### Global Variables #########
 phase_start_sequence = np.array([45, 135, 225, 135])
@@ -29,22 +30,42 @@ def bit_reader(symbols):
     for i in range(len(symbols)):
         angle = np.angle(symbols[i], deg=True) % 360
 
+        # don't know why, but this is the only way to get the angles in the right range.
+        # Might be because of the Hilbert transform?
         if 0 <= angle < 90:
-            bits[i] = [0, 0]  # 45°
+            bits[i] = [1, 1]  # 45°
         elif 90 <= angle < 180:
-            bits[i] = [0, 1]  # 135° (was [0, 1])
+            bits[i] = [1, 0]  # 135°
         elif 180 <= angle < 270:
-            bits[i] = [1, 1]  # 225° (was [1, 1])
+            bits[i] = [0, 0]  # 225°
         else:
-            bits[i] = [1, 0]  # 315°
+            bits[i] = [0, 1]  # 315°
     return bits
 
+def sample_read_output(qpsk_waveform, sample_rate, symbol_rate):
+    # compute the Hilbert transform
+    analytic_signal = hilbert(qpsk_waveform)
 
+    # Sample at symbol midpoints
+    samples_per_symbol = int(sample_rate / symbol_rate)
+    offset = samples_per_symbol // 2
+    sampled_symbols = analytic_signal[offset::samples_per_symbol]
+
+    # Optional normalization to unit magnitude
+    sampled_symbols /= np.abs(sampled_symbols)
+
+    # Decode bits
+    decoded_bits = bit_reader(sampled_symbols)
+
+    # Flatten bits to string
+    flat_bits = ''.join(str(b) for pair in decoded_bits for b in pair)
+
+    return analytic_signal, flat_bits
 
 ##### MAIN TEST #####
 
 # Input message
-message = "ABCD"
+message = "test"
 print("Message:", message)
 
 # Convert message to binary
@@ -58,32 +79,19 @@ sample_rate = 1e6  # 1 MHz
 symbol_rate = 1000  # 1 kHz
 
 # Generate QPSK waveform using your SigGen class
-sig_gen = SigGen.SigGen(freq=1000, amp=1.0)
-t, qpsk_waveform = sig_gen.generate_qpsk(bit_sequence, sample_rate, symbol_rate)
-# Sample at symbol midpoints
-Ts = int(sample_rate / symbol_rate)
-sampled_symbols = qpsk_waveform[::Ts]
+sig_gen = SigGen.SigGen(1000, 1.0, sample_rate, symbol_rate)
+t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
 
-# Optional normalization to unit magnitude
-sampled_symbols /= np.abs(sampled_symbols)  
+# decode the waveform
+analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate)
 
-# Decode bits
-decoded_bits = bit_reader(sampled_symbols)
-
-# Format output
-flat_bitstream = ''.join(str(b) for pair in decoded_bits for b in pair)
-grouped_bits = ' '.join(flat_bitstream[i:i+2] for i in range(0, len(flat_bitstream), 2))
-
-# Output
-print("Decoded Bits (grouped):", grouped_bits)
-
-# Convert to characters
-decoded_chars = [chr(int(flat_bitstream[i:i+8], 2)) for i in range(0, len(flat_bitstream), 8)]
+# Convert to ASCII characters
+decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
 decoded_message = ''.join(decoded_chars)
 print("Decoded Message:", decoded_message)
 
 original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
-decoded  = ' '.join(flat_bitstream[i:i+2] for i in range(0, len(flat_bitstream), 2))
+decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
 
 print("Transmitted Bits:", original)
 print("Decoded Bits:    ", decoded)
@@ -96,9 +104,9 @@ else:
 
 # Plot the waveform and phase
 plt.figure(figsize=(10, 4))
-plt.plot(t, qpsk_waveform.real, label='I (real part)')
-plt.plot(t, qpsk_waveform.imag, label='Q (imag part)')
-plt.title('QPSK Waveform (Real and Imag Parts)')
+plt.plot(t, analytical_output.real, label='I (real part)')
+plt.plot(t, analytical_output.imag, label='Q (imag part)')
+plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
 plt.xlabel('Time (s)')
 plt.ylabel('Amplitude')
 plt.grid()
