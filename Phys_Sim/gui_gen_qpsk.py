@@ -29,13 +29,13 @@ def main():
     """
 
     message_input = ui.input(label='Enter a message: ',
-                          placeholder = 'e.g., hello')
-    freq = ui.input(label='Frequency (Hz): ', placeholder=902000)
-    amp = ui.input(label='Amplitude: ', placeholder=1)
-    symbol_rate = ui.input(label='Symbol Rate (Hz): ', placeholder=1000)
+                          placeholder = 'e.g., hello').style('width: 300px;')
+    freq = ui.number(label='Frequency (Hz): ', placeholder=902000).style('width: 300px;')
+    amp = ui.number(label='Amplitude: ', placeholder=1).style('width: 300px;')
+    symbol_rate = ui.number(label='Symbol Rate (Hz): ', placeholder=1000).style('width: 300px;')
     # Create a button to submit the input
     # The button will trigger the use_data function when clicked
-    sumbit_button = ui.button('submit', on_click=lambda: use_data())
+    ui.button('submit', on_click=lambda: use_data())
     def use_data():
         """
         use_data()
@@ -50,8 +50,12 @@ def main():
             5. Plots the generated waveform with appropriate labels and grid.
         """
 
+        # Properly cast input values to the correct types
+        freq_val = int(freq.value)
+        amp_val = int(amp.value)
+        symbol_rate_val = int(symbol_rate.value)
         #create sig_gen object with the parameters from gui
-        sig_gen = SigGen.SigGen(freq=freq.value, amp=int(amp.value), sample_rate = 3*freq, symbol_rate = int(symbol_rate.value))#using default values for freq, sample_rate, symbol_rate, and amp
+        sig_gen = SigGen.SigGen(freq=freq_val, amp=amp_val, sample_rate = 20*freq_val, symbol_rate = symbol_rate_val)
         # Get the message from the input field and convert it to a bit sequence
         message = message_input.value
         # Convert the message to a binary bit sequence using the SigGen class
@@ -65,7 +69,7 @@ def main():
         # Plot the waveform
         with ui.matplotlib(figsize=(20, 4)) as fig:
         
-            plt.plot(t, qpsk_waveform, label=f'QPSK Waveform for{message}')
+            plt.plot(t, qpsk_waveform)
             plt.ylim(-1.5/np.sqrt(2)*sig_gen.amp, 1.5/np.sqrt(2)*sig_gen.amp)
             for lines in t_vertical_lines:
                 #add vertical lines at the symbol boundaries
@@ -84,14 +88,14 @@ def main():
                     x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
                     y_dist = 0.807*sig_gen.amp # 0.807 is the amplitude of the QPSK waveform
                     plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
-            plt.title('QPSK Waveform')
+            plt.title(f'QPSK Waveform for {message}')
             plt.xlabel('Time (s)')
             plt.ylabel('Amplitude')
             plt.grid()
             plt.legend()
             plt.show()
     #run the UI
-    ui.run()
+    ui.run(native=True)
 
 main()
 
