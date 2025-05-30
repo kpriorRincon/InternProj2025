@@ -56,18 +56,15 @@ def generate_qpsk_wave(bitstream):
 
     print(qpsk_signal)
     return t, qpsk_signal
-
-def main():
-    bitstream = [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1]
-
-    t, input_qpsk = generate_qpsk_wave(bitstream)
-    # Create the complex exponential for frequency shifting
-    #ideal mixing_signal = np.exp(1j * 2 * np.pi * (desired_f - f_carrier) * t)
+def mixing(t, input_qpsk, desired_f, f_carrier):
     mixing_signal = np.cos(2 * np.pi * (desired_f + f_carrier) * t)
     # Mix the QPSK signal with the complex exponential to shift its frequency
     qpsk_shifted = input_qpsk * mixing_signal
 
-        # Compute FFT
+    return qpsk_shifted
+
+def plotting(t, input_qpsk, qpsk_shifted):
+    # Compute FFT
     n = len(t)
     freqs = np.fft.fftfreq(n, d=1/fs)
 
@@ -101,8 +98,19 @@ def main():
     
     plt.subplot(2, 2, 3)
     plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
+    #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
+    plt.xlabel("Frequency (GHz)")
+    plt.ylabel("Magnitude (dB)")
+    plt.title("FFT of QPSK Before and After Frequency Shift")
+    plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+    plt.ylim(0, np.max(mag_input) + 10)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+
+    plt.subplot(2, 2, 4)
     plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
-    plt.xlabel("Frequency (MHz)")
+    plt.xlabel("Frequency (GHz)")
     plt.ylabel("Magnitude (dB)")
     plt.title("FFT of QPSK Before and After Frequency Shift")
     plt.xlim(0, fs / 2)  # From 0 to fs in MHz
@@ -111,5 +119,17 @@ def main():
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+def main():
+    bitstream = [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1]
+
+    t, input_qpsk = generate_qpsk_wave(bitstream)
+
+    #ideal mixing_signal = np.exp(1j * 2 * np.pi * (desired_f - f_carrier) * t)
+
+    qpsk_shifted = mixing(t, input_qpsk, desired_f, f_carrier)
+
+    plotting(t, input_qpsk, qpsk_shifted)
+    
 if __name__ == "__main__":
     main()
