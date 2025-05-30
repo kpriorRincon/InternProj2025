@@ -5,7 +5,7 @@ import Receiver as Receiver
 import Repeater as Repeater
 
 with ui.row():
-    simulate_button = ui.image('Phys_Sim/media/simulate_low_opacity.png').stle(width='40%')
+    simulate_button = ui.image('/media/simulate_low_opacity.png')
     #command_button = ui.image('Phys_Sim/media/command_low_opacity.png', width='40%')
 
 ui.run()
