@@ -36,12 +36,12 @@ def simulate_page():
                 message_input = ui.input(on_change=lambda e: ui.notify(f'Message entered: {e.value}'))
                 ui.label('Simulation Parameters').style('font-size: 2em; font-weight: bold;')
                 # When the user selects a simulation type, the parameters will change accordingly
-                ui.label('Frequency In (Hz)').style('width: 200px;')
-                #freq_in_slider = ui.slider()
-                ui.label('Frequency Out (Hz)').style('width: 200px;')
-                # freq_out_slider = ui.slider()
+                ui.label('Frequency In (MHz)').style('width: 200px; margin-bottom: 10px;')
+                freq_in_slider = ui.slider(min=902, max=928, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Frequency In set to {e.value} MHz'))
+                ui.label('Frequency Out (MHz)').style('width: 200px; margin-bottom: 10px;')
+                freq_out_slider = ui.slider(min=902, max=928, step=1)
                 ui.label('Gain (dB)').style('width: 200px;')
-                # gain_slider = ui.slider()
+                gain_slider = ui.slider(min=0, max=)
                 ui.label('Noise Level (dB)').style('width: 200px;')
                 # noise_slider = ui.slider()
 
