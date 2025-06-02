@@ -20,7 +20,6 @@ def random_symbol_generator(num_symbols=100):
 # Add noise to symbols
 def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
     n = (np.random.randn(num_symbols) + 1j * np.random.randn(num_symbols)) / np.sqrt(2)
-    sig_gen = SigGen.SigGen(1000, 1.0, sample_rate, symbol_rate)
     phase_noise = np.random.randn(len(x_symbols)) * 0.1
     r = x_symbols * np.exp(1j * phase_noise) + n * np.sqrt(noise_power)
     return r
@@ -76,7 +75,7 @@ bit_sequence = [int(bit) for bit in message_binary]
 print("Binary Message:", grouped_bits)
 
 # Add noise to the waveform
-noisy_bits = noise_adder(bit_sequence, noise_power=0.1, num_symbols=len(bit_sequence)/2)
+#noisy_bits = noise_adder(bit_sequence, noise_power=0.1, num_symbols=len(bit_sequence)/2)
 
 # Signal generation parameters
 sample_rate = 1e6  # 1 MHz
@@ -84,7 +83,7 @@ symbol_rate = 1000  # 1 kHz
 
 # Generate QPSK waveform using your SigGen class
 sig_gen = SigGen.SigGen(1000, 1.0, sample_rate, symbol_rate)
-t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(noisy_bits)
+t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
 
 # decode the waveform
 # apply hilbert transform
