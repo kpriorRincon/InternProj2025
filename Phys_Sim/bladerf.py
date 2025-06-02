@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import signal
 
 #testing
 symbol_rate = 10e6 #10M symbols per sec
 f_carrier = 910e6 #10e3
 fs = 4e9 #100e3 #sample frequency
 #duration = 0.01
-desired_f = 1e9#15e3
+desired_f = 960e6 #15e3
 #A QPSK signal contains two main components: in-phase and quadrature
 def generate_qpsk_wave(bitstream):
     """
@@ -56,6 +57,7 @@ def generate_qpsk_wave(bitstream):
 
     print(qpsk_signal)
     return t, qpsk_signal
+
 def mixing(t, input_qpsk, desired_f, f_carrier):
     mixing_signal = np.cos(2 * np.pi * (desired_f + f_carrier) * t)
     # Mix the QPSK signal with the complex exponential to shift its frequency
@@ -63,7 +65,13 @@ def mixing(t, input_qpsk, desired_f, f_carrier):
 
     return qpsk_shifted
 
-def plotting(t, input_qpsk, qpsk_shifted):
+def amplify(qpsk, gain):
+
+    amplified_qpsk = qpsk * gain
+
+    return amplified_qpsk
+
+def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp):
     # Compute FFT
     n = len(t)
     freqs = np.fft.fftfreq(n, d=1/fs)
@@ -71,15 +79,17 @@ def plotting(t, input_qpsk, qpsk_shifted):
     # FFT of original and shifted signals
     fft_input = np.fft.fft(input_qpsk)
     fft_shifted = np.fft.fft(qpsk_shifted)
-
+    fft_filtered = np.fft.fft(qpsk_filtered)
+    fft_amp = np.fft.fft(qpsk_amp)
     # Convert magnitude to dB
     mag_input = 20 * np.log10(np.abs(fft_input))
     mag_shifted = 20 * np.log10(np.abs(fft_shifted))
-
+    mag_filtered = 20 * np.log10(np.abs(fft_filtered))
+    mag_amp = 20 * np.log10(np.abs(fft_amp))
     plt.figure(figsize=(12, 10))
 
     # --- Time-domain plot: Original QPSK ---
-    plt.subplot(2, 2, 1)
+    plt.subplot(2, 3, 1)
     plt.plot(t, np.real(input_qpsk))  # convert time to microseconds
     plt.title("Original QPSK Signal (Time Domain)")
     plt.xlabel("Time (μs)")
@@ -88,7 +98,7 @@ def plotting(t, input_qpsk, qpsk_shifted):
     plt.grid(True)
 
     # --- Time-domain plot: Shifted QPSK ---
-    plt.subplot(2, 2, 2)
+    plt.subplot(2, 3, 2)
     plt.plot(t, np.real(qpsk_shifted))
     plt.title("Shifted QPSK Signal (Time Domain)")
     plt.xlabel("Time (μs)")
@@ -96,29 +106,60 @@ def plotting(t, input_qpsk, qpsk_shifted):
     plt.xlim(0, 1e-7)
     plt.grid(True)
     
-    plt.subplot(2, 2, 3)
+    plt.subplot(2, 3, 3)
     plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
     #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
     plt.xlabel("Frequency (GHz)")
     plt.ylabel("Magnitude (dB)")
-    plt.title("FFT of QPSK Before and After Frequency Shift")
+    plt.title("FFT of QPSK Before Frequency Shift")
     plt.xlim(0, fs / 2)  # From 0 to fs in MHz
     plt.ylim(0, np.max(mag_input) + 10)
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
 
-    plt.subplot(2, 2, 4)
+    plt.subplot(2, 3, 4)
     plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
     plt.xlabel("Frequency (GHz)")
     plt.ylabel("Magnitude (dB)")
-    plt.title("FFT of QPSK Before and After Frequency Shift")
+    plt.title("FFT of QPSK After Frequency Shift")
+    plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+    plt.ylim(0, np.max(mag_input) + 10)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+
+    plt.subplot(2, 3, 5)
+    plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
+    plt.xlabel("Frequency (GHz)")
+    plt.ylabel("Magnitude (dB)")
+    plt.title("FFT of QPSK After Filtering")
+    plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+    plt.ylim(0, np.max(mag_input) + 10)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+
+    plt.subplot(2, 3, 6)
+    plt.plot(freqs, mag_amp, label="Amplified QPSK", alpha=0.8)
+    plt.xlabel("Frequency (GHz)")
+    plt.ylabel("Magnitude (dB)")
+    plt.title("FFT of QPSK After Amplification")
     plt.xlim(0, fs / 2)  # From 0 to fs in MHz
     plt.ylim(0, np.max(mag_input) + 10)
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+def filter_the_signal(f_cutoff, sig, order=5):
+    # Design Butterworth LPF
+    b, a = signal.butter(order, f_cutoff, btype='low', fs=fs) # butterworth filter coefficients
+
+    # Apply filter
+    filtered_sig = signal.filtfilt(b, a, sig)   # filtered signal
+
+    return filtered_sig
 
 def main():
     bitstream = [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1]
@@ -129,7 +170,13 @@ def main():
 
     qpsk_shifted = mixing(t, input_qpsk, desired_f, f_carrier)
 
-    plotting(t, input_qpsk, qpsk_shifted)
+    f_cutoff = desired_f + 10e6
+    
+    filtered_sig = filter_the_signal(f_cutoff, qpsk_shifted, 5)
+
+    amplified_sig = amplify(filtered_sig, gain=2)
+
+    plotting(t, input_qpsk, qpsk_shifted, filtered_sig, amplified_sig)
     
 if __name__ == "__main__":
     main()
