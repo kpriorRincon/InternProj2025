@@ -5,7 +5,8 @@ import Sig_Gen as SigGen
 from scipy.signal import hilbert
 
 ######### Global Variables #########
-phase_start_sequence = np.array([45, 135, 225, 135])
+phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
+phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
 ######## Functions ########
 
@@ -33,13 +34,13 @@ def bit_reader(symbols):
         # don't know why, but this is the only way to get the angles in the right range.
         # Might be because of the Hilbert transform?
         if 0 <= angle < 90:
-            bits[i] = [1, 1]  # 45°
+            bits[i] = [0, 0]  # 45°
         elif 90 <= angle < 180:
-            bits[i] = [1, 0]  # 135°
+            bits[i] = [0, 1]  # 135°
         elif 180 <= angle < 270:
-            bits[i] = [0, 0]  # 225°
+            bits[i] = [1, 1]  # 225°
         else:
-            bits[i] = [0, 1]  # 315°
+            bits[i] = [1, 0]  # 315°
     return bits
 
 def sample_read_output(qpsk_waveform, sample_rate, symbol_rate):
@@ -52,20 +53,44 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate):
     sampled_symbols = analytic_signal[offset::samples_per_symbol]
 
     # Optional normalization to unit magnitude
-    sampled_symbols /= np.abs(sampled_symbols)
+    #sampled_symbols /= np.abs(sampled_symbols)
 
-    # Decode bits
-    decoded_bits = bit_reader(sampled_symbols)
 
-    # Flatten bits to string
-    flat_bits = ''.join(str(b) for pair in decoded_bits for b in pair)
+    # look for the start sequence
+    expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)
+    best_bits = None
+    #print("Expected Start Sequence: ", expected_start_sequence)
+    og_sampled_symbols = ''.join(str(bit) for pair in bit_reader(sampled_symbols) for bit in pair)
+    #print("Original sampled bits: ", og_sampled_symbols)
 
-    return analytic_signal, flat_bits
+    for i in range(0, 3):
+        # Rotate the flat bits to match the start sequence
+        rotated_bits = sampled_symbols * np.exp(-1j* np.deg2rad(i*90))  # Rotate by 0, 90, 180, or 270 degrees
+        
+        # decode the bits
+        decode_bits = bit_reader(rotated_bits)
+        flat_bits = ''.join(str(bit) for pair in decode_bits for bit in pair)
+        #print("Rotated bits: ", flat_bits)
+        
+         # Check for presence of the known start sequence (first few symbols)
+        if expected_start_sequence in flat_bits:  # check only first 8 symbols worth (16 bits)
+            #print(f"Start sequence found with phase shift: {i*90}°")
+            best_bits = flat_bits
+            break
+
+    if best_bits is None:
+        #print("Start sequence not found. Defaulting to 0°")
+        rotated_symbols = sampled_symbols
+        decoded_bits = bit_reader(rotated_symbols)
+        best_bits = ''.join(str(b) for pair in decoded_bits for b in pair)
+        
+
+    return analytic_signal, best_bits
 
 ##### MAIN TEST #####
 
 # Input message
-message = "test"
+message = "Rtest"
 print("Message:", message)
 
 # Convert message to binary
