@@ -69,7 +69,7 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
     ## compute the Hilbert transform ##
     analytic_signal = hilbert(qpsk_waveform)    # hilbert transformation
 
-    #analytic_signal = matched_filter(analytic_signal, fc)
+    analytic_signal = matched_filter(analytic_signal, fc)
 
     ## Sample at symbol midpoints ##
     samples_per_symbol = int(sample_rate / symbol_rate)             # number of samples per symbol
