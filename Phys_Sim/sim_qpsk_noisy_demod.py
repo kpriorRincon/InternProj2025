@@ -53,7 +53,7 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate):
     sampled_symbols = analytic_signal[offset::samples_per_symbol]
 
     # Optional normalization to unit magnitude
-    #sampled_symbols /= np.abs(sampled_symbols)
+    sampled_symbols /= np.abs(sampled_symbols)
 
 
     # look for the start sequence

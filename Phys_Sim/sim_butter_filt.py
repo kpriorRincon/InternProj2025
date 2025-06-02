@@ -5,7 +5,7 @@ from scipy.fft import fft, fftfreq
 
 #####################################################
 #
-# Author: Your Name
+# Author: Trevor Wiseman
 #
 #####################################################
 
