@@ -4,6 +4,12 @@ import Sig_Gen as Sig_Gen
 import Receiver as Receiver
 import Repeater as Repeater
 
+# global objects for the Sig_Gen, Receiver, and Repeater classes
+sig_gen = Sig_Gen.SigGen()
+receiver = Receiver.Receiver(sampling_rate=1e6, frequency=915e6)
+repeater = Repeater.Repeater(sampling_rate=1e6, frequency=915e6)
+
+
 
 #front page
 with ui.row().style('height: 100vh; width: 100%; display: flex; justify-content: center; align-items: center;'):
@@ -33,19 +39,37 @@ def simulate_page():
             with simulation_container:
                 ui.label('Single Message Simulation').style('font-size: 2em; font-weight: bold; ')
                 ui.label('Enter message to be sent')
-                message_input = ui.input(on_change=lambda e: ui.notify(f'Message entered: {e.value}'))
+                message_input = ui.input(placeholder="hello world")
                 ui.label('Simulation Parameters').style('font-size: 2em; font-weight: bold;')
                 # When the user selects a simulation type, the parameters will change accordingly
                 ui.label('Frequency In (MHz)').style('width: 200px; margin-bottom: 10px;')
                 freq_in_slider = ui.slider(min=902, max=928, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Frequency In set to {e.value} MHz'))
                 ui.label('Frequency Out (MHz)').style('width: 200px; margin-bottom: 10px;')
-                freq_out_slider = ui.slider(min=902, max=928, step=1)
-                ui.label('Gain (dB)').style('width: 200px;')
-                gain_slider = ui.slider(min=0, max=)
-                ui.label('Noise Level (dB)').style('width: 200px;')
-                # noise_slider = ui.slider()
+                freq_out_slider = ui.slider(min=902, max=928, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Frequency In set to {e.value} MHz'))
+                ui.label('Gain (dB)').style('width: 200px;margin-bottom: 10px;')
+                gain_slider = ui.slider(min=0, max=10, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Gain set to {e.value} dB'))
+                ui.label('Noise Level (dB)').style('width: 200px; margin-bottom: 10px;')
+                noise_slider = ui.slider(min=0, max=10, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Noise Level set to {e.value} dB'))
+                #TODO the submit button will be a handler that stores are variable data for the Sig_Gen, Receiver, and Repeater classes
+                ui.button("Submit", on_click=lambda: store_data).style('width: 200px; height: 10px;')
+                def store_data():
+                    """
+                    store_data()
+                    This function is triggered when the user clicks the submit button.
+                    It collects the values from the input fields and stores them for further processing.
+                    """
+                    # Here you would typically collect the values from the input fields and store them
+                    # For example:
+                    global sig_gen
+                    global receiver
+                    global repeater
+                    sig_gen.freq = freq_in_slider.value* 1e6  # Convert MHz to Hz
+                    sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate
+                    repeater.desired_freqeuncy = freq_out_slider.value
+                    gain = gain_slider.value
+                    noise_level = noise_slider.value
+                    ui.notify('Data stored successfully!')  # Placeholder notification
 
-                ui.button("Submit", on_click=lambda: ui.notify('Simulation started!')).style('width: 200px; height: 10px;')
             
         elif selected_type == 'Continuous Message': 
             with simulation_container:
@@ -56,7 +80,6 @@ def simulate_page():
         'Continuous Message'
     ]
     simulation_type_dropdown = ui.select(choices, on_change=open_simulation_single_message).style('width: 200px; height: 40px;')
-
 
 #control page
 @ui.page('/control_page')
