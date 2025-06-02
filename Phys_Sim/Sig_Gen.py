@@ -76,6 +76,8 @@ class SigGen:
         Returns:
             list: List of bits (0s and 1s).
         """
+        # prefix the message with the letter 'R' as a marker
+        message = 'R' + message
         message_binary = ''.join(format(ord(x), '08b') for x in message)
         # print(message_binary)
         # Convert string input to list of integers

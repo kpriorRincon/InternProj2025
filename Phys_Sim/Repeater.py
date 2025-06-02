@@ -1,7 +1,8 @@
 class Repeater:
-    def __init__(self, desired_frequency, sampling_frequency):
-        self.desired_freqeuncy = 1e9  # Default frequency set to 1 GHz
-        self.sampling_fequency = 4e9
+    def __init__(self, desired_frequency, sampling_frequency, gain):
+        self.desired_freqeuncy = desired_frequency  # Default frequency set to 1 GHz
+        self.sampling_fequency = sampling_frequency
+        self.gain = gain
 
     def mix(self, qpsk_signal, qpsk_frequency, t):
         """
@@ -45,7 +46,7 @@ class Repeater:
         
         return filtered_sig
 
-    def amplify(self, gain, input_signal):
+    def amplify(self, input_signal):
         """
         Amplifies the signal by a specified gain.
         Parameters:
@@ -54,7 +55,7 @@ class Repeater:
         - The amplified signal.
         """
         # Implement amplification logic here
-        return gain*input_signal
+        return self.gain*input_signal
     
     def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs = 1e9):
         """
