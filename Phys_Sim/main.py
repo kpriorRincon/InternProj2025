@@ -6,7 +6,7 @@ import Repeater as Repeater
 
 # global objects for the Sig_Gen, Receiver, and Repeater classes
 sig_gen = Sig_Gen.SigGen()
-repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=1e6)
+repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=1e6, gain=1)
 receiver = Receiver.Receiver(sampling_rate=1e6, frequency=915e6)
 
 
