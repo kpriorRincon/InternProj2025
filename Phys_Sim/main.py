@@ -48,9 +48,15 @@ def simulate_page():
                 freq_out_slider = ui.slider(min=902, max=928, step=1).props('label-always')
                 ui.label('Gain (dB)').style('width: 200px;margin-bottom: 10px;')
                 gain_slider = ui.slider(min=0, max=10, step=1).props('label-always')
-                ui.label('Noise Level (dB)').style('width: 200px; margin-bottom: 10px;')
-                noise_slider = ui.slider(min=0, max=10, step=1).props('label-always')
-                #TODO the submit button will be a handler that stores are variable data for the Sig_Gen, Receiver, and Repeater classes
+                #check box to ask if the user wants to add noise
+                ui.label('Add Noise?').style('width: 200px;')
+                noise_checkbox = ui.checkbox('add noise')#the value here will be a bool that can be used for siGen
+                #iff the user checks the noise checkbox, then show the noise slider
+
+                ui.label('Noise Level (dB)').style('width: 200px; margin-bottom: 10px;').bind_visibility_from(noise_checkbox, 'value')
+                noise_slider = ui.slider(min=0, max=10, step=1).props('label-always').bind_visibility_from(noise_checkbox, 'value')
+
+
                 ui.button("Submit", on_click=lambda: store_data()).style('width: 200px; height: 10px;')
                 def store_data():
                     """
@@ -58,8 +64,7 @@ def simulate_page():
                     This function is triggered when the user clicks the submit button.
                     It collects the values from the input fields and stores them for further processing.
                     """
-                    # Here you would typically collect the values from the input fields and store them
-                    # For example:
+                    #using global to change attributes of the global objects
                     global sig_gen
                     global receiver
                     global repeater
@@ -67,7 +72,7 @@ def simulate_page():
                     sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
                     repeater.desired_freqeuncy = int(freq_out_slider.value)
                     repeater.sampling_fequency = int(sig_gen.sample_rate)
-                    repeater.gain = 10^(int(gain_slider.value)/10)
+                    repeater.gain = 10^(int(gain_slider.value)/10) # convert dB to linear scale
                     #noise_level = noise_slider.value
                     #debug:
                     #print("made it here")
