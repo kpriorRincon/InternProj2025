@@ -1,7 +1,8 @@
 class Repeater:
-    def __init__(self, desired_frequency):
+    def __init__(self, desired_frequency, sampling_frequency, gain=1):
         self.desired_freqeuncy = 1e9  # Default frequency set to 1 GHz
-
+        self.sampling_fequency = 4e9
+        self.gain = gain  # Default gain set to 1
     def mix(self, qpsk_signal, qpsk_frequency, t):
         """
         Mixes the input signal with a carrier frequency.
@@ -22,7 +23,7 @@ class Repeater:
 
         return qpsk_shifted
 
-    def filter(self, cuttoff_frequency):
+    def filter(self, cuttoff_frequency, mixed_qpsk, order=5):
         """
         Filters the mixed signal to remove unwanted frequencies.
 
@@ -30,7 +31,14 @@ class Repeater:
         - The filtered signal.
         """
         # Implement filtering logic here
-        pass
+        from scipy import signal
+
+        b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_fequency) # butterworth filter coefficients
+
+        # Apply filter
+        filtered_sig = signal.filtfilt(b, a, mixed_qpsk)   # filtered signal
+        
+        return filtered_sig
 
     def amplify(self, gain, input_signal):
         """
@@ -43,7 +51,7 @@ class Repeater:
         # Implement amplification logic here
         return gain*input_signal
     
-    def plotting(t, input_qpsk, qpsk_shifted, fs = 1e9):
+    def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs = 1e9):
         """
         Plots the original and shifted QPSK signals.
 
@@ -61,15 +69,17 @@ class Repeater:
         # FFT of original and shifted signals
         fft_input = np.fft.fft(input_qpsk)
         fft_shifted = np.fft.fft(qpsk_shifted)
-
+        fft_filtered = np.fft.fft(qpsk_filtered)
+        fft_amp = np.fft.fft(qpsk_amp)
         # Convert magnitude to dB
         mag_input = 20 * np.log10(np.abs(fft_input))
         mag_shifted = 20 * np.log10(np.abs(fft_shifted))
-
+        mag_filtered = 20 * np.log10(np.abs(fft_filtered))
+        mag_amp = 20 * np.log10(np.abs(fft_amp))
         plt.figure(figsize=(12, 10))
 
         # --- Time-domain plot: Original QPSK ---
-        plt.subplot(2, 2, 1)
+        plt.subplot(2, 3, 1)
         plt.plot(t, np.real(input_qpsk))  # convert time to microseconds
         plt.title("Original QPSK Signal (Time Domain)")
         plt.xlabel("Time (μs)")
@@ -78,7 +88,7 @@ class Repeater:
         plt.grid(True)
 
         # --- Time-domain plot: Shifted QPSK ---
-        plt.subplot(2, 2, 2)
+        plt.subplot(2, 3, 2)
         plt.plot(t, np.real(qpsk_shifted))
         plt.title("Shifted QPSK Signal (Time Domain)")
         plt.xlabel("Time (μs)")
@@ -86,23 +96,45 @@ class Repeater:
         plt.xlim(0, 1e-7)
         plt.grid(True)
         
-        plt.subplot(2, 2, 3)
+        plt.subplot(2, 3, 3)
         plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
         #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
-        plt.title("FFT of QPSK Before and After Frequency Shift")
+        plt.title("FFT of QPSK Before Frequency Shift")
         plt.xlim(0, fs / 2)  # From 0 to fs in MHz
         plt.ylim(0, np.max(mag_input) + 10)
         plt.grid(True)
         plt.legend()
         plt.tight_layout()
 
-        plt.subplot(2, 2, 4)
+        plt.subplot(2, 3, 4)
         plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
-        plt.title("FFT of QPSK Before and After Frequency Shift")
+        plt.title("FFT of QPSK After Frequency Shift")
+        plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+        plt.ylim(0, np.max(mag_input) + 10)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+
+        plt.subplot(2, 3, 5)
+        plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
+        plt.xlabel("Frequency (GHz)")
+        plt.ylabel("Magnitude (dB)")
+        plt.title("FFT of QPSK After Filtering")
+        plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+        plt.ylim(0, np.max(mag_input) + 10)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+
+        plt.subplot(2, 3, 6)
+        plt.plot(freqs, mag_amp, label="Amplified QPSK", alpha=0.8)
+        plt.xlabel("Frequency (GHz)")
+        plt.ylabel("Magnitude (dB)")
+        plt.title("FFT of QPSK After Amplification")
         plt.xlim(0, fs / 2)  # From 0 to fs in MHz
         plt.ylim(0, np.max(mag_input) + 10)
         plt.grid(True)
