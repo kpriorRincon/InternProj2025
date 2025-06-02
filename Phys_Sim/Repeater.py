@@ -14,8 +14,13 @@ class Repeater:
         Returns:
         - The mixed signal.
         """
+        import numpy as np
         # Implement mixing logic here
-        pass
+        mixing_signal = np.cos(2 * np.pi * (self.desired_freqeuncy + qpsk_frequency) * t)
+        # Mix the QPSK signal with the complex exponential to shift its frequency
+        qpsk_shifted = qpsk_signal * mixing_signal
+
+        return qpsk_shifted
 
     def filter(self, cuttoff_frequency):
         """
@@ -37,3 +42,71 @@ class Repeater:
         """
         # Implement amplification logic here
         return gain*input_signal
+    
+    def plotting(t, input_qpsk, qpsk_shifted, fs = 1e9):
+        """
+        Plots the original and shifted QPSK signals.
+
+        Parameters:
+        - t: Time vector for the signal.
+        - input_qpsk: The original QPSK signal.
+        - qpsk_shifted: The shifted QPSK signal.
+        """
+        import numpy as np
+        import matplotlib.pyplot as plt
+        # Compute FFT
+        n = len(t)
+        freqs = np.fft.fftfreq(n, d=1/fs)
+
+        # FFT of original and shifted signals
+        fft_input = np.fft.fft(input_qpsk)
+        fft_shifted = np.fft.fft(qpsk_shifted)
+
+        # Convert magnitude to dB
+        mag_input = 20 * np.log10(np.abs(fft_input))
+        mag_shifted = 20 * np.log10(np.abs(fft_shifted))
+
+        plt.figure(figsize=(12, 10))
+
+        # --- Time-domain plot: Original QPSK ---
+        plt.subplot(2, 2, 1)
+        plt.plot(t, np.real(input_qpsk))  # convert time to microseconds
+        plt.title("Original QPSK Signal (Time Domain)")
+        plt.xlabel("Time (μs)")
+        plt.ylabel("Amplitude")
+        plt.xlim(0, 1e-7)
+        plt.grid(True)
+
+        # --- Time-domain plot: Shifted QPSK ---
+        plt.subplot(2, 2, 2)
+        plt.plot(t, np.real(qpsk_shifted))
+        plt.title("Shifted QPSK Signal (Time Domain)")
+        plt.xlabel("Time (μs)")
+        plt.ylabel("Amplitude")
+        plt.xlim(0, 1e-7)
+        plt.grid(True)
+        
+        plt.subplot(2, 2, 3)
+        plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
+        #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
+        plt.xlabel("Frequency (GHz)")
+        plt.ylabel("Magnitude (dB)")
+        plt.title("FFT of QPSK Before and After Frequency Shift")
+        plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+        plt.ylim(0, np.max(mag_input) + 10)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+
+        plt.subplot(2, 2, 4)
+        plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
+        plt.xlabel("Frequency (GHz)")
+        plt.ylabel("Magnitude (dB)")
+        plt.title("FFT of QPSK Before and After Frequency Shift")
+        plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+        plt.ylim(0, np.max(mag_input) + 10)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+        return
