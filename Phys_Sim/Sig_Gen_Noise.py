@@ -88,7 +88,9 @@ class SigGen:
         Returns:
             list: List of bits (0s and 1s).
         """
+        message = 'R'+ message  # Add 'R' at the start of the message as our marker
         message_binary = ''.join(format(ord(x), '08b') for x in message)
+
         # print(message_binary)
         # Convert string input to list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]

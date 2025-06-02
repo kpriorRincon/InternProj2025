@@ -119,17 +119,22 @@ def simulate_page():
 @ui.page('/signal_generator_page')
 def signal_generator_page():
     """This function creates the Signal Generator page where the user can view outputs from the signal generator."""
+    ui.button('back', on_click=ui.navigate.back)
     pass
 #simulation Repeater page
 @ui.page('/repeater_page')
 def repeater_page():
     """This function creates the repeater page where the user can view outputs from the repeater."""
+    ui.button('back', on_click=ui.navigate.back)
+
     pass
 
 #simulation receiver page
 @ui.page('/receiver_page')
 def receiver_page():
     """This function creates the Receiver page where the user can view outputs from the receiver."""
+    ui.button('back', on_click=ui.navigate.back)
+
     pass
 
 
