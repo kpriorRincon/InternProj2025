@@ -24,13 +24,16 @@ with ui.row().style('height: 100vh; width: 100%; display: flex; justify-content:
 #simulate page
 @ui.page('/simulate_page')
 def simulate_page():
-
- #   Simulate page
-    
+    """This function creates the simulation page where the user can select a simulation type and input parameters."""
     simulation_container = ui.column().style('order: 2;')
     with ui.row().style('justify-content: center;'):
         ui.label('Simulation Type').style('font-size: 2em; font-weight: bold;')
+
+
     def open_simulation_single_message():
+        """This function triggers when the user selects a simulation type from the dropdown.
+        It clears the simulation container and displays the appropriate input fields based on the selected type."""
+        simulation_container
         selected_type = simulation_type_dropdown.value
         simulation_container.clear()
         if selected_type == 'Single Message':
@@ -68,6 +71,8 @@ def simulate_page():
                     global repeater
                     sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
                     sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
+                    message = message_input.value
+                    bits = sig_gen.set_message(message)  # Set the message in the signal generator
                     repeater.desired_freqeuncy = int(freq_out_slider.value)
                     repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
@@ -95,7 +100,41 @@ def simulate_page():
         'Continuous Message'
     ]
     simulation_type_dropdown = ui.select(choices, on_change=open_simulation_single_message).style('width: 200px; height: 40px;')
-        ui.image('media/antenna_graphic.png')
+    with ui.column().style('position: absolute; top: 500px; left: 700px; '):
+        with ui.link(target='/signal_generator_page'):
+            ui.image('media/antenna_graphic.png').style('width:200px;')
+        ui.label("Signal Generator").style('font-size: 1.5em; font-weight: bold;')
+    with ui.column().style('position: absolute; top: 20px; left: 1000px;'):
+        ui.label("Repeater").style('font-size: 1.5em; font-weight: bold; margin-left: 55px;')
+        with ui.link(target='/repeater_page'):
+            ui.image('media/sattelite.png').style('width:300px;')
+
+    with ui.column().style('position: absolute; top: 500px; left: 1500px;'): 
+        with ui.link(target='/receiver_page'):
+            ui.image('media/antenna_graphic_flipped.png').style('width:200px;')
+        ui.label("Receiver").style('font-size: 1.5em; font-weight: bold; margin-left: 110px;')
+
+
+#simulation Signal Generator page
+@ui.page('/signal_generator_page')
+def signal_generator_page():
+    """This function creates the Signal Generator page where the user can view outputs from the signal generator."""
+    pass
+#simulation Repeater page
+@ui.page('/repeater_page')
+def repeater_page():
+    """This function creates the repeater page where the user can view outputs from the repeater."""
+    pass
+
+#simulation receiver page
+@ui.page('/receiver_page')
+def receiver_page():
+    """This function creates the Receiver page where the user can view outputs from the receiver."""
+    pass
+
+
+
+# TODO implement the control page when we are able to
 #control page
 @ui.page('/control_page')
 def control_page():
