@@ -6,8 +6,8 @@ import Repeater as Repeater
 
 # global objects for the Sig_Gen, Receiver, and Repeater classes
 sig_gen = Sig_Gen.SigGen()
+repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=1e6)
 receiver = Receiver.Receiver(sampling_rate=1e6, frequency=915e6)
-repeater = Repeater.Repeater(sampling_rate=1e6, frequency=915e6)
 
 
 
@@ -43,15 +43,15 @@ def simulate_page():
                 ui.label('Simulation Parameters').style('font-size: 2em; font-weight: bold;')
                 # When the user selects a simulation type, the parameters will change accordingly
                 ui.label('Frequency In (MHz)').style('width: 200px; margin-bottom: 10px;')
-                freq_in_slider = ui.slider(min=902, max=928, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Frequency In set to {e.value} MHz'))
+                freq_in_slider = ui.slider(min=902, max=928, step=1).props('label-always')
                 ui.label('Frequency Out (MHz)').style('width: 200px; margin-bottom: 10px;')
-                freq_out_slider = ui.slider(min=902, max=928, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Frequency In set to {e.value} MHz'))
+                freq_out_slider = ui.slider(min=902, max=928, step=1).props('label-always')
                 ui.label('Gain (dB)').style('width: 200px;margin-bottom: 10px;')
-                gain_slider = ui.slider(min=0, max=10, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Gain set to {e.value} dB'))
+                gain_slider = ui.slider(min=0, max=10, step=1).props('label-always')
                 ui.label('Noise Level (dB)').style('width: 200px; margin-bottom: 10px;')
-                noise_slider = ui.slider(min=0, max=10, step=1).props('label-always').on('update:model-value', lambda e: ui.notify(f'Noise Level set to {e.value} dB'))
+                noise_slider = ui.slider(min=0, max=10, step=1).props('label-always')
                 #TODO the submit button will be a handler that stores are variable data for the Sig_Gen, Receiver, and Repeater classes
-                ui.button("Submit", on_click=lambda: store_data).style('width: 200px; height: 10px;')
+                ui.button("Submit", on_click=lambda: store_data()).style('width: 200px; height: 10px;')
                 def store_data():
                     """
                     store_data()
@@ -63,12 +63,14 @@ def simulate_page():
                     global sig_gen
                     global receiver
                     global repeater
-                    sig_gen.freq = freq_in_slider.value* 1e6  # Convert MHz to Hz
-                    sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate
-                    repeater.desired_freqeuncy = freq_out_slider.value
-                    repeater.sampling_fequency = sig_gen.sample_rate
-                    #gain = gain_slider.value
+                    sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
+                    sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
+                    repeater.desired_freqeuncy = int(freq_out_slider.value)
+                    repeater.sampling_fequency = int(sig_gen.sample_rate)
+                    repeater.gain = 10^(int(gain_slider.value)/10)
                     #noise_level = noise_slider.value
+                    #debug:
+                    #print("made it here")
                     ui.notify('Data stored successfully!')  # Placeholder notification
 
             
