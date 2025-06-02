@@ -66,8 +66,9 @@ def simulate_page():
                     sig_gen.freq = freq_in_slider.value* 1e6  # Convert MHz to Hz
                     sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate
                     repeater.desired_freqeuncy = freq_out_slider.value
-                    gain = gain_slider.value
-                    noise_level = noise_slider.value
+                    repeater.sampling_fequency = sig_gen.sample_rate
+                    #gain = gain_slider.value
+                    #noise_level = noise_slider.value
                     ui.notify('Data stored successfully!')  # Placeholder notification
 
             

@@ -1,5 +1,5 @@
 class Repeater:
-    def __init__(self, desired_frequency):
+    def __init__(self, desired_frequency, sampling_frequency):
         self.desired_freqeuncy = 1e9  # Default frequency set to 1 GHz
         self.sampling_fequency = 4e9
 
