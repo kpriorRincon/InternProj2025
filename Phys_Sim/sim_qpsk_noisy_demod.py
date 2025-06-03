@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Sig_Gen as SigGen
 from scipy.signal import hilbert
+import scipy.signal as signal
 
 ######### Global Variables #########
 phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
@@ -43,33 +44,9 @@ def bit_reader(symbols):
             bits[i] = [1, 0]  # 315°
     return bits
 
-def matched_filter(input_signal, fc):
-    # create template based on the carrier frequency
-    template = np.exp(1j * 2 * np.pi * fc * np.arange(len(input_signal)) / len(input_signal))
-
-    ## Perform the auto-correlation by convolving the input signal with the flipped template ##
-
-    # flip
-    template_flipped = np.flip(template)
-    
-    # fft
-    input_signal_fft = np.fft.fft(input_signal)
-    template_flipped_fft = np.fft.fft(template_flipped)
-
-    # convolve
-    convolved_fft = input_signal_fft * template_flipped_fft
-    convolved = np.fft.ifft(convolved_fft)
-
-    # normalize
-    convolved /= np.linalg.norm(template_flipped)
-
-    return convolved
-
 def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
     ## compute the Hilbert transform ##
     analytic_signal = hilbert(qpsk_waveform)    # hilbert transformation
-
-    analytic_signal = matched_filter(analytic_signal, fc)
 
     ## Sample at symbol midpoints ##
     samples_per_symbol = int(sample_rate / symbol_rate)             # number of samples per symbol
@@ -81,8 +58,8 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
     expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)    # put the start sequence into a string
     best_bits = None                                                                                            # holds the best bits found
     print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
-    og_sampled_symbols = ''.join(str(bit) for pair in bit_reader(sampled_symbols) for bit in pair)              # original sampled symbols in string format
-    print("Original sampled bits: ", og_sampled_symbols)                                                        # debug statement
+    og_sampled_symbols = ''.join(str(bit) for pair in bit_reader(sampled_symbols) for bit in pair)                 # original sampled symbols in string format
+    print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
 
     ## Loop through possible phase shifts ##
     for i in range(0, 3):   # one for each quadrant (0°, 90°, 180°, 270°)
