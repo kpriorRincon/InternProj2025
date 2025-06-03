@@ -15,11 +15,11 @@ noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
 
-def plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message):
+def plot_qpsk_sig_gen(t_vertical_lines, symbols, message):
     "this function plots 3 sections of the qpsk wave form in the time domain"
     " and stores them into png files in the qpsk_sig_gen folder'"
     global sig_gen
-    plt.plot(t, qpsk_waveform)
+    plt.plot(sig_gen.time_vector, sig_gen.qpsk_waveform)
     plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
     for lines in t_vertical_lines:
         #add vertical lines at the symbol boundaries
@@ -114,7 +114,7 @@ def simulate_page():
                     #parameters:
                     #plot_qpsk_sig_gen()
                     t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(sig_gen.message_to_bits(message_input))
-                    plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message_input)
+                    # plot_qpsk_sig_gen(sig_get, qpsk_waveform, t_vertical_lines, symbols, message_input)
 
                     
                     repeater.desired_freqeuncy = int(freq_out_slider.value)

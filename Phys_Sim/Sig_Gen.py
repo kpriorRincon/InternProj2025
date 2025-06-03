@@ -9,6 +9,8 @@ class SigGen:
 
         self.time_vector = None
         self.qpsk_waveform = None
+        self.time_vertical_lines = None
+        self.symbols = None
         # Map bit pairs to complex symbols
         self.mapping = {
             (0, 0): (1 + 1j) / np.sqrt(2),
@@ -68,7 +70,8 @@ class SigGen:
 
         self.time_vector = t
         self.qpsk_waveform = qpsk_waveform
-        return t, qpsk_waveform, t_vertical_lines, symbols
+        self.time_vertical_lines = t_vertical_lines
+        self.symbols = symbols
     
     def message_to_bits(self, message):
         """
