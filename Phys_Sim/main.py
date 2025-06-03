@@ -83,7 +83,7 @@ def simulate_page():
                         noise_power = 10**(int(noise_slider.value)/10)  # Convert dB to linear scale
                     else:
                         noise_bool = False
-                        noise_power = 0.1  # Default value if no noise is added
+                        noise_power = 0  # Default value if no noise is added
 
                     #noise_level = noise_slider.value
                     #debug:
