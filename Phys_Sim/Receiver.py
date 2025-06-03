@@ -10,13 +10,15 @@ class Receiver:
         # Phase sequence for qpsk modulation corresponds to the letter 'R'
         self.phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
         self.phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
-    
-    def demod()
+    def matched_filter(self, qpsk_waveform):
         pass
+    def demod():
+        pass
+
     def get_string(self, bits):
         """Convert bits to string."""
         # Convert bits to bytes
         #take away the prefix 'R' from the bits
         bits = bits[1:]
-        
+
         pass
