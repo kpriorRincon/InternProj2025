@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 #create all of the objects
 
-def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs, fs2):
+def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs):
     """
     Plots the original and shifted QPSK signals.
 
@@ -20,7 +20,6 @@ def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs, fs2):
     # Compute FFT
     n = len(t)
     freqs = np.fft.fftfreq(n, d=1/fs)
-    freqs2 = np.fft.fftfreq(n, d=1/fs2)
 
     # FFT of original and shifted signals
     fft_input = np.fft.fft(input_qpsk)
@@ -65,7 +64,7 @@ def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs, fs2):
     plt.tight_layout()
 
     plt.subplot(3, 3, 4)
-    plt.plot(freqs2, mag_shifted, label="Shifted QPSK", alpha=0.8)
+    plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
     plt.xlabel("Frequency (GHz)")
     plt.ylabel("Magnitude (dB)")
     plt.title("FFT of QPSK After Frequency Shift")
@@ -76,7 +75,7 @@ def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs, fs2):
     plt.tight_layout()
 
     plt.subplot(3, 3, 5)
-    plt.plot(freqs2, mag_filtered, label="Filtered QPSK", alpha=0.8)
+    plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
     plt.xlabel("Frequency (GHz)")
     plt.ylabel("Magnitude (dB)")
     plt.title("FFT of QPSK After Filtering")
@@ -87,7 +86,7 @@ def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs, fs2):
     plt.tight_layout()
 
     plt.subplot(3, 3, 6)
-    plt.plot(freqs2, mag_amp, label="Amplified QPSK", alpha=0.8)
+    plt.plot(freqs, mag_amp, label="Amplified QPSK", alpha=0.8)
     plt.xlabel("Frequency (GHz)")
     plt.ylabel("Magnitude (dB)")
     plt.title("FFT of QPSK After Amplification")
@@ -148,7 +147,7 @@ def main():
 
     qpsk_amp = repeater.amplify(input_signal=qpsk_filtered)
     
-    plotting(t, qpsk, qpsk_mixed, qpsk_filtered, qpsk_amp, sig_gen.sample_rate, fs_sampling)
+    plotting(t, qpsk, qpsk_mixed, qpsk_filtered, qpsk_amp, sig_gen.sample_rate)
     analytic_signal, bits = sample_read_output(qpsk_amp,fs_sampling, symbol_rate, desired_f)
     print(f"After amp: {bits}")
 
