@@ -21,7 +21,6 @@ def plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message):
     global sig_gen
     plt.plot(t, qpsk_waveform)
     plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
-    plt.xlim(0, 10/sig_gen.symbol_rate)#limit the x-axis to 10 symbol periods
     for lines in t_vertical_lines:
         #add vertical lines at the symbol boundaries
         if lines < len(t):
@@ -109,12 +108,15 @@ def simulate_page():
                     global message_input
                     sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
                     sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
+                    sig_gen.symbol_rate = 0.3 * sig_gen.freq  # Example symbol rate 30% of the frequency
                     message_input = message.value
                     #save graphs:
                     #parameters:
                     #plot_qpsk_sig_gen()
-                    plot_qpsk_sig_gen(sig_gen.generate_qpsk(sig_gen.message_to_bits(message_input)), message_input)
+                    t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(sig_gen.message_to_bits(message_input))
+                    plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message_input)
 
+                    
                     repeater.desired_freqeuncy = int(freq_out_slider.value)
                     repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
@@ -169,10 +171,8 @@ def signal_generator_page():
     #create the qpsk wave form from the message
     global sig_gen 
     if message_input is not None:
-        bit_sequence=sig_gen.message_to_bits(message_input)
-        t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
-        #create the waveform plot
-        plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message_input)
+        with ui.column().style('width: 100%;'):
+            ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 100%; height: auto;')
 
     pass
 #simulation Repeater page
@@ -180,7 +180,6 @@ def signal_generator_page():
 def repeater_page():
     """This function creates the repeater page where the user can view outputs from the repeater."""
     ui.button('back', on_click=ui.navigate.back)
-    ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 100%; height: auto;')
     pass
 
 #simulation receiver page
@@ -200,4 +199,4 @@ def control_page():
     pass
 
 
-ui.run(native=True)    
+ui.run()    
