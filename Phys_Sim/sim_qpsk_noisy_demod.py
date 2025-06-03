@@ -92,12 +92,12 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
         # decode the bits
         decode_bits = bit_reader(rotated_bits)                                  # decode the rotated bits
         flat_bits = ''.join(str(bit) for pair in decode_bits for bit in pair)   # put the bits into a string
-        #print("Rotated bits: ", flat_bits)                                      # debug statement
+        #print("Rotated bits: ", flat_biTypeError: int() argument must be a string, a bytes-like object or a number, not 'NoneType'ts)                                      # debug statement
         
          # Check for presence of the known start sequence (first few symbols)
         if expected_start_sequence == flat_bits[0:8]:                   # check only first 8 symbols worth (16 bits)
             print(f"Start sequence found with phase shift: {i*90}°")
-            best_bits = flat_bits                                       # store the best bits found
+            best_bits = flat_bits    TypeError: int() argument must be a string, a bytes-like object or a number, not 'NoneType'                                   # store the best bits found
             break
     
     # Error state if no start sequence was found

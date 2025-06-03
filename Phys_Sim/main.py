@@ -3,6 +3,8 @@ from nicegui import ui
 import Sig_Gen as Sig_Gen
 import Receiver as Receiver
 import Repeater as Repeater
+import matplotlib.pyplot as plt
+import numpy as np
 
 # global objects for the Sig_Gen, Receiver, and Repeater classes
 sig_gen = Sig_Gen.SigGen()
@@ -10,6 +12,34 @@ repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=1e6, ga
 receiver = Receiver.Receiver(sampling_rate=1e6, frequency=915e6)
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
+message_input = None  # Global variable to store the message input field
+
+def plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message):
+    global sig_gen
+    plt.plot(t, qpsk_waveform)
+    plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
+    for lines in t_vertical_lines:
+        #add vertical lines at the symbol boundaries
+        if lines < len(t):
+            plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
+
+            #add annotation for the symbol e.g. '00', '01', '10', '11'
+            # Reverse mapping: symbol -> binary pair
+            symbol = symbols[t_vertical_lines.index(lines)]
+            # Reverse the mapping to get binary pair from symbol
+            reverse_mapping = {v: k for k, v in sig_gen.mapping.items()}
+            binary_pair = reverse_mapping.get(symbol, '')
+            formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
+            #debug
+            #print(formatted_pair)
+            x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
+            y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
+            plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
+    plt.title(f'QPSK Waveform for {message}')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude')
+    plt.grid()
+    plt.show()
 
 
 #front page
@@ -40,7 +70,7 @@ def simulate_page():
             with simulation_container:
                 ui.label('Single Message Simulation').style('font-size: 2em; font-weight: bold; ')
                 ui.label('Enter message to be sent')
-                message_input = ui.input(placeholder="hello world")
+                message = ui.input(placeholder="hello world")
                 ui.label('Simulation Parameters').style('font-size: 2em; font-weight: bold;')
                 # When the user selects a simulation type, the parameters will change accordingly
                 ui.label('Frequency In (MHz)').style('width: 200px; margin-bottom: 10px;')
@@ -69,13 +99,16 @@ def simulate_page():
                     global sig_gen
                     global receiver
                     global repeater
+                    global message_input
                     sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
                     sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
-                    message = message_input.value
-                    sig_gen.message_to_bits(message) # note this appends prefixes with 'R'
+                    message_input = message.value
                     repeater.desired_freqeuncy = int(freq_out_slider.value)
                     repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
+                    #add receiver things as well
+
+
                     if noise_checkbox.value:
                         global noise_bool
                         noise_bool = True
@@ -120,6 +153,16 @@ def simulate_page():
 def signal_generator_page():
     """This function creates the Signal Generator page where the user can view outputs from the signal generator."""
     ui.button('back', on_click=ui.navigate.back)
+    #create the qpsk wave form from the message
+    global sig_gen 
+    if message_input is not None:
+        bit_sequence=sig_gen.message_to_bits(message_input)
+        t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
+        #create the waveform plot
+        with ui.matplotlib(figsize=(20, 4)) as fig:
+            # Plot the QPSK waveform
+            plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message_input)
+
     pass
 #simulation Repeater page
 @ui.page('/repeater_page')
