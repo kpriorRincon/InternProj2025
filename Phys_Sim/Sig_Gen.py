@@ -1,10 +1,10 @@
 class SigGen:
     
-    def __init__(self, freq=1.0, amp=1.0, sample_rate =100000, symbol_rate = 1000):
+    def __init__(self, freq=1.0, amp=1.0, sample_rate =100000, symbol_rate=1000):
         import numpy as np
         self.freq = freq  # Frequency in Hz
         self.sample_rate = sample_rate  # sample rate in samples per second
-        self.symbol_rate = symbol_rate  # Symbol rate in symbols per second
+        self.symbol_rate = symbol_rate  # Symbol rate in symbols per second about 30% of the frequency
         self.amp = amp    # Amplitude
 
         # Map bit pairs to complex symbols

@@ -1,11 +1,12 @@
+#TODO insert file header here
 # this file will be used to run the GUI
 from nicegui import ui
 import Sig_Gen as Sig_Gen
 import Receiver as Receiver
 import Repeater as Repeater
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import numpy as np
-
+import matplotlib.pyplot as plt
 # global objects for the Sig_Gen, Receiver, and Repeater classes
 sig_gen = Sig_Gen.SigGen()
 repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=1e6, gain=1)
@@ -15,9 +16,12 @@ noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
 
 def plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message):
+    "this function plots 3 sections of the qpsk wave form in the time domain"
+    " and stores them into png files in the qpsk_sig_gen folder'"
     global sig_gen
     plt.plot(t, qpsk_waveform)
     plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
+    plt.xlim(0, 10/sig_gen.symbol_rate)#limit the x-axis to 10 symbol periods
     for lines in t_vertical_lines:
         #add vertical lines at the symbol boundaries
         if lines < len(t):
@@ -39,7 +43,10 @@ def plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message):
     plt.xlabel('Time (s)')
     plt.ylabel('Amplitude')
     plt.grid()
-    plt.show()
+    # Save the plot to a file
+    plt.savefig(f'qpsk_sig_gen/1_qpsk_waveform.png', dpi=300)    
+    return
+
 
 
 #front page
@@ -133,6 +140,7 @@ def simulate_page():
         'Continuous Message'
     ]
     simulation_type_dropdown = ui.select(choices, on_change=open_simulation_single_message).style('width: 200px; height: 40px;')
+
     with ui.column().style('position: absolute; top: 500px; left: 700px; '):
         with ui.link(target='/signal_generator_page'):
             ui.image('media/antenna_graphic.png').style('width:200px;')
@@ -159,9 +167,7 @@ def signal_generator_page():
         bit_sequence=sig_gen.message_to_bits(message_input)
         t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
         #create the waveform plot
-        with ui.matplotlib(figsize=(20, 4)) as fig:
-            # Plot the QPSK waveform
-            plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message_input)
+        plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message_input)
 
     pass
 #simulation Repeater page
@@ -189,5 +195,4 @@ def control_page():
     pass
 
 
-ui.run()    
-# with ui.row().style('justify-content: flex-start;'):
+ui.run(native=True)    
