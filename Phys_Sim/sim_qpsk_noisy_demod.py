@@ -45,8 +45,7 @@ def bit_reader(symbols):
             bits[i] = [1, 0]  # 315°
     return bits
 
-#### Matched Filter Functions ####
-# Make a rectangular pulse shape for the filter
+# Matched Filter
 def matched_filter(qpsk_waveform, fc):
     omega = 2 * np.pi * fc                                  # carrier frequency in radians
     T = np.exp(1j*omega)                                    # complex exponential for the carrier frequency
