@@ -5,6 +5,7 @@ import Sig_Gen as SigGen
 from scipy.signal import hilbert
 import scipy.signal as signal
 
+
 ######### Global Variables #########
 phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
@@ -44,6 +45,22 @@ def bit_reader(symbols):
             bits[i] = [1, 0]  # 315°
     return bits
 
+#### Matched Filter Functions ####
+# Make a rectangular pulse shape for the filter
+def rectangular_pulse(samples_per_symbol):
+    return np.ones(samples_per_symbol)
+
+# create a matched filter
+def matched_filter(pulse_shape):
+    return np.conj(pulse_shape[::-1])
+
+# apply the matched filter to the received signal
+def apply_matched_filter(received_signal, pulse_shape):
+    mf = matched_filter(pulse_shape)
+    filtered = signal.lfilter(mf, 1.0, received_signal)
+    return filtered
+
+# sample the received signal and do error checking
 def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
     ## compute the Hilbert transform ##
     analytic_signal = hilbert(qpsk_waveform)    # hilbert transformation

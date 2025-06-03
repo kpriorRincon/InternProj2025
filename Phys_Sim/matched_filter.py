@@ -1,4 +1,5 @@
 import numpy as np
+import sim_qpsk_noisy_demod as sim_qpsk
 
 def rectangular_pulse(samples_per_symbol):
     return np.ones(samples_per_symbol)
@@ -30,5 +31,7 @@ delay = len(pulse) - 1
 rx_samples = rx_waveform[delay::samples_per_symbol]
 
 # print results
-print("Transmitted Symbols:", tx_symbols)
-print("Received Samples:", rx_samples)
+tx_bits = sim_qpsk.bit_reader(tx_symbols)
+rx_bits = sim_qpsk.bit_reader(rx_samples)
+print("Transmitted Symbols:", tx_bits)
+print("Received Samples:", rx_bits)
