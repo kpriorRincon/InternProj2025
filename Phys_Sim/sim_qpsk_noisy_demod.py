@@ -5,6 +5,11 @@ import Sig_Gen as SigGen
 from scipy.signal import hilbert
 import scipy.signal as signal
 
+#####################################################
+#
+# Author: Trevor Wiseman
+#
+#####################################################
 
 ######### Global Variables #########
 phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
