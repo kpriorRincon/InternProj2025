@@ -103,59 +103,60 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
 
     return analytic_signal, best_bits
 
-##### MAIN TEST #####
+##### MAIN TEST Function #####
 
-# Input message
-message = "Ra."
-print("Message:", message)
+def main():
+    # Input message
+    message = "Ra."
+    print("Message:", message)
 
-# Convert message to binary
-message_binary = ''.join(format(ord(char), '08b') for char in message)
-grouped_bits = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
-bit_sequence = [int(bit) for bit in message_binary]
-print("Binary Message:", grouped_bits)
+    # Convert message to binary
+    message_binary = ''.join(format(ord(char), '08b') for char in message)
+    grouped_bits = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
+    bit_sequence = [int(bit) for bit in message_binary]
+    print("Binary Message:", grouped_bits)
 
-# Add noise to the waveform
-#noisy_bits = noise_adder(bit_sequence, noise_power=0.1, num_symbols=len(bit_sequence)/2)
+    # Add noise to the waveform
+    #noisy_bits = noise_adder(bit_sequence, noise_power=0.1, num_symbols=len(bit_sequence)/2)
 
-# Signal generation parameters
-fc = 920e6              # Carrier frequency for modulation
-sample_rate = 3 * fc    # 3 times the carrier frequency for oversampling
-symbol_rate = 1000      # 1 kHz
+    # Signal generation parameters
+    fc = 920e6              # Carrier frequency for modulation
+    sample_rate = 3 * fc    # 3 times the carrier frequency for oversampling
+    symbol_rate = 1000      # 1 kHz
 
-# Generate QPSK waveform using your SigGen class
-sig_gen = SigGen.SigGen(fc, 1.0, sample_rate, symbol_rate)
-t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
+    # Generate QPSK waveform using your SigGen class
+    sig_gen = SigGen.SigGen(fc, 1.0, sample_rate, symbol_rate)
+    t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
 
-# decode the waveform
-# apply hilbert transform
-analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc)
+    # decode the waveform
+    # apply hilbert transform
+    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc)
 
-# Convert to ASCII characters
-decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
-decoded_message = ''.join(decoded_chars)
-print("Decoded Message:", decoded_message)
+    # Convert to ASCII characters
+    decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
+    decoded_message = ''.join(decoded_chars)
+    print("Decoded Message:", decoded_message)
 
-original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
-decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
+    original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
+    decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
 
-print("Transmitted Bits:", original)
-print("Decoded Bits:    ", decoded)
+    print("Transmitted Bits:", original)
+    print("Decoded Bits:    ", decoded)
 
-if original == decoded:
-    print("Success: bits match!")
-else:
-    print("Mismatch detected.")
+    if original == decoded:
+        print("Success: bits match!")
+    else:
+        print("Mismatch detected.")
 
 
-# Plot the waveform and phase
-plt.figure(figsize=(10, 4))
-plt.plot(t, analytical_output.real, label='I (real part)')
-plt.plot(t, analytical_output.imag, label='Q (imag part)')
-plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
-plt.xlabel('Time (s)')
-plt.ylabel('Amplitude')
-plt.grid()
-plt.legend()
-plt.tight_layout()
-plt.show()
+    # Plot the waveform and phase
+    plt.figure(figsize=(10, 4))
+    plt.plot(t, analytical_output.real, label='I (real part)')
+    plt.plot(t, analytical_output.imag, label='Q (imag part)')
+    plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude')
+    plt.grid()
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
