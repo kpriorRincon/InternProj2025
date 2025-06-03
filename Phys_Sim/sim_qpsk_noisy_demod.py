@@ -47,27 +47,26 @@ def bit_reader(symbols):
 
 #### Matched Filter Functions ####
 # Make a rectangular pulse shape for the filter
-def rectangular_pulse(samples_per_symbol):
-    return np.ones(samples_per_symbol)
-
-# create a matched filter
-def matched_filter(pulse_shape):
-    return np.conj(pulse_shape[::-1])
-
-# apply the matched filter to the received signal
-def apply_matched_filter(received_signal, pulse_shape):
-    mf = matched_filter(pulse_shape)
-    filtered = signal.lfilter(mf, 1.0, received_signal)
-    return filtered
+def matched_filter(qpsk_waveform, fc):
+    omega = 2 * np.pi * fc                                  # carrier frequency in radians
+    T = np.exp(1j*omega)                                    # complex exponential for the carrier frequency
+    return np.convolve(qpsk_waveform, np.flip(np.conj(T)))  # cross-correlation of the received signal with the expected signal
 
 # sample the received signal and do error checking
 def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
-    ## compute the Hilbert transform ##
-    analytic_signal = hilbert(qpsk_waveform)    # hilbert transformation
-
     ## Sample at symbol midpoints ##
     samples_per_symbol = int(sample_rate / symbol_rate)             # number of samples per symbol
     offset = samples_per_symbol // 2                                # offset to sample at the midpoint of each symbol   
+    
+    ## Apply matched filter to the received signal ##
+    matched_filtered_signal = matched_filter(qpsk_waveform, fc)
+
+    ## compute the Hilbert transform ##
+    # Note: The correct way to do this is to break this into I and Q components,
+    #       but for now the Hilbert Transform is applied
+    analytic_signal = hilbert(np.real(matched_filtered_signal))    # hilbert transformation
+    
+    ## Sample the analytic signal ##
     sampled_symbols = analytic_signal[offset::samples_per_symbol]   # symbols sampled from the analytical signal
     sampled_symbols /= np.abs(sampled_symbols)                      # normalize the symbols
 
@@ -137,6 +136,7 @@ def main():
     decoded_message = ''.join(decoded_chars)
     print("Decoded Message:", decoded_message)
 
+    # Print the original
     original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
     decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
 
