@@ -4,6 +4,10 @@ class Repeater:
         self.sampling_fequency = sampling_frequency
         self.gain = gain
 
+
+        self.qpsk_mixed = None
+        self.qpsk_filtered = None
+
     def mix(self, qpsk_signal, qpsk_frequency, t):
         """
         Mixes the input signal with a carrier frequency.
@@ -148,3 +152,87 @@ class Repeater:
         plt.tight_layout()
         plt.show()
         return
+    
+    def plot_to_png(t, input_qpsk, qpsk_mixed, qpsk_filtered, fs):
+        import numpy as np
+        import matplotlib.pyplot as plt
+        # Compute FFT
+        n = len(t)
+        freqs = np.fft.fftfreq(n, d=1/fs)
+
+        # FFT of original and shifted signals
+        fft_input = np.fft.fft(input_qpsk)
+        fft_shifted = np.fft.fft(qpsk_mixed)
+        fft_filtered = np.fft.fft(qpsk_filtered)
+        # Convert magnitude to dB
+        mag_input = 20 * np.log10(np.abs(fft_input))
+        mag_shifted = 20 * np.log10(np.abs(fft_shifted))
+        mag_filtered = 20 * np.log10(np.abs(fft_filtered))
+        plt.figure(figsize=(12, 10))
+
+        # --- Time-domain plot: Original QPSK ---
+        plt.subplot(2, 3, 1)
+        plt.plot(t, np.real(input_qpsk))  # convert time to microseconds
+        plt.title("Original QPSK Signal (Time Domain)")
+        plt.xlabel("Time (μs)")
+        plt.ylabel("Amplitude")
+        plt.xlim(0, 1e-7)
+        plt.grid(True)
+
+        # --- Time-domain plot: Shifted QPSK ---
+        plt.subplot(2, 3, 2)
+        plt.plot(t, np.real(qpsk_mixed))
+        plt.title("Shifted QPSK Signal (Time Domain)")
+        plt.xlabel("Time (μs)")
+        plt.ylabel("Amplitude")
+        plt.xlim(0, 1e-7)
+        plt.grid(True)
+        
+        plt.subplot(2, 3, 3)
+        plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
+        #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
+        plt.xlabel("Frequency (GHz)")
+        plt.ylabel("Magnitude (dB)")
+        plt.title("FFT of QPSK Before Frequency Shift")
+        plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+        plt.ylim(0, np.max(mag_input) + 10)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+
+        plt.subplot(2, 3, 4)
+        plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
+        plt.xlabel("Frequency (GHz)")
+        plt.ylabel("Magnitude (dB)")
+        plt.title("FFT of QPSK After Frequency Shift")
+        plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+        plt.ylim(0, np.max(mag_input) + 10)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+
+        plt.subplot(2, 3, 5)
+        plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
+        plt.xlabel("Frequency (GHz)")
+        plt.ylabel("Magnitude (dB)")
+        plt.title("FFT of QPSK After Filtering")
+        plt.xlim(0, fs / 2)  # From 0 to fs in MHz
+        plt.ylim(0, np.max(mag_input) + 10)
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+
+        plt.savefig('repeater.png')
+
+    def handler(self, t, qpsk_waveform, f_carrier):
+        
+        qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)
+        
+        cutoff_freq = self.desired_freqeuncy + 30e6
+        
+        qpsk_filtered = self.filter(cutoff_freq, qpsk_mixed)
+        
+        self.plot_to_png(t, qpsk_waveform, qpsk_mixed, qpsk_filtered, self.sampling_fequency)
+
+        self.qpsk_mixed = qpsk_mixed
+        self.qpsk_filtered = qpsk_filtered

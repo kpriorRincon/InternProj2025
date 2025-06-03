@@ -7,6 +7,8 @@ class SigGen:
         self.symbol_rate = symbol_rate  # Symbol rate in symbols per second about 30% of the frequency
         self.amp = amp    # Amplitude
 
+        self.time_vector = None
+        self.qpsk_waveform = None
         # Map bit pairs to complex symbols
         self.mapping = {
             (0, 0): (1 + 1j) / np.sqrt(2),
@@ -63,6 +65,9 @@ class SigGen:
                 #add vertical dashed lines at time slices of the symbols
             )
             t_vertical_lines.append(idx_start/self.sample_rate)
+
+        self.time_vector = t
+        self.qpsk_waveform = qpsk_waveform
         return t, qpsk_waveform, t_vertical_lines, symbols
     
     def message_to_bits(self, message):
