@@ -173,8 +173,6 @@ def signal_generator_page():
     if message_input is not None:
         with ui.column().style('width: 100%;'):
             ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 100%; height: auto;')
-
-    pass
 #simulation Repeater page
 @ui.page('/repeater_page')
 def repeater_page():
