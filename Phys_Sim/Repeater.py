@@ -19,7 +19,7 @@ class Repeater:
         import numpy as np
         # Implement mixing logic here
         #Complex sinusoid (real-world)
-        mixing_signal = np.sin(2 * np.pi * (self.desired_freqeuncy + qpsk_frequency) * t)
+        mixing_signal = np.cos(2 * np.pi * (self.desired_freqeuncy + qpsk_frequency) * t)
 
         #Complex exponential (Ideal)
         #mixing_signal = np.exp(1j * 2 * np.pi * (self.desired_freqeuncy - qpsk_frequency) * t)
@@ -57,7 +57,7 @@ class Repeater:
         # Implement amplification logic here
         return self.gain*input_signal
     
-    def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs = 1e9):
+    def plotting(t, input_qpsk, qpsk_shifted, qpsk_filtered, qpsk_amp, fs):
         """
         Plots the original and shifted QPSK signals.
 
