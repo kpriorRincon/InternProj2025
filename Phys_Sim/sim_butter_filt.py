@@ -9,12 +9,11 @@ from scipy.fft import fft, fftfreq
 #
 #####################################################
 
-def mix_signal(f_lo, f_in, f_cutoff):
+def mix_signal(f_lo, f_in, f_cutoff, N):
     # Sampling frequency
     f_sample = 10 * f_cutoff    
 
     # Time vector
-    N = 2000
     t = np.arange(N) / f_sample    # time vector
     
     # Mixed signal
