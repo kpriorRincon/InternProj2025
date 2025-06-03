@@ -63,7 +63,7 @@ def apply_matched_filter(received_signal, pulse_shape):
 # sample the received signal and do error checking
 def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
     ## compute the Hilbert transform ##
-    analytic_signal = hilbert(qpsk_waveform)    # hilbert transformation
+    analytic_signal = hilbert(np.real(qpsk_waveform))    # hilbert transformation
 
     ## Sample at symbol midpoints ##
     samples_per_symbol = int(sample_rate / symbol_rate)             # number of samples per symbol
@@ -74,9 +74,9 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
     ## look for the start sequence ##
     expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)    # put the start sequence into a string
     best_bits = None                                                                                            # holds the best bits found
-    print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
+    #print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
     og_sampled_symbols = ''.join(str(bit) for pair in bit_reader(sampled_symbols) for bit in pair)                 # original sampled symbols in string format
-    print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
+    #print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
 
     ## Loop through possible phase shifts ##
     for i in range(0, 3):   # one for each quadrant (0°, 90°, 180°, 270°)
@@ -86,7 +86,7 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
         # decode the bits
         decode_bits = bit_reader(rotated_bits)                                  # decode the rotated bits
         flat_bits = ''.join(str(bit) for pair in decode_bits for bit in pair)   # put the bits into a string
-        print("Rotated bits: ", flat_bits)                                      # debug statement
+        #print("Rotated bits: ", flat_bits)                                      # debug statement
         
          # Check for presence of the known start sequence (first few symbols)
         if expected_start_sequence == flat_bits[0:8]:                   # check only first 8 symbols worth (16 bits)

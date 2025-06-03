@@ -19,10 +19,10 @@ class Repeater:
         import numpy as np
         # Implement mixing logic here
         #Complex sinusoid (real-world)
-        mixing_signal = np.cos(2 * np.pi * (self.desired_freqeuncy + qpsk_frequency) * t)
+        #mixing_signal = np.cos(2 * np.pi * (self.desired_freqeuncy + qpsk_frequency) * t)
 
         #Complex exponential (Ideal)
-        #mixing_signal = np.exp(1j * 2 * np.pi * (self.desired_freqeuncy - qpsk_frequency) * t)
+        mixing_signal = np.exp(1j * 2 * np.pi * (self.desired_freqeuncy - qpsk_frequency) * t)
         
         # Mix the QPSK signal with the complex exponential to shift its frequency
         qpsk_shifted = qpsk_signal * mixing_signal
