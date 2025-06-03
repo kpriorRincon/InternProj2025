@@ -1,12 +1,16 @@
 class SigGen:
     
-    def __init__(self, freq=1.0, amp=1.0, sample_rate =100000, symbol_rate = 1000):
+    def __init__(self, freq=1.0, amp=1.0, sample_rate =100000, symbol_rate=1000):
         import numpy as np
         self.freq = freq  # Frequency in Hz
         self.sample_rate = sample_rate  # sample rate in samples per second
-        self.symbol_rate = symbol_rate  # Symbol rate in symbols per second
+        self.symbol_rate = symbol_rate  # Symbol rate in symbols per second about 30% of the frequency
         self.amp = amp    # Amplitude
 
+        self.time_vector = None
+        self.qpsk_waveform = None
+        self.time_vertical_lines = None
+        self.symbols = None
         # Map bit pairs to complex symbols
         self.mapping = {
             (0, 0): (1 + 1j) / np.sqrt(2),
@@ -63,7 +67,11 @@ class SigGen:
                 #add vertical dashed lines at time slices of the symbols
             )
             t_vertical_lines.append(idx_start/self.sample_rate)
-        return t, qpsk_waveform, t_vertical_lines, symbols
+
+        self.time_vector = t
+        self.qpsk_waveform = qpsk_waveform
+        self.time_vertical_lines = t_vertical_lines
+        self.symbols = symbols
     
     def message_to_bits(self, message):
         """
