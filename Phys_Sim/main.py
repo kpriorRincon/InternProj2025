@@ -1,11 +1,12 @@
+#TODO insert file header here
 # this file will be used to run the GUI
 from nicegui import ui
 import Sig_Gen as Sig_Gen
 import Receiver as Receiver
 import Repeater as Repeater
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import numpy as np
-
+import matplotlib.pyplot as plt
 # global objects for the Sig_Gen, Receiver, and Repeater classes
 sig_gen = Sig_Gen.SigGen()
 repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=1e6, gain=1)
@@ -14,9 +15,11 @@ noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
 
-def plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message):
+def plot_qpsk_sig_gen(t_vertical_lines, symbols, message):
+    "this function plots 3 sections of the qpsk wave form in the time domain"
+    " and stores them into png files in the qpsk_sig_gen folder'"
     global sig_gen
-    plt.plot(t, qpsk_waveform)
+    plt.plot(sig_gen.time_vector, sig_gen.qpsk_waveform)
     plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
     for lines in t_vertical_lines:
         #add vertical lines at the symbol boundaries
@@ -35,11 +38,14 @@ def plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message):
             x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
             y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
             plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
-    plt.title(f'QPSK Waveform for {message}')
+    plt.title(f'QPSK Waveform for {message}(first 10 symbol periods)')
     plt.xlabel('Time (s)')
     plt.ylabel('Amplitude')
     plt.grid()
-    plt.show()
+    # Save the plot to a file
+    plt.savefig(f'qpsk_sig_gen/1_qpsk_waveform.png', dpi=300)    
+    return
+
 
 
 #front page
@@ -102,7 +108,15 @@ def simulate_page():
                     global message_input
                     sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
                     sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
+                    sig_gen.symbol_rate = 0.3 * sig_gen.freq  # Example symbol rate 30% of the frequency
                     message_input = message.value
+                    #save graphs:
+                    #parameters:
+                    #plot_qpsk_sig_gen()
+                    t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(sig_gen.message_to_bits(message_input))
+                    # plot_qpsk_sig_gen(sig_get, qpsk_waveform, t_vertical_lines, symbols, message_input)
+
+                    
                     repeater.desired_freqeuncy = int(freq_out_slider.value)
                     repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
@@ -133,6 +147,7 @@ def simulate_page():
         'Continuous Message'
     ]
     simulation_type_dropdown = ui.select(choices, on_change=open_simulation_single_message).style('width: 200px; height: 40px;')
+
     with ui.column().style('position: absolute; top: 500px; left: 700px; '):
         with ui.link(target='/signal_generator_page'):
             ui.image('media/antenna_graphic.png').style('width:200px;')
@@ -156,20 +171,13 @@ def signal_generator_page():
     #create the qpsk wave form from the message
     global sig_gen 
     if message_input is not None:
-        bit_sequence=sig_gen.message_to_bits(message_input)
-        t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
-        #create the waveform plot
-        with ui.matplotlib(figsize=(20, 4)) as fig:
-            # Plot the QPSK waveform
-            plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message_input)
-
-    pass
+        with ui.column().style('width: 100%;'):
+            ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 100%; height: auto;')
 #simulation Repeater page
 @ui.page('/repeater_page')
 def repeater_page():
     """This function creates the repeater page where the user can view outputs from the repeater."""
     ui.button('back', on_click=ui.navigate.back)
-
     pass
 
 #simulation receiver page
@@ -190,4 +198,3 @@ def control_page():
 
 
 ui.run()    
-# with ui.row().style('justify-content: flex-start;'):
