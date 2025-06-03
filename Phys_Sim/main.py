@@ -39,7 +39,7 @@ def plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message):
             x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
             y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
             plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
-    plt.title(f'QPSK Waveform for {message}')
+    plt.title(f'QPSK Waveform for {message}(first 10 symbol periods)')
     plt.xlabel('Time (s)')
     plt.ylabel('Amplitude')
     plt.grid()
@@ -110,6 +110,11 @@ def simulate_page():
                     sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
                     sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
                     message_input = message.value
+                    #save graphs:
+                    #parameters:
+                    #plot_qpsk_sig_gen()
+                    plot_qpsk_sig_gen(sig_gen.generate_qpsk(sig_gen.message_to_bits(message_input)), message_input)
+
                     repeater.desired_freqeuncy = int(freq_out_slider.value)
                     repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
@@ -175,7 +180,7 @@ def signal_generator_page():
 def repeater_page():
     """This function creates the repeater page where the user can view outputs from the repeater."""
     ui.button('back', on_click=ui.navigate.back)
-
+    ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 100%; height: auto;')
     pass
 
 #simulation receiver page
