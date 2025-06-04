@@ -82,12 +82,8 @@ class Receiver:
 
     # sample the received signal and do error checking
     def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, fc):
-        ## Apply matched filter to the received signal ##
-        #correlated_signal = cross_correlation(qpsk_waveform, f_base_band, t)  # apply the matched filter to the received signal
-        correlated_signal = qpsk_waveform
-
         ## tune to baseband ##
-        base_band_signal = correlated_signal * np.exp(1j*2*np.pi*(-fc))
+        base_band_signal = qpsk_waveform * np.exp(1j*2*np.pi*(-fc))
 
         ## compute the Hilbert transform ##
         print("Applying Hilbert Transform...")

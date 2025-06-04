@@ -16,6 +16,8 @@ phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
 ######## Functions ########
+
+## Functions for testing functionality ##
 # Generate random QPSK symbols (for testing)
 def random_symbol_generator(num_symbols=100):
     x_int = np.random.randint(0, 4, num_symbols)
@@ -32,26 +34,19 @@ def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
     return r
 
 # Cross-Correlation
-def cross_correlation(qpsk_waveform, f_if, t):
-    print("Performing cross correlation") 
-    # Template: carrier cosine (assuming zero phase)
-    amplitude = 1.0
-    template = amplitude * np.cos(2 * np.pi * f_if * t)       
+def cross_correlation(sampled_symbols, start):
+    print("Performing cross correlation...")     
+    cross_correlation = correlate(sampled_symbols[0:8], start, mode='full', method='auto')
+    plt.plot(np.real(sampled_symbols), np.imag(sampled_symbols), '.', label='sampled symbols')
+    plt.plot(np.real(start), np.imag(start), '.', label='start')
+    plt.plot(np.real(cross_correlation), np.imag(cross_correlation), '.', label='cross correlation')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
     
-    # Compute FFT length for linear correlation
-    #L = len(qpsk_waveform) + len(template) - 1
-    
-    # # FFT of received signal and template (zero-padded)
-    # qpsk_fft = np.fft.fft(qpsk_waveform, n=L)
-    # template_fft = np.fft.fft(template, n=L)
-    
-    # # Cross-correlation = IFFT of (FFT(r) * conjugate(FFT(s)))
-    # cross_correlation = np.fft.ifft(qpsk_fft * np.conj(template_fft))
-    cross_correlation = correlate(qpsk_waveform, template, mode='full', method='auto')
-    plt.plot(t, cross_correlation)
-    print("Matched filter computed")
-    return cross_correlation.real  # Output is real-valued (take real part)
+    return cross_correlation  # Output is real-valued (take real part)
 
+## Functions used in final implementation ##
 # Sample the received signal
 def sample_signal(analytic_signal, sample_rate, symbol_rate):
     print("Sampling the analytic signal")
@@ -119,12 +114,8 @@ def matched_filter(sampled_symbols):
 
 # sample the received signal and do error checking
 def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t, fc):
-    ## Apply matched filter to the received signal ##
-    #correlated_signal = cross_correlation(qpsk_waveform, f_base_band, t)  # apply the matched filter to the received signal
-    correlated_signal = qpsk_waveform
-
     ## tune to baseband ##
-    base_band_signal = correlated_signal * np.exp(1j*2*np.pi*(-fc))
+    base_band_signal = qpsk_waveform * np.exp(1j*2*np.pi*(-fc))
 
     ## compute the Hilbert transform ##
     print("Applying Hilbert Transform...")
@@ -176,7 +167,7 @@ def main():
     decoded_message = ''.join(decoded_chars)
     print("Decoded Message:", decoded_message)
 
-    # Print the original
+    # Print the originalcross_correlation
     original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
     decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
 
