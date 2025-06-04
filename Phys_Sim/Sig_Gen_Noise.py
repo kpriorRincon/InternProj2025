@@ -16,14 +16,17 @@ class SigGen:
         }
 
     # Add noise to symbols
-    def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
+    def noise_adder(self, sinusoid):
         import numpy as np
-        n = (np.random.randn(num_symbols) + 1j * np.random.randn(num_symbols)) / np.sqrt(2)
-        phase_noise = np.random.randn(len(x_symbols)) * 0.1
-        r = x_symbols * np.exp(1j * phase_noise) + n * np.sqrt(noise_power)
-        return r
+        # Noise parameters
+        mean_noise = 0                                                  # Mean of the noise distribution
+        std_noise = 0.01                                                 # Standard deviation of the noise distribution
 
-    def generate_qpsk(self, bits, bool_noise, noise_power=0.1):
+        # Generate noise
+        noise = np.random.normal(mean_noise, std_noise, len(sinusoid))
+        return sinusoid + noise                                         # returns the sinusoid with added noise
+
+    def generate_qpsk(self, bits, bool_noise):
         """
         Generate a QPSK signal from a sequence of bits.
         
@@ -47,11 +50,6 @@ class SigGen:
 
         #seperate into odd and even and map to complex symbols
         symbols = [self.mapping[(bits[i], bits[i + 1])] for i in range(0, len(bits), 2)]
-
-        # If noise is to be added, apply it to the symbols
-        if bool_noise:
-            symbols = self.noise_adder(symbols, noise_power, len(symbols))
-
         t_vertical_lines = []  # Initialize vertical lines for debugging
         samples_per_symbol = int(self.sample_rate / self.symbol_rate)
         #time vector for the wave form defined start at 0 end at the length of the symbols times samples per symbol
@@ -75,6 +73,11 @@ class SigGen:
                 #add vertical dashed lines at time slices of the symbols
             )
             t_vertical_lines.append(idx_start/self.sample_rate)
+
+        if bool_noise:
+            # add noise to the QPSK wavefrorm
+            qpsk_waveform = self.noise_adder(qpsk_waveform)
+
         return t, qpsk_waveform, t_vertical_lines, symbols
     
     def message_to_bits(self, message):
