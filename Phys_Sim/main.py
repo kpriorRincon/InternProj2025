@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 # global objects for the Sig_Gen, Receiver, and Repeater classes
-symbol_rate = 10
+symbol_rate = 10e6
 sample_rate = 4e9
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
 repeater = Repeater.Repeater(sampling_frequency=sample_rate)
@@ -81,13 +81,15 @@ def simulate_page():
                     global repeater
                     global message_input
                     message_input = message.value
+                    sig_gen.amp = 10**(int(gain_slider.value)/10) # convert dB to linear scale
+
                     #run the sig gen handler
                     sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
 
                     repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
                     #repeater.desired_freqeuncy = 1000e6
                     #repeater.sampling_fequency = int(sig_gen.sample_rate)
-                    repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
+                    repeater.gain = sig_gen.amp
                     #add receiver things as well
                     repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
 
@@ -170,6 +172,9 @@ def repeater_page():
 
     """This function creates the repeater page where the user can view outputs from the repeater."""
     ui.button('back', on_click=ui.navigate.back)
+    with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.label(f'Input Frequency: {sig_gen.freq} MHz      Output Frequency: {repeater.desired_freqeuncy} MHz').style('font-size: 2em; font-weight: bold;')
+        
     ui.image('repeater.png').force_reload()
     pass
 
