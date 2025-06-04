@@ -118,6 +118,7 @@ def simulate_page():
 
                     
                     repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
+                    #repeater.desired_freqeuncy = 1000e6
                     #repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
                     #add receiver things as well
@@ -180,7 +181,7 @@ def repeater_page():
 
     """This function creates the repeater page where the user can view outputs from the repeater."""
     ui.button('back', on_click=ui.navigate.back)
-    ui.image('repeater.png')
+    ui.image('repeater.png').force_reload()
     pass
 
 #simulation receiver page
