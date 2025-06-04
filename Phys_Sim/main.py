@@ -100,7 +100,7 @@ def simulate_page():
                     global repeater
                     global message_input
                     global decoded_bits
-                    global decoded_bits
+                    global decoded_string
                     message_input = message.value
 
                     #run the sig gen handler

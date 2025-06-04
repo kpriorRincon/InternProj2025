@@ -140,7 +140,9 @@ class Receiver:
         #exclude the prefix
         bits = bits[8:0]
         # convert the bits into a string
-        return''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
+        decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
+        print(decoded_string)
+        return decoded_string
 
     def handler(self, qpsk_waveform, sample_rate, symbol_rate, fc, t):
         analytical_signal, best_bits = self.demodulator(qpsk_waveform, sample_rate, symbol_rate, fc) 
