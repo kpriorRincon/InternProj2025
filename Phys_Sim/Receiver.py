@@ -13,7 +13,7 @@ class Receiver:
         # Phase sequence for qpsk modulation corresponds to the letter 'R'
         self.phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
         self.phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
-   
+
     # Sample the received signal
     def sample_signal(self, analytic_signal, sample_rate, symbol_rate):
         print("Sampling the analytic signal")
@@ -106,3 +106,5 @@ class Receiver:
         bits = bits[1:]
 
         pass
+
+   

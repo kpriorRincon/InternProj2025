@@ -14,6 +14,8 @@ sample_rate = 4e9
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
 repeater = Repeater.Repeater(sampling_frequency=sample_rate)
 receiver = Receiver.Receiver(sampling_rate=sample_rate)
+
+
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
@@ -69,7 +71,7 @@ def simulate_page():
                 ui.button("Submit", on_click=lambda: store_data()).style('width: 200px; height: 10px;')
                 def store_data():
                     """
-                    store_data()
+                    stoample_rate = sample_rate, symbol_rate = symbol_ratee_data()
                     This function is triggered when the user clicks the submit button.
                     It collects the values from the input fields and stores them for further processing.
                     """
@@ -86,7 +88,6 @@ def simulate_page():
                     #repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
                     #add receiver things as well
-
                     repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
 
                     if noise_checkbox.value:
@@ -97,6 +98,10 @@ def simulate_page():
                     else:
                         noise_bool = False
                         noise_power = 0  # Default value if no noise is added
+
+                    #TODO put receiver class here
+                    _,best_bits = receiver.demodulator(sig_gen.qpsk_waveform, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_freqeuncy)
+                    receiver.frequency=repeater.desired_freqeuncy
 
                     #noise_level = noise_slider.value
                     #debug:

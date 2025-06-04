@@ -174,7 +174,6 @@ class SigGen:
 
     def handler(self,message, frequency):
         self.freq = frequency
-        self.symbol_rate = .01*frequency
         self.generate_qpsk(self.message_to_bits(message))
         self.plot_time_png(message)
         self.plot_freq_png()
