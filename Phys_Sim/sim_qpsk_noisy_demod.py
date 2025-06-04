@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Sig_Gen_Noise as SigGen
 from scipy.signal import hilbert
+from scipy.signal import correlate
 
 #####################################################
 #
@@ -13,7 +14,6 @@ from scipy.signal import hilbert
 ######### Global Variables #########
 phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
-f_base_band = 100e3  # Baseband frequency for modulation
 
 ######## Functions ########
 # Generate random QPSK symbols (for testing)
@@ -39,16 +39,18 @@ def cross_correlation(qpsk_waveform, f_if, t):
     template = amplitude * np.cos(2 * np.pi * f_if * t)       
     
     # Compute FFT length for linear correlation
-    L = len(qpsk_waveform) + len(template) - 1
+    #L = len(qpsk_waveform) + len(template) - 1
     
-    # FFT of received signal and template (zero-padded)
-    qpsk_fft = np.fft.fft(qpsk_waveform, n=L)
-    template_fft = np.fft.fft(template, n=L)
+    # # FFT of received signal and template (zero-padded)
+    # qpsk_fft = np.fft.fft(qpsk_waveform, n=L)
+    # template_fft = np.fft.fft(template, n=L)
     
-    # Cross-correlation = IFFT of (FFT(r) * conjugate(FFT(s)))
-    matched_filter_output = np.fft.ifft(qpsk_fft * np.conj(template_fft))
+    # # Cross-correlation = IFFT of (FFT(r) * conjugate(FFT(s)))
+    # cross_correlation = np.fft.ifft(qpsk_fft * np.conj(template_fft))
+    cross_correlation = correlate(qpsk_waveform, template, mode='full', method='auto')
+    plt.plot(t, cross_correlation)
     print("Matched filter computed")
-    return matched_filter_output.real  # Output is real-valued (take real part)
+    return cross_correlation.real  # Output is real-valued (take real part)
 
 # Sample the received signal
 def sample_signal(analytic_signal, sample_rate, symbol_rate):
@@ -116,16 +118,17 @@ def matched_filter(sampled_symbols):
     return best_bits
 
 # sample the received signal and do error checking
-def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t):
+def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     ## Apply matched filter to the received signal ##
-    correlated_signal = cross_correlation(qpsk_waveform, f_base_band, t)  # apply the matched filter to the received signal
-    #correlated_signal = qpsk_waveform
+    #correlated_signal = cross_correlation(qpsk_waveform, f_base_band, t)  # apply the matched filter to the received signal
+    correlated_signal = qpsk_waveform
+
+    ## tune to baseband ##
+    base_band_signal = correlated_signal * np.exp(1j*2*np.pi*(-fc))
 
     ## compute the Hilbert transform ##
-    # Note: The correct way to do this is to break this into I and Q components,
-    #       but for now the Hilbert Transform is applied
     print("Applying Hilbert Transform...")
-    analytic_signal = hilbert(np.real(correlated_signal))  # hilbert transformation
+    analytic_signal = hilbert(np.real(base_band_signal))  # hilbert transformation
     
     # sample the analytic signal
     print("Sampling the analytic signal...")
@@ -166,7 +169,7 @@ def main():
     # decode the waveform
     # apply hilbert transform
     print("Decoding QPSK waveform...")
-    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t)
+    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t, freq)
 
     # Convert to ASCII characters
     decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
