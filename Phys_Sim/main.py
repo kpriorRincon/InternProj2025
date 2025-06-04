@@ -7,44 +7,18 @@ import Repeater as Repeater
 import plotly.graph_objects as go
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 # global objects for the Sig_Gen, Receiver, and Repeater classes
-sig_gen = Sig_Gen.SigGen()
-repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=4e9, gain=1)
-receiver = Receiver.Receiver(sampling_rate=1e6, frequency=915e6)
+symbol_rate = 10
+sample_rate = 4e9
+sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
+repeater = Repeater.Repeater(sampling_frequency=sample_rate)
+receiver = Receiver.Receiver(sampling_rate=sample_rate)
+
+
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
-
-def plot_qpsk_sig_gen(t_vertical_lines, symbols, message):
-    "this function plots 3 sections of the qpsk wave form in the time domain"
-    " and stores them into png files in the qpsk_sig_gen folder'"
-    global sig_gen
-    plt.plot(sig_gen.time_vector, sig_gen.qpsk_waveform)
-    plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
-    for lines in t_vertical_lines:
-        #add vertical lines at the symbol boundaries
-        if lines < len(t):
-            plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
-
-            #add annotation for the symbol e.g. '00', '01', '10', '11'
-            # Reverse mapping: symbol -> binary pair
-            symbol = symbols[t_vertical_lines.index(lines)]
-            # Reverse the mapping to get binary pair from symbol
-            reverse_mapping = {v: k for k, v in sig_gen.mapping.items()}
-            binary_pair = reverse_mapping.get(symbol, '')
-            formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
-            #debug
-            #print(formatted_pair)
-            x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
-            y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
-            plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
-    plt.title(f'QPSK Waveform for {message}(first 10 symbol periods)')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Amplitude')
-    plt.grid()
-    # Save the plot to a file
-    plt.savefig(f'qpsk_sig_gen/1_qpsk_waveform.png', dpi=300)    
-    return
 
 
 
@@ -97,7 +71,7 @@ def simulate_page():
                 ui.button("Submit", on_click=lambda: store_data()).style('width: 200px; height: 10px;')
                 def store_data():
                     """
-                    store_data()
+                    stoample_rate = sample_rate, symbol_rate = symbol_ratee_data()
                     This function is triggered when the user clicks the submit button.
                     It collects the values from the input fields and stores them for further processing.
                     """
@@ -106,23 +80,15 @@ def simulate_page():
                     global receiver
                     global repeater
                     global message_input
-                    sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
-                    #sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
-                    #sig_gen.symbol_rate = 0.3 * sig_gen.freq  # Example symbol rate 30% of the frequency
                     message_input = message.value
-                    #save graphs:
-                    #parameters:
-                    #plot_qpsk_sig_gen()
-                    t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(sig_gen.message_to_bits(message_input))
-                    # plot_qpsk_sig_gen(sig_get, qpsk_waveform, t_vertical_lines, symbols, message_input)
+                    #run the sig gen handler
+                    sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
 
-                    
                     repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
                     #repeater.desired_freqeuncy = 1000e6
                     #repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
                     #add receiver things as well
-
                     repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
 
                     if noise_checkbox.value:
@@ -133,6 +99,10 @@ def simulate_page():
                     else:
                         noise_bool = False
                         noise_power = 0  # Default value if no noise is added
+
+                    #TODO put receiver class here
+                    _,best_bits = receiver.demodulator(sig_gen.qpsk_waveform, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_freqeuncy)
+                    receiver.frequency=repeater.desired_freqeuncy
 
                     #noise_level = noise_slider.value
                     #debug:
@@ -173,9 +143,28 @@ def signal_generator_page():
     #create the qpsk wave form from the message
     global sig_gen 
     if message_input is not None:
-        with ui.column().style('width: 100%;'):
-            ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 100%; height: auto;')
+        #time stamp to force refresh
+        time_stamp = int(time.time())
+        with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+            ui.label(f'Message entered: {message_input}').style('font-size: 2em; font-weight: bold;')
+            #we want to show the header in a different color as the actual message 
+            bit_sequence =sig_gen.message_to_bits(message_input)
+            marker = ''
+            payload = ''
+            for i in range(len(bit_sequence)):
+                #get the first 8 bits as the marker
+                if i < 8:
+                    marker += str(bit_sequence[i])
+                else:
+                    payload += str(bit_sequence[i])
+            ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
+            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
+            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
+
+            #need to insure we get the most up to date image that's why we use .force_reload()
 #simulation Repeater page
+            ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 70%; height: auto;').force_reload()
+            ui.image('qpsk_sig_gen/2_qpsk_waveform.png').style('width: 70%; height: auto;').force_reload()
 @ui.page('/repeater_page')
 def repeater_page():
 

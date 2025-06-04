@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Sig_Gen_Noise as SigGen
 from scipy.signal import hilbert
-import scipy.signal as signal
+from scipy.signal import correlate
 
 #####################################################
 #
@@ -14,54 +14,10 @@ import scipy.signal as signal
 ######### Global Variables #########
 phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
-f_base_band = 100e3  # Baseband frequency for modulation
 
 ######## Functions ########
 
-## pre-DSP functions ##
-# perform signal mixing
-def mix_signal(f_lo, rec_wave):
-    print("Mixing the signal with the local oscillator")
-    # Sampling frequency
-    f_sample = 3 * f_lo   
-
-    # Time vector
-    t = np.arange(len(rec_wave)) / f_sample    # time vector
-    
-    # Mixed signal
-    sig =  rec_wave * np.exp(1j * 2 * np.pi * f_lo * t)   # Mixed Signal
-    print("Done mixing")
-
-    return sig
-
-# filter the signal
-def filter_signal(f_cutoff, sig):
-    num_taps = 51 # it helps to use an odd number of taps
-    sample_rate = f_cutoff * 3 # Hz
-    print("Filter sample rate: ", sample_rate)
-
-    # create our low pass filter
-    h = signal.firwin(num_taps, f_cutoff, fs=sample_rate)
-    print("Made filter coefficients")
-
-    # fft the filter
-    h_fft = np.fft.fft(h, n = len(sig))
-    print("Tooke FFT of filter coefficients")
-
-    # fft the signak
-    sig_fft = np.fft.fft(sig, n = len(sig))
-    print("Toof the fft of the signal")
-
-    # filter the signal
-    filtered_sig_fft = sig_fft * h_fft
-    print("Filtered the signal")
-
-    # inverse fft to get the filtered signal
-    filtered_sig = np.fft.ifft(filtered_sig_fft)
-    print("Inverse FFT of the filtered signal")
-
-    return filtered_sig
-
+## Functions for testing functionality ##
 # Generate random QPSK symbols (for testing)
 def random_symbol_generator(num_symbols=100):
     x_int = np.random.randint(0, 4, num_symbols)
@@ -77,29 +33,20 @@ def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
     r = x_symbols * np.exp(1j * phase_noise) + n * np.sqrt(noise_power)
     return r
 
-# Matched Filter
-def matched_filter(qpsk_waveform, f_if, symbol_rate, N):
-    print("Applying the matched filter")
-    amplitude = 1.0
-    sample_rate = 3 * f_if                   
-    samples_per_symbol = int(sample_rate / symbol_rate)     
-    t = np.arange(0, N * samples_per_symbol) / sample_rate  
+# Cross-Correlation
+def cross_correlation(sampled_symbols, start):
+    print("Performing cross correlation...")     
+    cross_correlation = correlate(sampled_symbols[0:8], start, mode='full', method='auto')
+    plt.plot(np.real(sampled_symbols), np.imag(sampled_symbols), '.', label='sampled symbols')
+    plt.plot(np.real(start), np.imag(start), '.', label='start')
+    plt.plot(np.real(cross_correlation), np.imag(cross_correlation), '.', label='cross correlation')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
     
-    # Template: carrier cosine (assuming zero phase)
-    template = amplitude * np.cos(2 * np.pi * f_if * t)       
-    
-    # Compute FFT length for linear correlation
-    L = len(qpsk_waveform) + len(template) - 1
-    
-    # FFT of received signal and template (zero-padded)
-    qpsk_fft = np.fft.fft(qpsk_waveform, n=L)
-    template_fft = np.fft.fft(template, n=L)
-    
-    # Cross-correlation = IFFT of (FFT(r) * conjugate(FFT(s)))
-    matched_filter_output = np.fft.ifft(qpsk_fft * np.conj(template_fft))
-    print("Matched filter computed")
-    return matched_filter_output.real  # Output is real-valued (take real part)
+    return cross_correlation  # Output is real-valued (take real part)
 
+## Functions used in final implementation ##
 # Sample the received signal
 def sample_signal(analytic_signal, sample_rate, symbol_rate):
     print("Sampling the analytic signal")
@@ -119,8 +66,7 @@ def bit_reader(symbols):
     for i in range(len(symbols)):
         angle = np.angle(symbols[i], deg=True) % 360
 
-        # don't know why, but this is the only way to get the angles in the right range.
-        # Might be because of the Hilbert transform?
+        # codex mapping phase to bits
         if 0 <= angle < 90:
             bits[i] = [0, 0]  # 45°
         elif 90 <= angle < 180:
@@ -131,8 +77,8 @@ def bit_reader(symbols):
             bits[i] = [1, 0]  # 315°
     return bits
 
-# Error checking for the start sequence
-def error_check_start_sequence(sampled_symbols):
+# Error checking for the start sequence using a matched filter
+def matched_filter(sampled_symbols):
     print("Error checking")
     ## look for the start sequence ##
     expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)    # put the start sequence into a string
@@ -167,21 +113,13 @@ def error_check_start_sequence(sampled_symbols):
     return best_bits
 
 # sample the received signal and do error checking
-def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, N, f_lo, f_cutoff):
-    ## Demodulate the QPSK waveform ##
-    #demod_sig = mix_signal(f_lo, qpsk_waveform)
-    #pre_dsp_sig = filter_signal(f_cutoff, demod_sig)
-    
-    ## Apply matched filter to the received signal ##
-    #matched_filtered_signal = matched_filter(pre_dsp_sig, f_base_band, symbol_rate, N)  # apply the matched filter to the received signal
-    #matched_filtered_signal = demod_sig
-    matched_filtered_signal = qpsk_waveform
+def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t, fc):
+    ## tune to baseband ##
+    base_band_signal = qpsk_waveform * np.exp(1j*2*np.pi*(-fc))
 
     ## compute the Hilbert transform ##
-    # Note: The correct way to do this is to break this into I and Q components,
-    #       but for now the Hilbert Transform is applied
     print("Applying Hilbert Transform...")
-    analytic_signal = hilbert(np.real(matched_filtered_signal))  # hilbert transformation
+    analytic_signal = hilbert(np.real(base_band_signal))  # hilbert transformation
     
     # sample the analytic signal
     print("Sampling the analytic signal...")
@@ -189,7 +127,7 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, N, f_lo, f_cutof
 
     # decode the symbols and error check the start sequence
     print("Decoding symbols and checking for start sequence...")
-    best_bits = error_check_start_sequence(sampled_symbols)
+    best_bits = matched_filter(sampled_symbols)
 
     return analytic_signal, best_bits
 
@@ -197,7 +135,7 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, N, f_lo, f_cutof
 
 def main():
     # Input message
-    message = "Ra"
+    message = "RThis is a test to see how much we can decode before breaking"
     print("Message:", message)
 
     # Convert message to binary
@@ -210,30 +148,26 @@ def main():
     #noisy_bits = noise_adder(bit_sequence, noise_power=0.1, num_symbols=len(bit_sequence)/2)
 
     # Signal generation parameters
-    fc = 920e6 + f_base_band    # Carrier frequency for modulation
-    sample_rate = 3 * fc        # 3 times the carrier frequency for oversampling
-    symbol_rate = 10000         # 10 kHz
-
-    # filter frequency cutoff
-    f_cutoff = 200e3
-    f_lo = fc + f_base_band 
+    freq = 920e6        # Carrier frequency for modulation
+    sample_rate = 4e9   # 3 times the carrier frequency for oversampling
+    symbol_rate = 10e6  # 10 kHz
 
     # Generate QPSK waveform using your SigGen class
     print("Generating QPSK waveform...")
-    sig_gen = SigGen.SigGen(fc, 1.0, sample_rate, symbol_rate)
-    t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence, True)
+    sig_gen = SigGen.SigGen(freq, 1.0, sample_rate, symbol_rate)
+    t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence, True, 0.1)
 
     # decode the waveform
     # apply hilbert transform
     print("Decoding QPSK waveform...")
-    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, len(symbols), f_lo, f_cutoff)
+    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t, freq)
 
     # Convert to ASCII characters
     decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
     decoded_message = ''.join(decoded_chars)
     print("Decoded Message:", decoded_message)
 
-    # Print the original
+    # Print the originalcross_correlation
     original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
     decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
 

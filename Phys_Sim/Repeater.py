@@ -1,8 +1,8 @@
 class Repeater:
-    def __init__(self, desired_frequency, sampling_frequency, gain):
-        self.desired_freqeuncy = desired_frequency  # Default frequency set to 1 GHz
+    def __init__(self, sampling_frequency):
+        self.desired_freqeuncy = None  # Default frequency set to 1 GHz
         self.sampling_fequency = sampling_frequency
-        self.gain = gain
+        self.gain = None
 
 
         self.qpsk_mixed = None
