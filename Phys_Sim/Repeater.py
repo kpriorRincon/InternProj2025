@@ -153,7 +153,7 @@ class Repeater:
         plt.show()
         return
     
-    def plot_to_png(t, input_qpsk, qpsk_mixed, qpsk_filtered, fs):
+    def plot_to_png(self, t, input_qpsk, qpsk_mixed, qpsk_filtered, fs):
         import numpy as np
         import matplotlib.pyplot as plt
         # Compute FFT

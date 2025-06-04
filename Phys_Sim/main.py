@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # global objects for the Sig_Gen, Receiver, and Repeater classes
 sig_gen = Sig_Gen.SigGen()
-repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=1e6, gain=1)
+repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=4e9, gain=1)
 receiver = Receiver.Receiver(sampling_rate=1e6, frequency=915e6)
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
@@ -107,8 +107,8 @@ def simulate_page():
                     global repeater
                     global message_input
                     sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
-                    sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
-                    sig_gen.symbol_rate = 0.3 * sig_gen.freq  # Example symbol rate 30% of the frequency
+                    #sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
+                    #sig_gen.symbol_rate = 0.3 * sig_gen.freq  # Example symbol rate 30% of the frequency
                     message_input = message.value
                     #save graphs:
                     #parameters:
@@ -117,11 +117,12 @@ def simulate_page():
                     plot_qpsk_sig_gen(t, qpsk_waveform, t_vertical_lines, symbols, message_input)
 
                     
-                    repeater.desired_freqeuncy = int(freq_out_slider.value)
-                    repeater.sampling_fequency = int(sig_gen.sample_rate)
+                    repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
+                    #repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
                     #add receiver things as well
 
+                    repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
 
                     if noise_checkbox.value:
                         global noise_bool
@@ -178,8 +179,10 @@ def signal_generator_page():
 #simulation Repeater page
 @ui.page('/repeater_page')
 def repeater_page():
+
     """This function creates the repeater page where the user can view outputs from the repeater."""
     ui.button('back', on_click=ui.navigate.back)
+    ui.image('repeater.png')
     pass
 
 #simulation receiver page
