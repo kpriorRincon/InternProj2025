@@ -21,9 +21,11 @@ import plotly.graph_objects as go
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+# global objects for the Sig_Gen, Receiver, and Repeater classes
+symbol_rate = 10e6
 
 #global objects for the Sig_Gen, Receiver, and Repeater classes
-symbol_rate = 10e6
+symbol_rate = 20e6
 sample_rate = 4e9
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
 repeater = Repeater.Repeater(sampling_frequency=sample_rate)
@@ -98,10 +100,12 @@ def simulate_page():
                     global repeater
                     global message_input
                     global decoded_bits
-                    global decoded_bits
+                    global decoded_string
                     message_input = message.value
-       
-                    #check if we need to apply noise
+
+                    #run the sig gen handler
+                    sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
+
                     if noise_checkbox.value:
                         global noise_bool
                         noise_bool = True
@@ -200,13 +204,36 @@ def repeater_page():
 
     """This function creates the repeater page where the user can view outputs from the repeater."""
     ui.button('back', on_click=ui.navigate.back)
-    ui.image('repeater.png').force_reload()
+    if message_input is not None:
+        with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+            ui.label(f'Input Frequency: {sig_gen.freq/1e6:.1f} MHz      Output Frequency: {repeater.desired_freqeuncy/1e6:.1f} MHz').style('font-size: 2em; font-weight: bold;')
+
+    ui.image('original_qpsk_rp.png').force_reload()
+    ui.image('shifted_qpsk_rp.png').force_reload()
+    ui.image('filtered_qpsk_rp.png').force_reload()
+
 
 #simulation receiver page
 @ui.page('/receiver_page')
 def receiver_page():
     """This function creates the Receiver page where the user can view outputs from the receiver."""
     ui.button('back', on_click=ui.navigate.back)
+    #on this page put plots
+    global decoded_bits
+    global decoded_string
+    marker = ''
+    payload = ''
+    for i in range(len(decoded_bits)):
+        #get the first 8 bits as the marker
+        if i < 8:
+            marker += str(decoded_bits[i])
+        else:
+            payload += str(decoded_bits[i])
+    with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
+        ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
+        ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
+        ui.label(f'Decoded Message: {decoded_string}')
 
     pass
 

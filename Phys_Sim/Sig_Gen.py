@@ -169,6 +169,8 @@ class SigGen:
         plt.title("FFT of QPSK signal")
         plt.xlim(0, 1000e6)
         plt.ylim(0, np.max(fft_db)+10)
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude (dB)')
         #save plot
         plt.savefig(f'qpsk_sig_gen/2_qpsk_waveform.png', dpi = 300)
 
