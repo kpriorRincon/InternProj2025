@@ -64,15 +64,15 @@ def simulate_page():
             with simulation_container:
                 ui.label('Single Message Simulation').style('font-size: 2em; font-weight: bold; ')
                 ui.label('Enter message to be sent')
-                message = ui.input(placeholder="hello world")
+                message = ui.input(placeholder="hello world", value="hello world")
                 ui.label('Simulation Parameters').style('font-size: 2em; font-weight: bold;')
                 # When the user selects a simulation type, the parameters will change accordingly
-                ui.label('Frequency In (MHz)').style('width: 200px; margin-bottom: 10px;')
-                freq_in_slider = ui.slider(min=902, max=928, step=1).props('label-always')
+                ui.label('Frequency In (MHz)',).style('width: 200px; margin-bottom: 10px;')
+                freq_in_slider = ui.slider(min=902, max=928, step=1, value=905).props('label-always')
                 ui.label('Frequency Out (MHz)').style('width: 200px; margin-bottom: 10px;')
-                freq_out_slider = ui.slider(min=902, max=928, step=1).props('label-always')
+                freq_out_slider = ui.slider(min=902, max=928, step=1, value=910).props('label-always')
                 ui.label('Gain (dB)').style('width: 200px;margin-bottom: 10px;')
-                gain_slider = ui.slider(min=0, max=10, step=1).props('label-always')
+                gain_slider = ui.slider(min=0, max=10, step=1, value=0).props('label-always')
                 #check box to ask if the user wants to add noise
                 ui.label('Add Noise?').style('width: 200px;')
                 noise_checkbox = ui.checkbox('add noise')#the value here will be a bool that can be used for siGen
