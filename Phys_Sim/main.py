@@ -7,6 +7,7 @@ import Repeater as Repeater
 import plotly.graph_objects as go
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 # global objects for the Sig_Gen, Receiver, and Repeater classes
 sig_gen = Sig_Gen.SigGen()
 repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=4e9, gain=1)
@@ -15,35 +16,64 @@ noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
 
-def plot_qpsk_sig_gen(t_vertical_lines, symbols, message):
+def plot_qpsk_sig_gen(message):
     "this function plots 3 sections of the qpsk wave form in the time domain"
     " and stores them into png files in the qpsk_sig_gen folder'"
     global sig_gen
+    plt.figure(figsize=(15, 5))
     plt.plot(sig_gen.time_vector, sig_gen.qpsk_waveform)
     plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
-    for lines in t_vertical_lines:
-        #add vertical lines at the symbol boundaries
-        if lines < len(t):
-            plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
 
-            #add annotation for the symbol e.g. '00', '01', '10', '11'
-            # Reverse mapping: symbol -> binary pair
-            symbol = symbols[t_vertical_lines.index(lines)]
-            # Reverse the mapping to get binary pair from symbol
-            reverse_mapping = {v: k for k, v in sig_gen.mapping.items()}
-            binary_pair = reverse_mapping.get(symbol, '')
-            formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
-            #debug
-            #print(formatted_pair)
-            x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
-            y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
-            plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
-    plt.title(f'QPSK Waveform for {message}(first 10 symbol periods)')
+    #if there are more than 10 symbols only show the first ten symbols
+    if len(sig_gen.time_vertical_lines) > 10:
+        plt.xlim(0, 10/sig_gen.symbol_rate)  # Show first 10 symbol periods
+    #if not don't touch the xlim
+
+    for lines in sig_gen.time_vertical_lines:
+        #add vertical lines at the symbol boundaries
+        if len(sig_gen.time_vertical_lines) > 10:
+            if lines < 9/sig_gen.symbol_rate:
+                plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
+
+                #add annotation for the symbol e.g. '00', '01', '10', '11'
+                # Reverse mapping: symbol -> binary pair
+                symbol = sig_gen.symbols[sig_gen.time_vertical_lines.index(lines)]
+                # Reverse the mapping to get binary pair from symbol
+                reverse_mapping = {v: k for k, v in sig_gen.mapping.items()}
+                binary_pair = reverse_mapping.get(symbol, '')
+                formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
+                #debug
+                #print(formatted_pair)
+                x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
+                y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
+                plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)  
+        else:
+            if lines < len(sig_gen.time_vector):
+                plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
+
+                #add annotation for the symbol e.g. '00', '01', '10', '11'
+                # Reverse mapping: symbol -> binary pair
+                symbol = sig_gen.symbols[sig_gen.time_vertical_lines.index(lines)]
+                # Reverse the mapping to get binary pair from symbol
+                reverse_mapping = {v: k for k, v in sig_gen.mapping.items()}
+                binary_pair = reverse_mapping.get(symbol, '')
+                formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
+                #debug
+                #print(formatted_pair)
+                x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
+                y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
+                plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
+            
+    if len(sig_gen.time_vertical_lines) > 10:
+        plt.title(f'QPSK Waveform for \"{message}\" (first 10 symbol periods)')
+    else:
+        plt.title(f'QPSK Waveform for \"{message}\"')
     plt.xlabel('Time (s)')
     plt.ylabel('Amplitude')
     plt.grid()
     # Save the plot to a file
     plt.savefig(f'qpsk_sig_gen/1_qpsk_waveform.png', dpi=300)    
+    #print("Debug: plot generated")
     return
 
 
@@ -108,14 +138,12 @@ def simulate_page():
                     global message_input
                     sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
                     #sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
-                    #sig_gen.symbol_rate = 0.3 * sig_gen.freq  # Example symbol rate 30% of the frequency
+                    sig_gen.symbol_rate = 0.1 * sig_gen.freq  # Example symbol rate 30% of the frequency
                     message_input = message.value
                     #save graphs:
-                    #parameters:
-                    #plot_qpsk_sig_gen()
-                    t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(sig_gen.message_to_bits(message_input))
-                    # plot_qpsk_sig_gen(sig_get, qpsk_waveform, t_vertical_lines, symbols, message_input)
-
+                    #run the method to generate the QPSK waveform
+                    sig_gen.generate_qpsk(sig_gen.message_to_bits(message_input))
+                    plot_qpsk_sig_gen(message_input)
                     
                     repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
                     #repeater.sampling_fequency = int(sig_gen.sample_rate)
@@ -172,8 +200,26 @@ def signal_generator_page():
     #create the qpsk wave form from the message
     global sig_gen 
     if message_input is not None:
-        with ui.column().style('width: 100%;'):
-            ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 100%; height: auto;')
+        #time stamp to force refresh
+        time_stamp = int(time.time())
+        with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+            ui.label(f'Message entered: {message_input}').style('font-size: 2em; font-weight: bold;')
+            #we want to show the header in a different color as the actual message 
+            bit_sequence =sig_gen.message_to_bits(message_input)
+            marker = ''
+            payload = ''
+            for i in range(len(bit_sequence)):
+                #get the first 8 bits as the marker
+                if i < 8:
+                    marker += str(bit_sequence[i])
+                else:
+                    payload += str(bit_sequence[i])
+            ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
+            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
+            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
+
+            #need to insure we get the most up to date image that's why we use .force_reload()
+            ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 70%; height: auto;').force_reload()
 #simulation Repeater page
 @ui.page('/repeater_page')
 def repeater_page():
