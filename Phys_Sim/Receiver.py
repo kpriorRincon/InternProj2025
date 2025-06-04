@@ -138,7 +138,7 @@ class Receiver:
         """Convert bits to string."""
         # bits is an array
         #exclude the prefix
-        bits = bits[8:0]
+        bits = bits[8:]
         # convert the bits into a string
         decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
         print(decoded_string)
