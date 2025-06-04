@@ -9,9 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 # global objects for the Sig_Gen, Receiver, and Repeater classes
-sig_gen = Sig_Gen.SigGen()
-repeater = Repeater.Repeater(desired_frequency=915e6, sampling_frequency=4e9, gain=1)
-receiver = Receiver.Receiver(sampling_rate=1e6, frequency=915e6)
+symbol_rate = 10
+sample_rate = 4e9
+sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
+repeater = Repeater.Repeater(sampling_frequency=sample_rate)
+receiver = Receiver.Receiver(sampling_rate=sample_rate)
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field

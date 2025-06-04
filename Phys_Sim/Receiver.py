@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 from scipy.signal import hilbert
 
 class Receiver:
-    def __init__(self, sampling_rate, frequency):
+    def __init__(self, sampling_rate):
         #constructor
         self.sampling_rate = sampling_rate
-        self.frequency = frequency
+        self.frequency = None
         # Phase sequence for qpsk modulation corresponds to the letter 'R'
         self.phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
         self.phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
