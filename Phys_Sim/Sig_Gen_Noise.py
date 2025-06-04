@@ -16,17 +16,17 @@ class SigGen:
         }
 
     # Add noise to symbols
-    def noise_adder(self, sinusoid):
+    def noise_adder(self, sinusoid, noise_power):
         import numpy as np
         # Noise parameters
         mean_noise = 0                                                  # Mean of the noise distribution
-        std_noise = 0.01                                                 # Standard deviation of the noise distribution
+        std_noise = noise_power                                                 # Standard deviation of the noise distribution
 
         # Generate noise
         noise = np.random.normal(mean_noise, std_noise, len(sinusoid))
         return sinusoid + noise                                         # returns the sinusoid with added noise
 
-    def generate_qpsk(self, bits, bool_noise):
+    def generate_qpsk(self, bits, bool_noise, noise_power = 0.01):
         """
         Generate a QPSK signal from a sequence of bits.
         
@@ -76,7 +76,7 @@ class SigGen:
 
         if bool_noise:
             # add noise to the QPSK wavefrorm
-            qpsk_waveform = self.noise_adder(qpsk_waveform)
+            qpsk_waveform = self.noise_adder(qpsk_waveform, noise_power)
 
         return t, qpsk_waveform, t_vertical_lines, symbols
     
