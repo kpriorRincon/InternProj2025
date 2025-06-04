@@ -138,7 +138,7 @@ def simulate_page():
                     global message_input
                     sig_gen.freq = int(freq_in_slider.value)* 1e6  # Convert MHz to Hz
                     #sig_gen.sample_rate = 20 * sig_gen.freq  # Example sample rate 20 times the frequency
-                    sig_gen.symbol_rate = 0.3 * sig_gen.freq  # Example symbol rate 30% of the frequency
+                    sig_gen.symbol_rate = 0.1 * sig_gen.freq  # Example symbol rate 30% of the frequency
                     message_input = message.value
                     #save graphs:
                     #run the method to generate the QPSK waveform
