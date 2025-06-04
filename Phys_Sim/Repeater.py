@@ -1,7 +1,7 @@
 class Repeater:
     def __init__(self, sampling_frequency):
-        self.desired_freqeuncy = None  # Default frequency set to 1 GHz
-        self.sampling_fequency = sampling_frequency
+        self.desired_frequency = None  # Default frequency set to 1 GHz
+        self.sampling_frequency = sampling_frequency
         self.gain = None
 
 
@@ -25,9 +25,10 @@ class Repeater:
         #Complex sinusoid (real-world)
         #mixing_signal = np.cos(2 * np.pi * (self.desired_freqeuncy + qpsk_frequency) * t)
 
-        #Complex exponential (Ideal)
-        mixing_signal = np.exp(1j * 2 * np.pi * (self.desired_freqeuncy - qpsk_frequency) * t)
         
+        #Complex exponential (Ideal)
+        mixing_signal = np.exp(1j * 2 * np.pi * (self.desired_frequency - qpsk_frequency) * t)
+
         # Mix the QPSK signal with the complex exponential to shift its frequency
         qpsk_shifted = qpsk_signal * mixing_signal
 
@@ -43,7 +44,7 @@ class Repeater:
         # Implement filtering logic here
         from scipy import signal
 
-        b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_fequency) # butterworth filter coefficients
+        b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_frequency) # butterworth filter coefficients
 
         # Apply filter
         filtered_sig = signal.filtfilt(b, a, mixed_qpsk)   # filtered signal
@@ -286,11 +287,11 @@ class Repeater:
         
         qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)
         
-        cutoff_freq = self.desired_freqeuncy + 30e6
+        cutoff_freq = self.desired_frequency + 30e6
         
         qpsk_filtered = self.filter(cutoff_freq, qpsk_mixed)
         
-        self.plot_to_png(t, qpsk_waveform, qpsk_mixed, qpsk_filtered, self.sampling_fequency)
+        self.plot_to_png(t, qpsk_waveform, qpsk_mixed, qpsk_filtered, self.sampling_frequency)
 
         self.qpsk_mixed = qpsk_mixed
         self.qpsk_filtered = qpsk_filtered

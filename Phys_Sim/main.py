@@ -34,10 +34,12 @@ noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
 
+decoded_bits = None
+decoded_string = None
 
 def Noise_Addr(input_wave, noise_power):
     #define noise
-    noise =np.random.normal(0,1,len(input_wave))
+    noise =np.random.normal(0,noise_power,len(input_wave))
     return input_wave+noise
 #front page
 with ui.row().style('height: 100vh; width: 100%; display: flex; justify-content: center; align-items: center;'):
@@ -66,21 +68,21 @@ def simulate_page():
             with simulation_container:
                 ui.label('Single Message Simulation').style('font-size: 2em; font-weight: bold; ')
                 ui.label('Enter message to be sent')
-                message = ui.input(placeholder="hello world")
+                message = ui.input(placeholder="hello world", value="hello world")
                 ui.label('Simulation Parameters').style('font-size: 2em; font-weight: bold;')
                 # When the user selects a simulation type, the parameters will change accordingly
-                ui.label('Frequency In (MHz)').style('width: 200px; margin-bottom: 10px;')
-                freq_in_slider = ui.slider(min=902, max=928, step=1).props('label-always')
+                ui.label('Frequency In (MHz)',).style('width: 200px; margin-bottom: 10px;')
+                freq_in_slider = ui.slider(min=902, max=928, step=1, value=905).props('label-always')
                 ui.label('Frequency Out (MHz)').style('width: 200px; margin-bottom: 10px;')
-                freq_out_slider = ui.slider(min=902, max=928, step=1).props('label-always')
+                freq_out_slider = ui.slider(min=902, max=928, step=1, value=910).props('label-always')
                 ui.label('Gain (dB)').style('width: 200px;margin-bottom: 10px;')
-                gain_slider = ui.slider(min=0, max=10, step=1).props('label-always')
+                gain_slider = ui.slider(min=0, max=10, step=1, value=0).props('label-always')
                 #check box to ask if the user wants to add noise
                 ui.label('Add Noise?').style('width: 200px;')
                 noise_checkbox = ui.checkbox('add noise')#the value here will be a bool that can be used for siGen
                 #iff the user checks the noise checkbox, then show the noise slider
                 ui.label('Noise Level (dB)').style('width: 200px; margin-bottom: 10px;').bind_visibility_from(noise_checkbox, 'value')
-                noise_slider = ui.slider(min=0, max=10, step=1).props('label-always').bind_visibility_from(noise_checkbox, 'value')
+                noise_slider = ui.slider(min=-60, max=5, step=1).props('label-always').bind_visibility_from(noise_checkbox, 'value')
 
                 #submit button
                 ui.button("Submit", on_click=lambda: store_data()).style('width: 200px; height: 10px;')
@@ -97,6 +99,8 @@ def simulate_page():
                     global receiver
                     global repeater
                     global message_input
+                    global decoded_bits
+                    global decoded_bits
                     message_input = message.value
 
                     #run the sig gen handler
@@ -117,17 +121,24 @@ def simulate_page():
                     sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
                     #iff there is noise add it to the outgoing sig_gen waveform
                     if noise_bool:
-                        sig_gen.qpsk_waveform = Noise_Addr(sig_gen.qpsk_waveform, noise_power)
+                        pass#workin on noise addr still
+                        #sig_gen.qpsk_waveform = Noise_Addr(sig_gen.qpsk_waveform, noise_power)
 
                     #Repeater 
-                    repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
+                    repeater.desired_frequency = int(freq_out_slider.value) * 1e6
                     #repeater.sampling_fequency = int(sig_gen.sample_rate)
                     repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
                     #add receiver things as well
                     repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
 
+
+                    #add noise if applicable
+                    if noise_bool: 
+                        pass #working on noise_adder
+                        repeater.qpsk_filtered = Noise_Addr(repeater.qpsk_filtered, noise_power)
+
                     #TODO put receiver class here
-                    
+                    decoded_bits, decoded_string = receiver.handler(repeater.qpsk_filtered, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_frequency, sig_gen.time_vector)
 
                     #noise_level = noise_slider.value
                     #debug:
@@ -168,8 +179,6 @@ def signal_generator_page():
     #create the qpsk wave form from the message
     global sig_gen 
     if message_input is not None:
-        #time stamp to force refresh
-        time_stamp = int(time.time())
         with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
             ui.label(f'Message entered: {message_input}').style('font-size: 2em; font-weight: bold;')
             #we want to show the header in a different color as the actual message 
