@@ -1,11 +1,11 @@
 class SigGen:
     
-    def __init__(self, freq=1.0, amp=1.0, sample_rate =4e9, symbol_rate=10e6):
+    def __init__(self, sample_rate, symbol_rate):
         import numpy as np
-        self.freq = freq  # Frequency in Hz
+        self.freq = None  # Frequency in Hz
         self.sample_rate = sample_rate  # sample rate in samples per second
         self.symbol_rate = symbol_rate  # Symbol rate in symbols per second about 30% of the frequency
-        self.amp = amp    # Amplitude
+        self.amp = None    # Amplitude
 
         self.time_vector = None
         self.qpsk_waveform = None
@@ -174,7 +174,6 @@ class SigGen:
 
     def handler(self,message, frequency):
         self.freq = frequency
-        self.symbol_rate = .01*frequency
         self.generate_qpsk(self.message_to_bits(message))
         self.plot_time_png(message)
         self.plot_freq_png()

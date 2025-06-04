@@ -1,8 +1,8 @@
 class Repeater:
-    def __init__(self, desired_frequency, sampling_frequency, gain):
-        self.desired_freqeuncy = desired_frequency  # Default frequency set to 1 GHz
+    def __init__(self, sampling_frequency):
+        self.desired_freqeuncy = None  # Default frequency set to 1 GHz
         self.sampling_fequency = sampling_frequency
-        self.gain = gain
+        self.gain = None
 
 
         self.qpsk_mixed = None
@@ -107,7 +107,13 @@ class Repeater:
         plt.grid(True)
         
         plt.subplot(2, 3, 3)
+
+        peak_index = np.argmax(mag_input)
+        peak_freq = freqs[peak_index]
+        peak_mag = mag_input[peak_index]
         plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
+        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
         #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
@@ -119,7 +125,12 @@ class Repeater:
         plt.tight_layout()
 
         plt.subplot(2, 3, 4)
+        peak_index = np.argmax(mag_shifted)
+        peak_freq = freqs[peak_index]
+        peak_mag = mag_shifted[peak_index]
         plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
+        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
         plt.title("FFT of QPSK After Frequency Shift")
@@ -130,7 +141,12 @@ class Repeater:
         plt.tight_layout()
 
         plt.subplot(2, 3, 5)
+        peak_index = np.argmax(mag_filtered)
+        peak_freq = freqs[peak_index]
+        peak_mag = mag_filtered[peak_index]
         plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
+        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
         plt.title("FFT of QPSK After Filtering")
@@ -189,7 +205,12 @@ class Repeater:
         plt.grid(True)
         
         plt.subplot(2, 3, 3)
+        peak_index = np.argmax(mag_input)
+        peak_freq = freqs[peak_index]
+        peak_mag = mag_input[peak_index]
         plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
+        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
         #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
@@ -201,7 +222,12 @@ class Repeater:
         plt.tight_layout()
 
         plt.subplot(2, 3, 4)
+        peak_index = np.argmax(mag_shifted)
+        peak_freq = freqs[peak_index]
+        peak_mag = mag_shifted[peak_index]
         plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
+        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
         plt.title("FFT of QPSK After Frequency Shift")
@@ -212,7 +238,13 @@ class Repeater:
         plt.tight_layout()
 
         plt.subplot(2, 3, 5)
+        peak_index = np.argmax(mag_filtered)
+        peak_freq = freqs[peak_index]
+        peak_mag = mag_filtered[peak_index]
+        print(freqs[peak_index-3:peak_index+3])
         plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
+        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
         plt.title("FFT of QPSK After Filtering")
