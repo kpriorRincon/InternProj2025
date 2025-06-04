@@ -95,21 +95,9 @@ def simulate_page():
                     global receiver
                     global repeater
                     global message_input
-<<<<<<< HEAD
                     message_input = message.value
-                    #run the sig gen handler
-                    sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
-
-                    repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
-                    #repeater.desired_freqeuncy = 1000e6
-                    #repeater.sampling_fequency = int(sig_gen.sample_rate)
-                    repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
-                    #add receiver things as well
-                    repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
-
-=======
+       
                     #check if we need to apply noise
->>>>>>> c76c3d1 (main file wor\k)
                     if noise_checkbox.value:
                         global noise_bool
                         noise_bool = True
@@ -120,6 +108,7 @@ def simulate_page():
                         noise_power = 0  # Default value if no noise is added
 
                     message_input = message.value
+
                     #Sig Gen
                     sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
                     #iff there is noise add it to the outgoing sig_gen waveform
@@ -134,7 +123,6 @@ def simulate_page():
                     repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
 
                     #TODO put receiver class here
-                    receiver.frequency=repeater.desired_freqeuncy
                     
 
                     #noise_level = noise_slider.value
