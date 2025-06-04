@@ -41,8 +41,11 @@ print("Request received.")
 symbol_rate = 10e6
 f_sample = 4e9 
 
-_, bits = Receiver.demodulator(rep["rep signal"],f_sample, symbol_rate,f_out)
-message = Receiver.get_string(bits)
+receiver = Receiver.Receiver(f_sample)
+
+rep_signal = rep["rep signal"]
+analytical_signal, bits = receiver.demodulator(rep_signal, f_sample, symbol_rate, f_out)
+message = receiver.get_string(bits)
 
 rep = {"bit sequence": bits,
        "recovered message": message}

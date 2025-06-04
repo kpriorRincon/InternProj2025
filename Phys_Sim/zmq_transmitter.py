@@ -53,7 +53,8 @@ tx_symbols = sig_gen.symbols
 rep = {"time": t, 
        "qpsk": tx_qpsk, 
        "vertical lines": tx_vert_lines, 
-       "symbols": tx_symbols}
+       "symbols": tx_symbols,
+       "message in binary": message_bin}
 
 # Sending the generated QPSK signal and data to the controller
 print("Sending data to controller...")

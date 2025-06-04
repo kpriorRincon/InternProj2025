@@ -41,6 +41,7 @@ t = tx_data['time']
 tx_qpsk = tx_data['qpsk']
 tx_vert_lines = tx_data['vertical lines']
 tx_symbols = tx_data['symbols']
+message_bin = tx_data['message in binary']
 
 # ---------------------------------------------------
 
@@ -70,7 +71,6 @@ rep_input = {"freq in": f_in, "freq out": f_out}
 rep.send_json(rep_input)
 print("Request sent.")
 
-rx = context.socket(zmq.REQ)
 # Receiving data from the repeater
 print("Waiting for response from repeater...")
 rep_data = rep.recv_pyobj()
@@ -108,6 +108,12 @@ print("Request sent.")
 print("Waiting for response from receiver...")
 rx_data = rx.recv_pyobj()
 print("Response received.")
+
+bit_sequence = rx_data['bit sequence']
+recovered_message = rx_data['recovered message']
+
+print('Original Message:', message)
+print('Recovered Message:', recovered_message)
 
 
 
