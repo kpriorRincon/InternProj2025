@@ -41,11 +41,14 @@ symbol_rate = 10e6
 f_sample = 4e9 
 incoming_qpsk = tx['tx signal']
 t = tx['time']
-repeater = Repeater.Repeater(desired_frequency=f_out, sampling_frequency=f_sample, gain=2)
-qpsk_mixed = repeater.mix(incoming_qpsk, f_in, t)
+repeater = Repeater.Repeater(sampling_frequency=f_sample)
+repeater.desired_frequency = f_out
+
+qpsk_mixed = np.real(repeater.mix(qpsk_signal=incoming_qpsk, qpsk_frequency=f_in, t=t))
 symbol_rate *= f_out / f_in
 f_sample *= f_out / f_in
 qpsk_filtered = repeater.filter(f_out + 20e6, qpsk_mixed, order=10)
+repeater.gain = 2
 qpsk_amp = repeater.amplify(input_signal=qpsk_filtered)
 
 rep = {"Incoming Signal": incoming_qpsk,

@@ -1,6 +1,6 @@
 class Repeater:
     def __init__(self, sampling_frequency):
-        self.desired_freqeuncy = None  # Default frequency set to 1 GHz
+        self.desired_frequency = None  # Default frequency set to 1 GHz
         self.sampling_fequency = sampling_frequency
         self.gain = None
 
@@ -25,9 +25,10 @@ class Repeater:
         #Complex sinusoid (real-world)
         #mixing_signal = np.cos(2 * np.pi * (self.desired_freqeuncy + qpsk_frequency) * t)
 
-        #Complex exponential (Ideal)
-        mixing_signal = np.exp(1j * 2 * np.pi * (self.desired_freqeuncy - qpsk_frequency) * t)
         
+        #Complex exponential (Ideal)
+        mixing_signal = np.exp(1j * 2 * np.pi * (self.desired_frequency - qpsk_frequency) * t)
+
         # Mix the QPSK signal with the complex exponential to shift its frequency
         qpsk_shifted = qpsk_signal * mixing_signal
 
@@ -260,7 +261,7 @@ class Repeater:
         
         qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)
         
-        cutoff_freq = self.desired_freqeuncy + 30e6
+        cutoff_freq = self.desired_frequency + 30e6
         
         qpsk_filtered = self.filter(cutoff_freq, qpsk_mixed)
         

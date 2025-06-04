@@ -41,5 +41,12 @@ print("Request received.")
 symbol_rate = 10e6
 f_sample = 4e9 
 
-_, best_bits = Receiver.demodulator(rep["rep signal"],f_sample, symbol_rate,f_out)
-#message = Receiver.get_string
+_, bits = Receiver.demodulator(rep["rep signal"],f_sample, symbol_rate,f_out)
+message = Receiver.get_string(bits)
+
+rep = {"bit sequence": bits,
+       "recovered message": message}
+
+print("Sending data to controller...")
+ctrl.send_pyobj(rep)
+print("Data sent.")

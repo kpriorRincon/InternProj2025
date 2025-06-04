@@ -35,7 +35,7 @@ f_out = req['freq out']
 
 symbol_rate = 10e6
 f_sample = 4e9 
-sig_gen = Sig_Gen.SigGen()
+sig_gen = Sig_Gen.SigGen(f_sample, symbol_rate)
 sig_gen.freq = f_in
 sig_gen.sample_rate = f_sample
 sig_gen.symbol_rate = symbol_rate 

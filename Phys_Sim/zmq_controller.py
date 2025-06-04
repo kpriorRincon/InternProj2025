@@ -17,8 +17,10 @@ rx.connect("tcp://127.0.0.1:6003") # sets up a REQ-REP connection with the recei
 
 # Get user input
 message = input("Enter the message you want to send:\n")
-f_in = float(input("Enter the desired frequency (in Hz) to transmit the message:\n"))
-f_out = float(input("Enter the desired frequency (in Hz) to receive the message:\n"))
+f_in = float(input("Enter the desired frequency (in MHz) to transmit the message:\n"))
+f_in = f_in*1000000
+f_out = float(input("Enter the desired frequency (in MHz) to receive the message:\n"))
+f_out = f_out*1000000
 
 # ---------------------------------------------------
 
@@ -68,6 +70,7 @@ rep_input = {"freq in": f_in, "freq out": f_out}
 rep.send_json(rep_input)
 print("Request sent.")
 
+rx = context.socket(zmq.REQ)
 # Receiving data from the repeater
 print("Waiting for response from repeater...")
 rep_data = rep.recv_pyobj()
