@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Sig_Gen_Noise as SigGen
 from scipy.signal import hilbert
-import scipy.signal as signal
 
 #####################################################
 #
@@ -32,15 +31,11 @@ def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
     r = x_symbols * np.exp(1j * phase_noise) + n * np.sqrt(noise_power)
     return r
 
-# Matched Filter
-def cross_correlation(qpsk_waveform, f_if, symbol_rate, N):
-    print("Performing cross correlation")
-    amplitude = 1.0
-    sample_rate = 3 * f_if                   
-    samples_per_symbol = int(sample_rate / symbol_rate)     
-    t = np.arange(0, N * samples_per_symbol) / sample_rate  
-    
+# Cross-Correlation
+def cross_correlation(qpsk_waveform, f_if, t):
+    print("Performing cross correlation") 
     # Template: carrier cosine (assuming zero phase)
+    amplitude = 1.0
     template = amplitude * np.cos(2 * np.pi * f_if * t)       
     
     # Compute FFT length for linear correlation
@@ -74,8 +69,7 @@ def bit_reader(symbols):
     for i in range(len(symbols)):
         angle = np.angle(symbols[i], deg=True) % 360
 
-        # don't know why, but this is the only way to get the angles in the right range.
-        # Might be because of the Hilbert transform?
+        # codex mapping phase to bits
         if 0 <= angle < 90:
             bits[i] = [0, 0]  # 45°
         elif 90 <= angle < 180:
@@ -86,7 +80,7 @@ def bit_reader(symbols):
             bits[i] = [1, 0]  # 315°
     return bits
 
-# Error checking for the start sequence
+# Error checking for the start sequence using a matched filter
 def matched_filter(sampled_symbols):
     print("Error checking")
     ## look for the start sequence ##
@@ -122,10 +116,10 @@ def matched_filter(sampled_symbols):
     return best_bits
 
 # sample the received signal and do error checking
-def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, N, f_lo, f_cutoff):
+def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t):
     ## Apply matched filter to the received signal ##
-    correlated_signal = matched_filter(qpsk_waveform, f_base_band, symbol_rate, N)  # apply the matched filter to the received signal
-    correlated_signal = qpsk_waveform
+    correlated_signal = cross_correlation(qpsk_waveform, f_base_band, t)  # apply the matched filter to the received signal
+    #correlated_signal = qpsk_waveform
 
     ## compute the Hilbert transform ##
     # Note: The correct way to do this is to break this into I and Q components,
@@ -160,27 +154,19 @@ def main():
     #noisy_bits = noise_adder(bit_sequence, noise_power=0.1, num_symbols=len(bit_sequence)/2)
 
     # Signal generation parameters
-    freq = 920e6 + f_base_band    # Carrier frequency for modulation
-    sample_rate = 4e9       # 3 times the carrier frequency for oversampling
-    symbol_rate = 10e6         # 10 kHz
-
-    # filter frequency cutoff
-    f_cutoff = 200e3
-    f_lo = freq + f_base_band
+    freq = 920e6        # Carrier frequency for modulation
+    sample_rate = 4e9   # 3 times the carrier frequency for oversampling
+    symbol_rate = 10e6  # 10 kHz
 
     # Generate QPSK waveform using your SigGen class
     print("Generating QPSK waveform...")
     sig_gen = SigGen.SigGen(freq, 1.0, sample_rate, symbol_rate)
     t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence, True, 0.1)
-    sig_fft = np.fft.fft(qpsk_waveform)
-    
-    print("qpsk signal freq peak: ", np.max(np.real(np.fft.fft(qpsk_waveform))))
-
 
     # decode the waveform
     # apply hilbert transform
     print("Decoding QPSK waveform...")
-    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, len(symbols), freq, f_cutoff)
+    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t)
 
     # Convert to ASCII characters
     decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
