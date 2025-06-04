@@ -180,18 +180,36 @@ def main():
         print("Mismatch detected.")
 
 
+    # constellation plot
+    plt.figure(figsize=(10, 4))
     plt.plot(np.real(analytical_output), np.imag(analytical_output), '.')
     plt.grid(True)
+    plt.title('Constellation Plot of Sampled Symbols')
+    plt.xlabel('Real')
+    plt.ylabel('Imaginary')
     plt.show()
 
-    # # Plot the waveform and phase
-    # plt.figure(figsize=(10, 4))
-    # plt.plot(t, analytical_output.real, label='I (real part)')
-    # plt.plot(t, analytical_output.imag, label='Q (imag part)')
-    # plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
-    # plt.xlabel('Time (s)')
-    # plt.ylabel('Amplitude')
-    # plt.grid()
-    # plt.legend()
-    # plt.tight_layout()
-    # plt.show()
+    # Plot the waveform and phase
+    plt.figure(figsize=(10, 4))
+    plt.plot(t, analytical_output.real, label='I (real part)')
+    plt.plot(t, analytical_output.imag, label='Q (imag part)')
+    plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude')
+    plt.grid()
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    # plot the fft
+    ao_fft = np.fft.fft(analytical_output)
+    freqs = np.fft.fftfreq(len(analytical_output), d=1/2*sample_rate)
+    plt.figure(figsize=(10, 4))
+    plt.plot(freqs, 20*np.log10(ao_fft))
+    plt.title('FFT of the Base Band Signal')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Madgnitude (dB)')
+    plt.grid()
+    plt.legend()
+    plt.tight_layout()
+    plt.show()

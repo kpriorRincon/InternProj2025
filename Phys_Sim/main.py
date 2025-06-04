@@ -1,5 +1,18 @@
-#TODO insert file header here
-# this file will be used to run the GUI
+# =============================================================================
+# File: main.py
+# Authors: Skylar Harris, Jorge Hernandez, Kobe Prior, Trevor Wiseman
+# Description:
+#   This program provides a graphical user interface (GUI) for simulating a 
+#   digital communication system, including a signal generator, repeater, and 
+#   receiver. Users can input messages, configure simulation parameters such as 
+#   frequency, gain, and noise, and visualize the signal processing stages. 
+#   The application is built using NiceGUI and integrates with custom signal 
+#   processing modules (Sig_Gen, Receiver, Repeater). It is intended for 
+#   educational and prototyping purposes in the context of physical layer 
+#   communications.
+# =============================================================================
+
+#imports
 from nicegui import ui
 import Sig_Gen as Sig_Gen
 import Receiver as Receiver
@@ -10,23 +23,26 @@ import matplotlib.pyplot as plt
 import time
 # global objects for the Sig_Gen, Receiver, and Repeater classes
 symbol_rate = 10e6
+
+#global objects for the Sig_Gen, Receiver, and Repeater classes
+symbol_rate = 10e6
 sample_rate = 4e9
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
 repeater = Repeater.Repeater(sampling_frequency=sample_rate)
 receiver = Receiver.Receiver(sampling_rate=sample_rate)
-
-
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
 
 
-
+def Noise_Addr(input_wave, noise_power):
+    #define noise
+    noise =np.random.normal(0,1,len(input_wave))
+    return input_wave+noise
 #front page
 with ui.row().style('height: 100vh; width: 100%; display: flex; justify-content: center; align-items: center;'):
     with ui.link(target='\simulate_page'):
         simulate_button = ui.image('media/simulate.png').style('width: 50vh; height: 50vh;')
-    #TODO: make this command and control the opacity of the image
     with ui.link(target='#'):
         control_button = ui.image('media/control.png').style('width: 50vh; height: 50vh;')
         control_button.on('click', lambda: ui.notify('Control feature not yet available!'))  # Placeholder for control functionality
@@ -39,7 +55,7 @@ def simulate_page():
     with ui.row().style('justify-content: center;'):
         ui.label('Simulation Type').style('font-size: 2em; font-weight: bold;')
 
-
+    #function to handle drop down menu
     def open_simulation_single_message():
         """This function triggers when the user selects a simulation type from the dropdown.
         It clears the simulation container and displays the appropriate input fields based on the selected type."""
@@ -63,12 +79,13 @@ def simulate_page():
                 ui.label('Add Noise?').style('width: 200px;')
                 noise_checkbox = ui.checkbox('add noise')#the value here will be a bool that can be used for siGen
                 #iff the user checks the noise checkbox, then show the noise slider
-
                 ui.label('Noise Level (dB)').style('width: 200px; margin-bottom: 10px;').bind_visibility_from(noise_checkbox, 'value')
                 noise_slider = ui.slider(min=0, max=10, step=1).props('label-always').bind_visibility_from(noise_checkbox, 'value')
 
-
+                #submit button
                 ui.button("Submit", on_click=lambda: store_data()).style('width: 200px; height: 10px;')
+                #function to store data on submit button click
+                
                 def store_data():
                     """
                     stoample_rate = sample_rate, symbol_rate = symbol_ratee_data()
@@ -102,9 +119,23 @@ def simulate_page():
                         noise_bool = False
                         noise_power = 0  # Default value if no noise is added
 
+                    message_input = message.value
+
+                    #Sig Gen
+                    sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
+                    #iff there is noise add it to the outgoing sig_gen waveform
+                    if noise_bool:
+                        sig_gen.qpsk_waveform = Noise_Addr(sig_gen.qpsk_waveform, noise_power)
+
+                    #Repeater 
+                    repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
+                    #repeater.sampling_fequency = int(sig_gen.sample_rate)
+                    repeater.gain = 10**(int(gain_slider.value)/10) # convert dB to linear scale
+                    #add receiver things as well
+                    repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
+
                     #TODO put receiver class here
-                    _,best_bits = receiver.demodulator(sig_gen.qpsk_waveform, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_freqeuncy)
-                    receiver.frequency=repeater.desired_freqeuncy
+                    
 
                     #noise_level = noise_slider.value
                     #debug:
@@ -174,7 +205,7 @@ def repeater_page():
     ui.button('back', on_click=ui.navigate.back)
     with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
         ui.label(f'Input Frequency: {sig_gen.freq} MHz      Output Frequency: {repeater.desired_freqeuncy} MHz').style('font-size: 2em; font-weight: bold;')
-        
+
     ui.image('repeater.png').force_reload()
     pass
 

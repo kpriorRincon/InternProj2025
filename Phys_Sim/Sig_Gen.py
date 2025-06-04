@@ -5,7 +5,7 @@ class SigGen:
         self.freq = None  # Frequency in Hz
         self.sample_rate = sample_rate  # sample rate in samples per second
         self.symbol_rate = symbol_rate  # Symbol rate in symbols per second about 30% of the frequency
-        self.amp = None    # Amplitude
+        self.amp = 1   # Amplitude
 
         self.time_vector = None
         self.qpsk_waveform = None
@@ -109,7 +109,7 @@ class SigGen:
         for lines in self.time_vertical_lines:
             #add vertical lines at the symbol boundaries
             if len(self.time_vertical_lines) > 10:
-                if lines < 9/self.symbol_rate:
+                if lines < 10/self.symbol_rate:
                     plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
 
                     #add annotation for the symbol e.g. '00', '01', '10', '11'

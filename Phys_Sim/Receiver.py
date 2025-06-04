@@ -99,6 +99,41 @@ class Receiver:
 
         return analytic_signal, best_bits
 
+    def plot_data(self, analytical_output, t):
+        # constellation plot
+        plt.figure(figsize=(10, 4))
+        plt.plot(np.real(analytical_output), np.imag(analytical_output), '.')
+        plt.grid(True)
+        plt.title('Constellation Plot of Sampled Symbols')
+        plt.xlabel('Real')
+        plt.ylabel('Imaginary')
+        plt.savefig('qpsk_sig_gen/Constellation.png')
+
+        # Plot the waveform and phase
+        plt.figure(figsize=(10, 4))
+        plt.plot(t, analytical_output.real, label='I (real part)')
+        plt.plot(t, analytical_output.imag, label='Q (imag part)')
+        plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Amplitude')
+        plt.grid()
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig('qpsk_sig_gen/Base_Band_Waveform.png')
+
+        # plot the fft
+        ao_fft = np.fft.fft(analytical_output)
+        freqs = np.fft.fftfreq(len(analytical_output), d=1/2*self.sampling_rate)
+        plt.figure(figsize=(10, 4))
+        plt.plot(freqs, 20*np.log10(ao_fft))
+        plt.title('FFT of the Base Band Signal')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Madgnitude (dB)')
+        plt.grid()
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig('qpsk_sig_gen/Base_Band_FFT.png')
+
     def get_string(self, bits):
         """Convert bits to string."""
         # Convert bits to bytes
