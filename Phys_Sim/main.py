@@ -25,7 +25,7 @@ import time
 symbol_rate = 10e6
 
 #global objects for the Sig_Gen, Receiver, and Repeater classes
-symbol_rate = 10e6
+symbol_rate = 20e6
 sample_rate = 4e9
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
 repeater = Repeater.Repeater(sampling_frequency=sample_rate)
@@ -218,6 +218,22 @@ def repeater_page():
 def receiver_page():
     """This function creates the Receiver page where the user can view outputs from the receiver."""
     ui.button('back', on_click=ui.navigate.back)
+    #on this page put plots
+    global decoded_bits
+    global decoded_string
+    marker = ''
+    payload = ''
+    for i in range(len(decoded_bits)):
+        #get the first 8 bits as the marker
+        if i < 8:
+            marker += str(decoded_bits[i])
+        else:
+            payload += str(decoded_bits[i])
+    with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
+        ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
+        ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
+        ui.label(f'Decoded Message: {decoded_string}')
 
     pass
 
