@@ -113,7 +113,8 @@ def simulate_page():
                     sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
                     #iff there is noise add it to the outgoing sig_gen waveform
                     if noise_bool:
-                        sig_gen.qpsk_waveform = Noise_Addr(sig_gen.qpsk_waveform, noise_power)
+                        pass#workin on noise addr still
+                        #sig_gen.qpsk_waveform = Noise_Addr(sig_gen.qpsk_waveform, noise_power)
 
                     #Repeater 
                     repeater.desired_freqeuncy = int(freq_out_slider.value) * 1e6
@@ -122,8 +123,12 @@ def simulate_page():
                     #add receiver things as well
                     repeater.handler(sig_gen.time_vector, sig_gen.qpsk_waveform, sig_gen.freq)
 
+
+                    #add noise
+                    if noise_bool: 
+                        pass
                     #TODO put receiver class here
-                    
+                    decoded_bits, decoded_string = receiver.handler(repeater.qpsk_filtered, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_freqeuncy, sig_gen.time_vector)
 
                     #noise_level = noise_slider.value
                     #debug:

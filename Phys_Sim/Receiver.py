@@ -107,7 +107,7 @@ class Receiver:
         plt.title('Constellation Plot of Sampled Symbols')
         plt.xlabel('Real')
         plt.ylabel('Imaginary')
-        plt.savefig('qpsk_sig_gen/Constellation.png')
+        plt.savefig('demod_media/Constellation.png')
 
         # Plot the waveform and phase
         plt.figure(figsize=(10, 4))
@@ -119,7 +119,7 @@ class Receiver:
         plt.grid()
         plt.legend()
         plt.tight_layout()
-        plt.savefig('qpsk_sig_gen/Base_Band_Waveform.png')
+        plt.savefig('demod_media/Base_Band_Waveform.png')
 
         # plot the fft
         ao_fft = np.fft.fft(analytical_output)
@@ -132,14 +132,18 @@ class Receiver:
         plt.grid()
         plt.legend()
         plt.tight_layout()
-        plt.savefig('qpsk_sig_gen/Base_Band_FFT.png')
+        plt.savefig('demod_media/Base_Band_FFT.png')
 
     def get_string(self, bits):
         """Convert bits to string."""
-        # Convert bits to bytes
-        #take away the prefix 'R' from the bits
-        bits = bits[1:]
+        # bits is an array
+        #exclude the prefix
+        bits = bits[8:0]
+        # convert the bits into a string
+        return''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
 
-        pass
-
-   
+    def handler(self, qpsk_waveform, sample_rate, symbol_rate, fc, t):
+        analytical_signal, best_bits = self.demodulator(qpsk_waveform, sample_rate, symbol_rate, fc) 
+        self.plot_data(analytical_signal, t)
+        #return these things to be displayed
+        return best_bits, self.get_string(best_bits)
