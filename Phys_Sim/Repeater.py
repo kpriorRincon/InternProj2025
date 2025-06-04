@@ -1,7 +1,7 @@
 class Repeater:
     def __init__(self, sampling_frequency):
         self.desired_frequency = None  # Default frequency set to 1 GHz
-        self.sampling_fequency = sampling_frequency
+        self.sampling_frequency = sampling_frequency
         self.gain = None
 
 
@@ -44,7 +44,7 @@ class Repeater:
         # Implement filtering logic here
         from scipy import signal
 
-        b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_fequency) # butterworth filter coefficients
+        b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_frequency) # butterworth filter coefficients
 
         # Apply filter
         filtered_sig = signal.filtfilt(b, a, mixed_qpsk)   # filtered signal
@@ -265,8 +265,7 @@ class Repeater:
         
         qpsk_filtered = self.filter(cutoff_freq, qpsk_mixed)
         
-        self.plot_to_png(t, qpsk_waveform, qpsk_mixed, qpsk_filtered, self.sampling_fequency)
+        self.plot_to_png(t, qpsk_waveform, qpsk_mixed, qpsk_filtered, self.sampling_frequency)
 
         self.qpsk_mixed = qpsk_mixed
         self.qpsk_filtered = qpsk_filtered
-        
