@@ -1,7 +1,7 @@
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
-import Sig_Gen as SigGen
+import Sig_Gen_Noise as SigGen
 from scipy.signal import hilbert
 import scipy.signal as signal
 
@@ -14,8 +14,53 @@ import scipy.signal as signal
 ######### Global Variables #########
 phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
+f_base_band = 100e3  # Baseband frequency for modulation
 
 ######## Functions ########
+
+## pre-DSP functions ##
+# perform signal mixing
+def mix_signal(f_lo, rec_wave):
+    print("Mixing the signal with the local oscillator")
+    # Sampling frequency
+    f_sample = 3 * f_lo   
+
+    # Time vector
+    t = np.arange(len(rec_wave)) / f_sample    # time vector
+    
+    # Mixed signal
+    sig =  rec_wave * np.exp(1j * 2 * np.pi * f_lo * t)   # Mixed Signal
+    print("Done mixing")
+
+    return sig
+
+# filter the signal
+def filter_signal(f_cutoff, sig):
+    num_taps = 51 # it helps to use an odd number of taps
+    sample_rate = f_cutoff * 3 # Hz
+    print("Filter sample rate: ", sample_rate)
+
+    # create our low pass filter
+    h = signal.firwin(num_taps, f_cutoff, fs=sample_rate)
+    print("Made filter coefficients")
+
+    # fft the filter
+    h_fft = np.fft.fft(h, n = len(sig))
+    print("Tooke FFT of filter coefficients")
+
+    # fft the signak
+    sig_fft = np.fft.fft(sig, n = len(sig))
+    print("Toof the fft of the signal")
+
+    # filter the signal
+    filtered_sig_fft = sig_fft * h_fft
+    print("Filtered the signal")
+
+    # inverse fft to get the filtered signal
+    filtered_sig = np.fft.ifft(filtered_sig_fft)
+    print("Inverse FFT of the filtered signal")
+
+    return filtered_sig
 
 # Generate random QPSK symbols (for testing)
 def random_symbol_generator(num_symbols=100):
@@ -25,15 +70,51 @@ def random_symbol_generator(num_symbols=100):
     x_symbols = np.cos(x_radians) + 1j * np.sin(x_radians)
     return x_symbols
 
-# Add noise to symbols
+# Add noise to symbols (for testing)
 def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
     n = (np.random.randn(num_symbols) + 1j * np.random.randn(num_symbols)) / np.sqrt(2)
     phase_noise = np.random.randn(len(x_symbols)) * 0.1
     r = x_symbols * np.exp(1j * phase_noise) + n * np.sqrt(noise_power)
     return r
 
+# Matched Filter
+def matched_filter(qpsk_waveform, f_if, symbol_rate, N):
+    print("Applying the matched filter")
+    amplitude = 1.0
+    sample_rate = 3 * f_if                   
+    samples_per_symbol = int(sample_rate / symbol_rate)     
+    t = np.arange(0, N * samples_per_symbol) / sample_rate  
+    
+    # Template: carrier cosine (assuming zero phase)
+    template = amplitude * np.cos(2 * np.pi * f_if * t)       
+    
+    # Compute FFT length for linear correlation
+    L = len(qpsk_waveform) + len(template) - 1
+    
+    # FFT of received signal and template (zero-padded)
+    qpsk_fft = np.fft.fft(qpsk_waveform, n=L)
+    template_fft = np.fft.fft(template, n=L)
+    
+    # Cross-correlation = IFFT of (FFT(r) * conjugate(FFT(s)))
+    matched_filter_output = np.fft.ifft(qpsk_fft * np.conj(template_fft))
+    print("Matched filter computed")
+    return matched_filter_output.real  # Output is real-valued (take real part)
+
+# Sample the received signal
+def sample_signal(analytic_signal, sample_rate, symbol_rate):
+    print("Sampling the analytic signal")
+    ## Sample at symbol midpoints ##
+    samples_per_symbol = int(sample_rate / symbol_rate)             # number of samples per symbol
+    offset = samples_per_symbol // 2                                # offset to sample at the midpoint of each symbol   
+    ## Sample the analytic signal ##
+    sampled_symbols = analytic_signal[offset::samples_per_symbol]   # symbols sampled from the analytical signal
+    sampled_symbols /= np.abs(sampled_symbols)                      # normalize the symbols
+    print("Done sampling the analytic signal")
+    return sampled_symbols
+
 # QPSK symbol to bit mapping
 def bit_reader(symbols):
+    print("Reading bits from symbols")
     bits = np.zeros((len(symbols), 2), dtype=int)
     for i in range(len(symbols)):
         angle = np.angle(symbols[i], deg=True) % 360
@@ -50,39 +131,15 @@ def bit_reader(symbols):
             bits[i] = [1, 0]  # 315°
     return bits
 
-# Matched Filter
-def matched_filter(qpsk_waveform, fc):
-    omega = 2 * np.pi * fc                                  # carrier frequency in radians
-    T = np.exp(1j*omega)                                    # complex exponential for the carrier frequency
-    return np.convolve(qpsk_waveform, np.flip(np.conj(T)))  # cross-correlation of the received signal with the expected signal
-
-# sample the received signal and do error checking
-def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
-    ## compute the Hilbert transform ##
-    analytic_signal = hilbert(np.real(qpsk_waveform))    # hilbert transformation
-
-    ## Sample at symbol midpoints ##
-    samples_per_symbol = int(sample_rate / symbol_rate)             # number of samples per symbol
-    offset = samples_per_symbol // 2                                # offset to sample at the midpoint of each symbol   
-    
-    ## Apply matched filter to the received signal ##
-    matched_filtered_signal = matched_filter(qpsk_waveform, fc)
-
-    ## compute the Hilbert transform ##
-    # Note: The correct way to do this is to break this into I and Q components,
-    #       but for now the Hilbert Transform is applied
-    analytic_signal = hilbert(np.real(matched_filtered_signal))    # hilbert transformation
-    
-    ## Sample the analytic signal ##
-    sampled_symbols = analytic_signal[offset::samples_per_symbol]   # symbols sampled from the analytical signal
-    sampled_symbols /= np.abs(sampled_symbols)                      # normalize the symbols
-
+# Error checking for the start sequence
+def error_check_start_sequence(sampled_symbols):
+    print("Error checking")
     ## look for the start sequence ##
     expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)    # put the start sequence into a string
     best_bits = None                                                                                            # holds the best bits found
-    #print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
+    print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
     og_sampled_symbols = ''.join(str(bit) for pair in bit_reader(sampled_symbols) for bit in pair)                 # original sampled symbols in string format
-    #print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
+    print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
 
     ## Loop through possible phase shifts ##
     for i in range(0, 3):   # one for each quadrant (0°, 90°, 180°, 270°)
@@ -92,12 +149,12 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
         # decode the bits
         decode_bits = bit_reader(rotated_bits)                                  # decode the rotated bits
         flat_bits = ''.join(str(bit) for pair in decode_bits for bit in pair)   # put the bits into a string
-        #print("Rotated bits: ", flat_biTypeError: int() argument must be a string, a bytes-like object or a number, not 'NoneType'ts)                                      # debug statement
+        print("Rotated bits: ", flat_bits)                                      # debug statement
         
          # Check for presence of the known start sequence (first few symbols)
         if expected_start_sequence == flat_bits[0:8]:                   # check only first 8 symbols worth (16 bits)
             print(f"Start sequence found with phase shift: {i*90}°")
-            best_bits = flat_bits    TypeError: int() argument must be a string, a bytes-like object or a number, not 'NoneType'                                   # store the best bits found
+            best_bits = flat_bits                                       # store the best bits found
             break
     
     # Error state if no start sequence was found
@@ -106,6 +163,33 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
         rotated_symbols = sampled_symbols
         decoded_bits = bit_reader(rotated_symbols)
         best_bits = ''.join(str(b) for pair in decoded_bits for b in pair)
+    
+    return best_bits
+
+# sample the received signal and do error checking
+def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, N, f_lo, f_cutoff):
+    ## Demodulate the QPSK waveform ##
+    #demod_sig = mix_signal(f_lo, qpsk_waveform)
+    #pre_dsp_sig = filter_signal(f_cutoff, demod_sig)
+    
+    ## Apply matched filter to the received signal ##
+    #matched_filtered_signal = matched_filter(pre_dsp_sig, f_base_band, symbol_rate, N)  # apply the matched filter to the received signal
+    #matched_filtered_signal = demod_sig
+    matched_filtered_signal = qpsk_waveform
+
+    ## compute the Hilbert transform ##
+    # Note: The correct way to do this is to break this into I and Q components,
+    #       but for now the Hilbert Transform is applied
+    print("Applying Hilbert Transform...")
+    analytic_signal = hilbert(np.real(matched_filtered_signal))  # hilbert transformation
+    
+    # sample the analytic signal
+    print("Sampling the analytic signal...")
+    sampled_symbols = sample_signal(analytic_signal, sample_rate, symbol_rate)
+
+    # decode the symbols and error check the start sequence
+    print("Decoding symbols and checking for start sequence...")
+    best_bits = error_check_start_sequence(sampled_symbols)
 
     return analytic_signal, best_bits
 
@@ -113,7 +197,7 @@ def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc):
 
 def main():
     # Input message
-    message = "Ra."
+    message = "Ra"
     print("Message:", message)
 
     # Convert message to binary
@@ -126,17 +210,23 @@ def main():
     #noisy_bits = noise_adder(bit_sequence, noise_power=0.1, num_symbols=len(bit_sequence)/2)
 
     # Signal generation parameters
-    fc = 920e6              # Carrier frequency for modulation
-    sample_rate = 3 * fc    # 3 times the carrier frequency for oversampling
-    symbol_rate = 1000      # 1 kHz
+    fc = 920e6 + f_base_band    # Carrier frequency for modulation
+    sample_rate = 3 * fc        # 3 times the carrier frequency for oversampling
+    symbol_rate = 10000         # 10 kHz
+
+    # filter frequency cutoff
+    f_cutoff = 200e3
+    f_lo = fc + f_base_band 
 
     # Generate QPSK waveform using your SigGen class
+    print("Generating QPSK waveform...")
     sig_gen = SigGen.SigGen(fc, 1.0, sample_rate, symbol_rate)
-    t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
+    t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence, True)
 
     # decode the waveform
     # apply hilbert transform
-    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, fc)
+    print("Decoding QPSK waveform...")
+    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, len(symbols), f_lo, f_cutoff)
 
     # Convert to ASCII characters
     decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
@@ -156,14 +246,18 @@ def main():
         print("Mismatch detected.")
 
 
-    # Plot the waveform and phase
-    plt.figure(figsize=(10, 4))
-    plt.plot(t, analytical_output.real, label='I (real part)')
-    plt.plot(t, analytical_output.imag, label='Q (imag part)')
-    plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Amplitude')
-    plt.grid()
-    plt.legend()
-    plt.tight_layout()
+    plt.plot(np.real(analytical_output), np.imag(analytical_output), '.')
+    plt.grid(True)
     plt.show()
+
+    # # Plot the waveform and phase
+    # plt.figure(figsize=(10, 4))
+    # plt.plot(t, analytical_output.real, label='I (real part)')
+    # plt.plot(t, analytical_output.imag, label='Q (imag part)')
+    # plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Amplitude')
+    # plt.grid()
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.show()
