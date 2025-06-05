@@ -136,7 +136,7 @@ def simulate_page():
                     global f_out
 
                     message_input = message.value
-                    print(f'message input type is :{type(message_input)}')
+                    
                     # implement zmq here
 
                     if noise_checkbox.value:
@@ -157,7 +157,7 @@ def simulate_page():
                         'noise_bool': noise_bool,
                         'noise_power': noise_power,
                     }
-                    print(data_dict)
+                
                     with open('data_dict.pkl', 'wb') as outfile:
                             pickle.dump(data_dict,outfile)
                     #basically run everything in zmq_integration
@@ -197,8 +197,7 @@ def simulate_page():
                     rx_analytical_signal = data['receiver analytical signal']
                     f_in = data['freq in']
                     f_out = data['freq out']
-                    #debug:
-                    print(tx_signal)
+                    
 
                     #all data read do plots here
                     #generate_plots
@@ -249,9 +248,9 @@ def simulate_page():
                                 plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
                             
                     if len(tx_vert_lines) > 10:
-                        plt.title(f'QPSK Waveform for \"{message}\" (first 10 symbol periods)')
+                        plt.title(f'QPSK Waveform for \"{message_input}\" (first 10 symbol periods)')
                     else:
-                        plt.title(f'QPSK Waveform for \"{message}\"')
+                        plt.title(f'QPSK Waveform for \"{message_input}\"')
                     plt.xlabel('Time (s)')
                     plt.ylabel('Amplitude')
                     plt.grid()

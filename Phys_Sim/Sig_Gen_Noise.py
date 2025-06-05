@@ -69,11 +69,21 @@ class SigGen:
         # Modulate: multiply upsampled symbols by phasor
         qpsk_waveform = upsampled_symbols * phasor
 
+        # get vertical lines
+        t_vertical_lines = []  # Initialize vertical lines for debugging
+        for i, symbol in enumerate(symbols):
+            #compute the phase offset for the symbol
+            phase_offset = np.angle(symbol)
+            #debugging print statement to show the symbol and phase offset
+            #print(f"Symbol {i}: {symbol}, Phase Offset: {phase_offset}");
+            idx_start = i * samples_per_symbol
+            t_vertical_lines.append(idx_start/self.sample_rate)
+
         if bool_noise:
             # add noise to the QPSK wavefrorm
             qpsk_waveform = self.noise_adder(qpsk_waveform, noise_power)
 
-        return t, qpsk_waveform, symbols
+        return t, qpsk_waveform, symbols, t_vertical_lines
     
     def message_to_bits(self, message):
         """

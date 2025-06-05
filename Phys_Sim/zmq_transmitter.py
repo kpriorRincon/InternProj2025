@@ -40,20 +40,15 @@ with open('data_dict.pkl', 'rb') as infile:
 f_sample = init_data['sample rate']
 symbol_rate = init_data['symbol rate']
 
-sig_gen = Sig_Gen_Noise.SigGen(sample_rate=f_sample, symbol_rate=symbol_rate)
-sig_gen.freq = f_in
-sig_gen.sample_rate = f_sample
-sig_gen.symbol_rate = symbol_rate 
+sig_gen_noise = Sig_Gen_Noise.SigGen(sample_rate=f_sample, symbol_rate=symbol_rate)
+sig_gen_noise.freq = f_in
+sig_gen_noise.sample_rate = f_sample
+sig_gen_noise.symbol_rate = symbol_rate 
 
-message_bin = sig_gen.message_to_bits(message)
+message_bin = sig_gen_noise.message_to_bits(message)
 print("Transmitter: Message converted to binary.")
-sig_gen.generate_qpsk(message_bin)
+t, tx_qpsk, tx_symbols, tx_vert_lines = sig_gen_noise.generate_qpsk(message_bin, False, 0)
 print("Transmitter: QPSK signal generated.")
-
-t = sig_gen.time_vector
-tx_qpsk = sig_gen.qpsk_waveform
-tx_vert_lines = sig_gen.time_vertical_lines
-tx_symbols = sig_gen.symbols
 
 rep = {"time": t, 
        "qpsk": tx_qpsk, 
