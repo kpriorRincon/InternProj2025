@@ -25,11 +25,18 @@ rx.setsockopt(zmq.LINGER, 0)
 # Get user input
 time.sleep(1)
 print("Controller: Waiting for user input...")
-message = input("Enter the message you want to send:\n")
-f_in = float(input("Enter the desired frequency (in MHz) to transmit the message:\n"))
-f_in = f_in*1000000
-f_out = float(input("Enter the desired frequency (in MHz) to receive the message:\n"))
-f_out = f_out*1000000
+# message = input("Enter the message you want to send:\n")
+# f_in = float(input("Enter the desired frequency (in MHz) to transmit the message:\n"))
+# f_in = f_in*1000000
+# f_out = float(input("Enter the desired frequency (in MHz) to receive the message:\n"))
+# f_out = f_out*1000000
+
+with open('data_dict.pkl', 'rb') as infile:
+    init_data = pickle.load(infile)
+
+f_in = init_data['fin']
+f_out = init_data['fout']
+message = init_data['message']
 
 # ---------------------------------------------------
 
@@ -130,6 +137,7 @@ bit_sequence = rx_data['bit sequence']
 recovered_message = rx_data['recovered message']
 rx_incoming_signal = rx_data['incoming signal']
 rx_filtered_signal = rx_data['filtered signal']
+rx_analytical_signal = rx_data['analytical signal']
 
 print('Controller: Original Message:', message)
 print('Controller: Recovered Message:', recovered_message)
@@ -146,7 +154,10 @@ controller_data = {'time': t,
                    'receiver message in binary': bit_sequence,
                    'receiver recovered message': recovered_message,
                    'receiver incoming signal': rx_incoming_signal,
-                   'receiver filtered signal': rx_filtered_signal
+                   'receiver filtered signal': rx_filtered_signal,
+                   'receiver analytical signal': rx_analytical_signal,
+                   'freq in': f_in,
+                   'freq out': f_out
                    }
 
 

@@ -14,6 +14,12 @@ from sim_qpsk_noisy_demod import sample_read_output
 from scipy.signal import hilbert
 import numpy as np
 
+
+def Noise_Addr(input_wave, noise_power):
+    #define noise
+    noise =np.random.normal(0,noise_power,len(input_wave))
+    return input_wave+noise
+
 context = zmq.Context()
 
 # Control socket
@@ -41,18 +47,32 @@ print("Repeater: Waiting for request from controller...")
 freq = ctrl.recv_json()
 f_out = freq['freq out']
 f_in = freq['freq in']
-symbol_rate = 10e6
-f_sample = 4e9 
-incoming_qpsk = tx['tx signal']
+
+# symbol_rate = 10e6
+# f_sample = 4e9 
+
+with open('data_dict.pkl', 'rb') as infile:
+    init_data = pickle.load(infile)
+
+f_sample = init_data['sample rate']
+symbol_rate = init_data['symbol rate']
+noise_bool = init_data['noise_bool']
+noise_power = init_data['noise_power']
+gain = init_data['gain']
+if noise_bool:
+    incoming_qpsk = Noise_Addr(tx['tx signal'], noise_power)
+else:
+    incoming_qpsk = tx['tx signal']
+
 t = tx['time']
 repeater = Repeater.Repeater(sampling_frequency=f_sample, symbol_rate=symbol_rate)
 repeater.desired_frequency = f_out
 
-qpsk_mixed = np.real(repeater.mix(qpsk_signal=incoming_qpsk, qpsk_frequency=f_in, t=t))
+qpsk_mixed = repeater.mix(qpsk_signal=incoming_qpsk, qpsk_frequency=f_in, t=t)
 symbol_rate *= f_out / f_in
 f_sample *= f_out / f_in
 qpsk_filtered = repeater.filter(qpsk_mixed)
-repeater.gain = 2
+repeater.gain = gain
 qpsk_amp = repeater.amplify(input_signal=qpsk_filtered)
 
 rep = {"Incoming Signal": incoming_qpsk,

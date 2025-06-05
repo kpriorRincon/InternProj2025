@@ -13,6 +13,11 @@ from sim_qpsk_noisy_demod import sample_read_output
 from scipy.signal import hilbert
 import numpy as np
 
+def Noise_Addr(input_wave, noise_power):
+    #define noise
+    noise =np.random.normal(0,noise_power,len(input_wave))
+    return input_wave+noise
+
 context = zmq.Context()
 
 # Control socket
@@ -41,19 +46,31 @@ freq = ctrl.recv_json()
 f_out = freq["freq out"]
 print("Receiver: Request received.")
 
-symbol_rate = 10e6
-f_sample = 4e9 
+# symbol_rate = 10e6
+# f_sample = 4e9 
+
+with open('data_dict.pkl', 'rb') as infile:
+    init_data = pickle.load(infile)
+
+f_sample = init_data['sample rate']
+symbol_rate = init_data['symbol rate']
+noise_bool = init_data['noise_bool']
+noise_power = init_data['noise_power']
 
 receiver = Receiver.Receiver(f_sample)
+if noise_bool:
+    rep_signal = Noise_Addr(rep["rep signal"], noise_power)
+else:
+    rep_signal = rep["rep signal"]
 
-rep_signal = rep["rep signal"]
 analytical_signal, bits = receiver.demodulator(rep_signal, f_sample, symbol_rate, f_out)
 message = receiver.get_string(bits)
 
 rep = {"bit sequence": bits,
        "recovered message": message,
        "incoming signal": rep_signal,
-       "filtered signal": rep_signal 
+       "filtered signal": rep_signal, 
+       'analytical signal': analytical_signal
        }
 
 print("Receiver: Sending data to controller...")
