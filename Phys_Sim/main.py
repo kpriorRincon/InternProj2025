@@ -28,7 +28,7 @@ symbol_rate = 10e6
 symbol_rate = 20e6
 sample_rate = 4e9
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
-repeater = Repeater.Repeater(sampling_frequency=sample_rate)
+repeater = Repeater.Repeater(sampling_frequency=sample_rate, symbol_rate=symbol_rate)
 receiver = Receiver.Receiver(sampling_rate=sample_rate)
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
@@ -206,7 +206,7 @@ def repeater_page():
     ui.button('back', on_click=ui.navigate.back)
     if message_input is not None:
         with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
-            ui.label(f'Input Frequency: {sig_gen.freq/1e6:.1f} MHz      Output Frequency: {repeater.desired_freqeuncy/1e6:.1f} MHz').style('font-size: 2em; font-weight: bold;')
+            ui.label(f'Input Frequency: {sig_gen.freq/1e6:.1f} MHz      Output Frequency: {repeater.desired_frequency/1e6:.1f} MHz').style('font-size: 2em; font-weight: bold;')
 
     ui.image('original_qpsk_rp.png').force_reload()
     ui.image('shifted_qpsk_rp.png').force_reload()
