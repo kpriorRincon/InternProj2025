@@ -55,7 +55,7 @@ class Repeater:
         # Apply filter
         filtered_sig = signal.lfilter(taps, 1.0, mixed_qpsk)  # filtered signal
         
-        return filtered_sig
+        return mixed_qpsk
 
     def amplify(self, input_signal):
         """

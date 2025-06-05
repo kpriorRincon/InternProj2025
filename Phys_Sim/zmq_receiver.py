@@ -1,3 +1,6 @@
+# Scipts for a ZeroMQ system that implments the bent-pipe communication
+# This script acts as the receiver that receives commands from the controller
+
 import zmq
 import time
 import pickle
@@ -15,28 +18,28 @@ context = zmq.Context()
 # Control socket
 ctrl = context.socket(zmq.REP)
 ctrl.bind("tcp://127.0.0.1:6003") # sets up a REQ-REP connection with the controller/computer
+ctrl.setsockopt(zmq.LINGER, 0)
 
 # ---------------------------------------------------
 
 # Getting the signal from the repeater
 
-print("Waiting for request from controller...")
+print("Receiver: Waiting for request from controller...")
 req = ctrl.recv_string()
-print("Request received.")
+print("Receiver: Request received.")
 ctrl.send_string("Request received")
 time.sleep(0.5)
 with open('rep_to_rx.pkl', 'rb') as infile:
     rep = pickle.load(infile)
-print("Signal acquired.")
+print("Receiver: Signal acquired.")
 
 # ---------------------------------------------------
 
 # Demodulating/decoding the signal
-
-print("Waiting for request from controller...")
+print("Receiver: Waiting for request from controller...")
 freq = ctrl.recv_json()
 f_out = freq["freq out"]
-print("Request received.")
+print("Receiver: Request received.")
 
 symbol_rate = 10e6
 f_sample = 4e9 
@@ -50,9 +53,9 @@ message = receiver.get_string(bits)
 rep = {"bit sequence": bits,
        "recovered message": message}
 
-print("Sending data to controller...")
+print("Receiver: Sending data to controller...")
 ctrl.send_pyobj(rep)
-print("Data sent.")
+print("Receiver: Data sent.")
 
 ctrl.close()
 context.term()
