@@ -148,8 +148,8 @@ def simulate_page():
                         noise_power = 0  # Default value if no noise is added
 
                     data_dict = {
-                        'fin':freq_in_slider.value,
-                        'fout': freq_out_slider.value, 
+                        'fin':freq_in_slider.value*1e6,
+                        'fout': freq_out_slider.value*1e6, 
                         'message': message_input,
                         'sample rate': sample_rate,
                         'gain': 10**(int(gain_slider.value)/10), 
@@ -157,6 +157,7 @@ def simulate_page():
                         'noise_bool': noise_bool,
                         'noise_power': noise_power,
                     }
+                    print(data_dict)
                     with open('data_dict.pkl', 'wb') as outfile:
                             pickle.dump(data_dict,outfile)
                     #basically run everything in zmq_integration
@@ -196,6 +197,8 @@ def simulate_page():
                     rx_analytical_signal = data['receiver analytical signal']
                     f_in = data['freq in']
                     f_out = data['freq out']
+                    #debug:
+                    print(tx_signal)
 
                     #all data read do plots here
                     #generate_plots
