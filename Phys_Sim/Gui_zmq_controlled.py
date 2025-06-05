@@ -54,7 +54,7 @@ noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
 
-decoded_bits = None
+rx_message_binary = None
 decoded_string = None
 
 def Noise_Addr(input_wave, noise_power):
@@ -116,7 +116,7 @@ def simulate_page():
                     """
                     
                     global message_input
-                    global decoded_bits
+                    global rx_message_binary
                     global decoded_string
                     global t
                     global tx_signal
@@ -136,7 +136,7 @@ def simulate_page():
                     global f_out
 
                     message_input = message.value
-
+                    print(f'message input type is :{type(message_input)}')
                     # implement zmq here
 
                     if noise_checkbox.value:
@@ -502,17 +502,16 @@ def receiver_page():
     """This function creates the Receiver page where the user can view outputs from the receiver."""
     ui.button('back', on_click=ui.navigate.back)
     #on this page put plots
-    global decoded_bits
-    global decoded_string
+
 
     marker = ''
     payload = ''
-    for i in range(len(decoded_bits)):
+    for i in range(len(rx_message_binary)):
         #get the first 8 bits as the marker
         if i < 8:
-            marker += str(decoded_bits[i])
+            marker += str(rx_message_binary[i])
         else:
-            payload += str(decoded_bits[i])
+            payload += str(rx_message_binary[i])
     with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
         ui.image('demod_media/Constellation.png').force_reload()
         ui.image('demod_media/Base_Band_Waveform.png').force_reload()
@@ -520,7 +519,7 @@ def receiver_page():
         ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
         ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
         ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
-        ui.label(f'Decoded Message: {decoded_string}')
+        ui.label(f'Decoded Message: {rx_recovered_message}')
 
     pass
 
