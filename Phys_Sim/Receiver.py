@@ -130,7 +130,6 @@ class Receiver:
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Madgnitude (dB)')
         plt.grid()
-        plt.legend()
         plt.tight_layout()
         plt.savefig('demod_media/Base_Band_FFT.png')
 
