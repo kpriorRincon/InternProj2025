@@ -135,13 +135,9 @@ def simulate_page():
                     if noise_bool: 
                         repeater.qpsk_filtered = Noise_Addr(repeater.qpsk_filtered, noise_power)
 
-                    #TODO put receiver class here
-                    decoded_bits, decoded_string = receiver.handler(repeater.qpsk_mixed, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_frequency, sig_gen.time_vector)
-
-                    #noise_level = noise_slider.value
-                    #debug:
-                    #print("made it here")
-                    ui.notify('Data stored successfully!')  # Placeholder notification
+                    # run receiver handler
+                    decoded_bits, decoded_string = receiver.handler(repeater.qpsk_filtered, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_frequency, sig_gen.time_vector)
+                    ui.notify('Data stored successfully!') 
 
             
         elif selected_type == 'Continuous Message': 
