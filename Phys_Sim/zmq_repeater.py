@@ -77,4 +77,5 @@ with open('rep_to_rx.pkl','wb') as outfile:
 
 print("Signal sent.")
 
-
+ctrl.close()
+context.term()

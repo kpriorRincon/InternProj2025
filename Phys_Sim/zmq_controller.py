@@ -116,5 +116,8 @@ print('Original Message:', message)
 print('Recovered Message:', recovered_message)
 
 
-
+tx.close()
+rep.close()
+rx.close()
+context.term()
 

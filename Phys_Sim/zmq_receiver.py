@@ -53,3 +53,6 @@ rep = {"bit sequence": bits,
 print("Sending data to controller...")
 ctrl.send_pyobj(rep)
 print("Data sent.")
+
+ctrl.close()
+context.term()

@@ -77,3 +77,5 @@ with open('tx_to_rep.pkl','wb') as outfile:
 
 print("Signal sent.")
 
+ctrl.close()
+context.term()
