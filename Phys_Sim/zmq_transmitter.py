@@ -5,7 +5,7 @@ import zmq
 import pickle
 
 # Imports to run the sim
-import Sig_Gen as Sig_Gen
+import Sig_Gen_Noise as Sig_Gen_Noise
 import Receiver as Receiver
 import Repeater as Repeater
 import numpy as np
@@ -40,7 +40,7 @@ with open('data_dict.pkl', 'rb') as infile:
 f_sample = init_data['sample rate']
 symbol_rate = init_data['symbol rate']
 
-sig_gen = Sig_Gen.SigGen(f_sample, symbol_rate)
+sig_gen = Sig_Gen_Noise.SigGen(sample_rate=f_sample, symbol_rate=symbol_rate)
 sig_gen.freq = f_in
 sig_gen.sample_rate = f_sample
 sig_gen.symbol_rate = symbol_rate 
