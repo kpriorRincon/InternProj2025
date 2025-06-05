@@ -42,22 +42,24 @@ class Repeater:
         Returns:
         - The filtered signal.
         """
-        # Implement filtering logic here
-        from scipy import signal
-        freq_low = self.desired_frequency - 50e6
-        freq_high = self.desired_frequency +50e6
-
-        #we need to normalize these frequencies by sampling rate/2
-        nyquist = self.sampling_frequency/2
-        low = freq_low/nyquist
-        high =freq_high/nyquist
-        #debug print(low, high)
-        taps = signal.firwin(order+1,[low, high])
-
-        # Apply filter
-        filtered_sig = signal.lfilter(taps, 1.0, mixed_qpsk)  # filtered signal
+        #don't apply filter
         
-        return filtered_sig
+        # # Implement filtering logic here
+        # from scipy import signal
+        # freq_low = self.desired_frequency - 150e6
+        # freq_high = self.desired_frequency + 150e6
+
+        # #we need to normalize these frequencies by sampling rate/2
+        # nyquist = self.sampling_frequency/2
+        # low = freq_low/nyquist
+        # high =freq_high/nyquist
+        # #debug print(low, high)
+        # taps = signal.firwin(order+1,[low, high])
+
+        # # Apply filter
+        # filtered_sig = signal.lfilter(taps, 1.0, mixed_qpsk)  # filtered signal
+        
+        return mixed_qpsk
 
     def amplify(self, input_signal):
         """
