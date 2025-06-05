@@ -281,7 +281,7 @@ def simulate_page():
                     #start plots for repeater: 
                     x_t_lim = 3 / symbol_rate
                     n = len(t)
-                    freqs = np.fft.fftfreq(n, d=1/fs)
+                    freqs = np.fft.fftfreq(n, d=1/sample_rate)
                     positive_freqs = freqs > 0
                     positive_freq_values = freqs[positive_freqs]
 
