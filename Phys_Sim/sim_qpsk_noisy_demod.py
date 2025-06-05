@@ -34,6 +34,22 @@ def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
     r = x_symbols * np.exp(1j * phase_noise) + n * np.sqrt(noise_power)
     return r
 
+# find the minimum
+def find_start_from_minimum_before_peak(correlation_signal, search_window=100):
+    corr_mag = np.abs(correlation_signal)
+    peak_idx = np.argmax(corr_mag)
+    
+    # Search for minimum before peak
+    search_start = max(0, peak_idx - search_window)
+    search_end = peak_idx
+    
+    if search_start >= search_end:
+        return peak_idx
+    
+    search_region = corr_mag[search_start:search_end]
+    local_min_idx = np.argmin(search_region)
+    return search_start + local_min_idx
+
 # Cross-Correlation
 def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
     start_index = 0
@@ -82,12 +98,12 @@ def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
             current_max = max_corr_abs
             
             # Find start index (in original signal coordinates)
-            start_idx_in_corr = np.argmax(np.abs(cor_sig_start))
+            start_idx_in_corr = find_start_from_minimum_before_peak(cor_sig_start, search_window=100)
             best_start_idx = start_idx_in_corr  # For 'valid' mode, this is direct
             
             # Correlate with end sequence
             cor_sig_end = correlate(compensated_sig, np.conj(end_gold), mode='valid')
-            end_idx_in_corr = np.argmax(np.abs(cor_sig_end))
+            end_idx_in_corr = find_start_from_minimum_before_peak(cor_sig_end, search_window=100)
             best_end_idx = end_idx_in_corr + len(end_gold)  # Add length to get end position
             
             # Ensure end_index is not beyond signal length
@@ -113,15 +129,27 @@ def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
     # Plot the best correlation result
     if best_start_corr is not None:
         plt.figure(figsize=(12, 4))
-        plt.plot(np.arange(len(best_start_corr)), 20*np.log10(np.abs(best_start_corr)))
-        plt.axvline(x=np.argmax(np.abs(best_start_corr)), color='r', linestyle='--', label='Start')
+        corr_db = 20*np.log10(np.abs(best_start_corr))
+        plt.plot(np.arange(len(best_start_corr)), corr_db)
+        
+        # Vertical line at peak
+        peak_idx = np.argmax(np.abs(best_start_corr))
+        plt.axvline(x=peak_idx, color='r', linestyle='--', label='Peak Location')
+        
+        # Horizontal lines for reference levels
+        max_corr_db = np.amax(corr_db)
+        plt.axhline(y=max_corr_db, color='g', linestyle='--', alpha=0.7, label='Peak Level')
+        plt.axhline(y=max_corr_db - 3, color='orange', linestyle='--', alpha=0.7, label='-3dB')
+        
         plt.xlabel("Sample Index")
         plt.ylabel("Correlation Magnitude (dB)")
         plt.title("Cross Correlation - Start Sequence")
         plt.legend()
+        plt.ylim(65, 85)
         plt.grid(True)
-        plt.show()
     
+
+
     return start_index, end_index
 
 ## Functions used in final implementation ##
@@ -209,18 +237,22 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     # plots to see the constellations before and after tuning and after the matched filter
     fig, axs = plt.subplots(3,1)
     axs[0].scatter(np.real(qpsk_waveform), np.imag(qpsk_waveform))
+    axs[0].set_xlabel('Real')
+    axs[0].set_ylabel('Imaginary')
     axs[0].set_title("Raw QPSK")
     axs[0].grid()
 
     axs[1].scatter(np.real(baseband_sig), np.imag(baseband_sig))
     axs[1].set_title("Tuned Signal")
+    axs[1].set_xlabel('Real')
+    axs[1].set_ylabel('Imaginary')
     axs[1].grid()
 
     axs[2].scatter(np.real(analytic_sig), np.imag(analytic_sig))
     axs[2].set_title("Analytic Signal")
+    axs[2].set_xlabel('Real')
+    axs[2].set_ylabel('Imaginary')
     axs[2].grid()
-
-    plt.show()
     
     # sample the analytic signal
     print("Sampling the analytic signal...")
@@ -236,7 +268,7 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
 
 def main():
     # Input message
-    message = "garbage data R some really important data M garbage data"
+    message = "abcde R abcde M abcde"
     print("Message:", message)
 
     # Convert message to binary
@@ -254,6 +286,10 @@ def main():
     print("Generating QPSK waveform...")
     sig_gen = SigGen.SigGen(freq, 1.0, sample_rate, symbol_rate)
     t, qpsk_waveform, _ = sig_gen.generate_qpsk(bit_sequence, False, 0.1)
+
+    # plt.plot(t, np.imag(qpsk_waveform))
+    # plt.xlim(0,50/sample_rate)
+    # plt.show()
 
     
     # decode the waveform
@@ -281,16 +317,16 @@ def main():
 
     # constellation plot
     fig, axs = plt.subplots(3,1)
-    axs[0].plot(np.real(analytical_output), np.imag(analytical_output), '.')
+    axs[0].scatter(np.real(analytical_output), np.imag(analytical_output))
     axs[0].grid(True)
     axs[0].set_title('Constellation Plot of Sampled Symbols')
     axs[0].set_xlabel('Real')
     axs[0].set_ylabel('Imaginary')
 
     # Plot the waveform and phase
-    axs[1].plot(t, np.real(analytical_output), label='I (real part)')
-    axs[1].plot(t, np.imag(analytical_output), label='Q (imag part)')
-    axs[1].set_title('Hilbert Transformed Waveform (Real and Imag Parts)')
+    axs[1].plot(np.arange(0,len(analytical_output)), np.real(analytical_output), label='I (real part)')
+    axs[1].plot(np.arange(0, len(analytical_output)), np.imag(analytical_output), label='Q (imag part)')
+    axs[1].set_title('Baseband Time Signal (Real and Imag Parts)')
     axs[1].set_xlabel('Time (s)')
     axs[1].set_ylabel('Amplitude')
     axs[1].grid()
