@@ -104,7 +104,7 @@ def simulate_page():
                     message_input = message.value
 
                     #run the sig gen handler
-                    sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
+                    sig_gen.handler(message_input, int(freq_in_slider.value)*1e6) 
 
                     if noise_checkbox.value:
                         global noise_bool
@@ -115,7 +115,6 @@ def simulate_page():
                         noise_bool = False
                         noise_power = 0  # Default value if no noise is added
 
-                    message_input = message.value
 
                     #Sig Gen
                     sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
@@ -135,6 +134,7 @@ def simulate_page():
                     if noise_bool: 
                         repeater.qpsk_filtered = Noise_Addr(repeater.qpsk_filtered, noise_power)
 
+                    print(noise_bool)
                     # run receiver handler
                     decoded_bits, decoded_string = receiver.handler(repeater.qpsk_filtered, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_frequency, sig_gen.time_vector)
                     ui.notify('Data stored successfully!') 
