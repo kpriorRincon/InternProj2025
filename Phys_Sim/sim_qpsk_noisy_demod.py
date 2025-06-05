@@ -12,7 +12,8 @@ from scipy.signal import correlate
 #####################################################
 
 ######### Global Variables #########
-phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
+phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK 01 01 00 10
+phase_end_sequence = np.array([-1+1j, 1+1j, -1-1j, -1+1j]) # M 01 00 11 01
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
 ######## Functions ########
@@ -33,18 +34,123 @@ def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
     r = x_symbols * np.exp(1j * phase_noise) + n * np.sqrt(noise_power)
     return r
 
-# Cross-Correlation
-def cross_correlation(sampled_symbols, start):
-    print("Performing cross correlation...")     
-    cross_correlation = correlate(sampled_symbols[0:8], start, mode='full', method='auto')
-    plt.plot(np.real(sampled_symbols), np.imag(sampled_symbols), '.', label='sampled symbols')
-    plt.plot(np.real(start), np.imag(start), '.', label='start')
-    plt.plot(np.real(cross_correlation), np.imag(cross_correlation), '.', label='cross correlation')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+# find the minimum
+def find_start_from_minimum_before_peak(correlation_signal, search_window=100):
+    corr_mag = np.abs(correlation_signal)
+    peak_idx = np.argmax(corr_mag)
     
-    return cross_correlation  # Output is real-valued (take real part)
+    # Search for minimum before peak
+    search_start = max(0, peak_idx - search_window)
+    search_end = peak_idx
+    
+    if search_start >= search_end:
+        return peak_idx
+    
+    search_region = corr_mag[search_start:search_end]
+    local_min_idx = np.argmin(search_region)
+    return search_start + local_min_idx
+
+# Cross-Correlation
+def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
+    start_index = 0
+    end_index = len(baseband_sig)  # Default to full signal
+    current_max = 0
+    best_start_corr = None
+    best_end_corr = None
+    best_start_idx = 0
+    best_end_idx = len(baseband_sig)
+    
+    # Define start and end sequences
+    start = 'R'
+    message_binary = ''.join(format(ord(char), '08b') for char in start)
+    start_sequence = [int(bit) for bit in message_binary]
+    
+    end = 'M'
+    message_binary = ''.join(format(ord(char), '08b') for char in end)
+    end_sequence = [int(bit) for bit in message_binary]
+    
+    print(f"Looking for start sequence: {start_sequence}")
+    print(f"Looking for end sequence: {end_sequence}")
+    
+    # Test different frequencies (for Doppler compensation)
+    for i, f in enumerate(freqs):
+        print(f"Testing frequency {i+1}/{len(freqs)}: {f/1e6:.1f} MHz")
+        
+        # Generate reference sequences at baseband
+        sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)  # Generate at baseband (0 Hz)
+        _, start_gold, _ = sig_gen.generate_qpsk(start_sequence, False, 0)
+        _, end_gold, _ = sig_gen.generate_qpsk(end_sequence, False, 0)
+        
+        # Apply frequency offset compensation to baseband signal
+        freq_offset = f - fc
+        compensated_sig = baseband_sig * np.exp(-1j * 2 * np.pi * freq_offset * np.arange(len(baseband_sig)) / sample_rate)
+        
+        # Correlate with start sequence
+        cor_sig_start = correlate(compensated_sig, np.conj(start_gold), mode='valid')
+        
+        # Find maximum correlation
+        max_corr_abs = np.amax(np.abs(cor_sig_start))
+        
+        if max_corr_abs > current_max:
+            print(f"Stronger correlation found at {f/1e6:.1f} MHz")
+            print(f"Correlation strength: {20*np.log10(max_corr_abs):.1f} dB")
+            
+            current_max = max_corr_abs
+            
+            # Find start index (in original signal coordinates)
+            start_idx_in_corr = find_start_from_minimum_before_peak(cor_sig_start, search_window=100)
+            best_start_idx = start_idx_in_corr  # For 'valid' mode, this is direct
+            
+            # Correlate with end sequence
+            cor_sig_end = correlate(compensated_sig, np.conj(end_gold), mode='valid')
+            end_idx_in_corr = find_start_from_minimum_before_peak(cor_sig_end, search_window=100)
+            best_end_idx = end_idx_in_corr + len(end_gold)  # Add length to get end position
+            
+            # Ensure end_index is not beyond signal length
+            best_end_idx = min(best_end_idx, len(baseband_sig))
+            
+            print(f"Start index: {best_start_idx}")
+            print(f"End index: {best_end_idx}")
+            
+            # Store best correlations for debugging
+            best_start_corr = cor_sig_start
+            best_end_corr = cor_sig_end
+    
+    # Set final indices
+    start_index = best_start_idx
+    end_index = best_end_idx
+    
+    # Final validation
+    if start_index >= end_index:
+        print("Warning: start_index >= end_index, using default values")
+        start_index = 0
+        end_index = len(baseband_sig)
+    
+    # Plot the best correlation result
+    if best_start_corr is not None:
+        plt.figure(figsize=(12, 4))
+        corr_db = 20*np.log10(np.abs(best_start_corr))
+        plt.plot(np.arange(len(best_start_corr)), corr_db)
+        
+        # Vertical line at peak
+        peak_idx = np.argmax(np.abs(best_start_corr))
+        plt.axvline(x=peak_idx, color='r', linestyle='--', label='Peak Location')
+        
+        # Horizontal lines for reference levels
+        max_corr_db = np.amax(corr_db)
+        plt.axhline(y=max_corr_db, color='g', linestyle='--', alpha=0.7, label='Peak Level')
+        plt.axhline(y=max_corr_db - 3, color='orange', linestyle='--', alpha=0.7, label='-3dB')
+        
+        plt.xlabel("Sample Index")
+        plt.ylabel("Correlation Magnitude (dB)")
+        plt.title("Cross Correlation - Start Sequence")
+        plt.legend()
+        plt.ylim(65, 85)
+        plt.grid(True)
+    
+
+
+    return start_index, end_index
 
 ## Functions used in final implementation ##
 # Sample the received signal
@@ -78,7 +184,7 @@ def bit_reader(symbols):
     return bits
 
 # Error checking for the start sequence using a matched filter
-def matched_filter(sampled_symbols):
+def error_handling(sampled_symbols):
     print("Error checking")
     ## look for the start sequence ##
     expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)    # put the start sequence into a string
@@ -88,9 +194,9 @@ def matched_filter(sampled_symbols):
     print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
 
     ## Loop through possible phase shifts ##
-    for i in range(0, 3):   # one for each quadrant (0°, 90°, 180°, 270°)
+    for i in range(0, 7):   # one for each quadrant (0°, 90°, 180°, 270°)
         # Rotate the flat bits to match the start sequence
-        rotated_bits = sampled_symbols * np.exp(-1j* np.deg2rad(i*90))  # Rotate by 0, 90, 180, or 270 degrees
+        rotated_bits = sampled_symbols * np.exp(-1j* np.deg2rad(i*45))  # Rotate by 0, 90, 180, or 270 degrees
         
         # decode the bits
         decode_bits = bit_reader(rotated_bits)                                  # decode the rotated bits
@@ -113,29 +219,56 @@ def matched_filter(sampled_symbols):
     return best_bits
 
 # sample the received signal and do error checking
-def sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t, fc):
+def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     ## tune to baseband ##
-    base_band_signal = qpsk_waveform * np.exp(1j*2*np.pi*(-fc))
+    print("Tuning to basband...")
+    baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
 
-    ## compute the Hilbert transform ##
-    print("Applying Hilbert Transform...")
-    analytic_signal = hilbert(np.real(base_band_signal))  # hilbert transformation
+    # find the desired signal
+    lam = 3e8 / fc  # wavelength of the carrier frequency
+    v = 7.8e3 # average speed of a satellite in LEO
+    doppler = v / lam   # calculated doppler shift
+    print("Doppler shift: ", doppler)
+    freqs = np.linspace(fc-doppler, fc+doppler, 4)
+    start_index, end_index = cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc)
+    analytic_sig = baseband_sig[start_index:end_index]
+    #analytic_signal = baseband_sig
+
+    # plots to see the constellations before and after tuning and after the matched filter
+    fig, axs = plt.subplots(3,1)
+    axs[0].scatter(np.real(qpsk_waveform), np.imag(qpsk_waveform))
+    axs[0].set_xlabel('Real')
+    axs[0].set_ylabel('Imaginary')
+    axs[0].set_title("Raw QPSK")
+    axs[0].grid()
+
+    axs[1].scatter(np.real(baseband_sig), np.imag(baseband_sig))
+    axs[1].set_title("Tuned Signal")
+    axs[1].set_xlabel('Real')
+    axs[1].set_ylabel('Imaginary')
+    axs[1].grid()
+
+    axs[2].scatter(np.real(analytic_sig), np.imag(analytic_sig))
+    axs[2].set_title("Analytic Signal")
+    axs[2].set_xlabel('Real')
+    axs[2].set_ylabel('Imaginary')
+    axs[2].grid()
     
     # sample the analytic signal
     print("Sampling the analytic signal...")
-    sampled_symbols = sample_signal(analytic_signal, sample_rate, symbol_rate)
+    sampled_symbols = sample_signal(analytic_sig, sample_rate, symbol_rate)
 
     # decode the symbols and error check the start sequence
     print("Decoding symbols and checking for start sequence...")
-    best_bits = matched_filter(sampled_symbols)
+    best_bits = error_handling(sampled_symbols)
 
-    return analytic_signal, best_bits
+    return analytic_sig, best_bits
 
 ##### MAIN TEST Function #####
 
 def main():
     # Input message
-    message = "RThis is a test to see how much we can decode before breaking"
+    message = "abcde R abcde M abcde"
     print("Message:", message)
 
     # Convert message to binary
@@ -144,23 +277,25 @@ def main():
     bit_sequence = [int(bit) for bit in message_binary]
     print("Binary Message:", grouped_bits)
 
-    # Add noise to the waveform
-    #noisy_bits = noise_adder(bit_sequence, noise_power=0.1, num_symbols=len(bit_sequence)/2)
-
     # Signal generation parameters
-    freq = 920e6        # Carrier frequency for modulation
-    sample_rate = 4e9   # 3 times the carrier frequency for oversampling
-    symbol_rate = 10e6  # 10 kHz
+    freq = 920e6            # Carrier frequency for modulation
+    sample_rate = 5 * freq  # 5 times the carrier frequency for oversampling
+    symbol_rate = 1e6      # 10 MHz
 
     # Generate QPSK waveform using your SigGen class
     print("Generating QPSK waveform...")
     sig_gen = SigGen.SigGen(freq, 1.0, sample_rate, symbol_rate)
-    t, qpsk_waveform,t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence, True, 0.1)
+    t, qpsk_waveform, _ = sig_gen.generate_qpsk(bit_sequence, False, 0.1)
 
+    # plt.plot(t, np.imag(qpsk_waveform))
+    # plt.xlim(0,50/sample_rate)
+    # plt.show()
+
+    
     # decode the waveform
     # apply hilbert transform
     print("Decoding QPSK waveform...")
-    analytical_output, flat_bits = sample_read_output(qpsk_waveform, sample_rate, symbol_rate, t, freq)
+    analytical_output, flat_bits = demodulator(qpsk_waveform, sample_rate, symbol_rate, t, freq)
 
     # Convert to ASCII characters
     decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
@@ -181,35 +316,31 @@ def main():
 
 
     # constellation plot
-    plt.figure(figsize=(10, 4))
-    plt.plot(np.real(analytical_output), np.imag(analytical_output), '.')
-    plt.grid(True)
-    plt.title('Constellation Plot of Sampled Symbols')
-    plt.xlabel('Real')
-    plt.ylabel('Imaginary')
-    plt.show()
+    fig, axs = plt.subplots(3,1)
+    axs[0].scatter(np.real(analytical_output), np.imag(analytical_output))
+    axs[0].grid(True)
+    axs[0].set_title('Constellation Plot of Sampled Symbols')
+    axs[0].set_xlabel('Real')
+    axs[0].set_ylabel('Imaginary')
 
     # Plot the waveform and phase
-    plt.figure(figsize=(10, 4))
-    plt.plot(t, analytical_output.real, label='I (real part)')
-    plt.plot(t, analytical_output.imag, label='Q (imag part)')
-    plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Amplitude')
-    plt.grid()
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    axs[1].plot(np.arange(0,len(analytical_output)), np.real(analytical_output), label='I (real part)')
+    axs[1].plot(np.arange(0, len(analytical_output)), np.imag(analytical_output), label='Q (imag part)')
+    axs[1].set_title('Baseband Time Signal (Real and Imag Parts)')
+    axs[1].set_xlabel('Time (s)')
+    axs[1].set_ylabel('Amplitude')
+    axs[1].grid()
+    axs[1].legend()
 
     # plot the fft
     ao_fft = np.fft.fft(analytical_output)
     freqs = np.fft.fftfreq(len(analytical_output), d=1/2*sample_rate)
-    plt.figure(figsize=(10, 4))
-    plt.plot(freqs, 20*np.log10(ao_fft))
-    plt.title('FFT of the Base Band Signal')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Madgnitude (dB)')
-    plt.grid()
-    plt.legend()
-    plt.tight_layout()
+    axs[2].plot(freqs, 20*np.log10(ao_fft))
+    axs[2].set_title('FFT of the Base Band Signal')
+    axs[2].set_xlabel('Frequency (Hz)')
+    axs[2].set_ylabel('Madgnitude (dB)')
+    axs[2].grid()
+
     plt.show()
+
+

@@ -33,8 +33,15 @@ message = req['message']
 f_in = req['freq in']
 f_out = req['freq out']
 
-symbol_rate = 10e6
-f_sample = 4e9 
+# symbol_rate = 10e6
+# f_sample = 4e9 
+
+with open('data_dict.pkl', 'rb') as infile:
+    init_data = pickle.load(infile)
+
+f_sample = init_data['sample rate']
+symbol_rate = init_data['symbol rate']
+
 sig_gen = Sig_Gen.SigGen(f_sample, symbol_rate)
 sig_gen.freq = f_in
 sig_gen.sample_rate = f_sample

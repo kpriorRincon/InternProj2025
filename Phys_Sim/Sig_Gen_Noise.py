@@ -23,7 +23,9 @@ class SigGen:
         std_noise = noise_power                                                 # Standard deviation of the noise distribution
 
         # Generate noise
-        noise = np.random.normal(mean_noise, std_noise, len(sinusoid))
+        noise_real = np.random.normal(mean_noise, std_noise/np.sqrt(2), len(sinusoid))
+        noise_imag = np.random.normal(mean_noise, std_noise/np.sqrt(2), len(sinusoid))
+        noise = noise_real + 1j*noise_imag
         return sinusoid + noise                                         # returns the sinusoid with added noise
 
     def generate_qpsk(self, bits, bool_noise, noise_power = 0.01):
@@ -44,41 +46,34 @@ class SigGen:
         import numpy as np
         
         # Convert bits to symbols
-        symbols = []
         if len(bits) % 2 != 0:
             raise ValueError("Bit sequence must have an even length.")
-
-        #seperate into odd and even and map to complex symbols
+        
+        # Map bit pairs to complex symbols
         symbols = [self.mapping[(bits[i], bits[i + 1])] for i in range(0, len(bits), 2)]
-        t_vertical_lines = []  # Initialize vertical lines for debugging
+        
+        # Calculate samples per symbol
         samples_per_symbol = int(self.sample_rate / self.symbol_rate)
-        #time vector for the wave form defined start at 0 end at the length of the symbols times samples per symbol
-        # and spaced by the sample rate
-        t = np.arange(0, len(symbols) * samples_per_symbol) / self.sample_rate
-
-        # Initialize the QPSK waveform
-        qpsk_waveform = np.zeros_like(t)
-        #for loop that tracks the index of the symbol and the symbol itself
-        for i, symbol in enumerate(symbols):
-            #compute the phase offset for the symbol
-            phase_offset = np.angle(symbol)
-            #debugging print statement to show the symbol and phase offset
-            #print(f"Symbol {i}: {symbol}, Phase Offset: {phase_offset}");
-            idx_start = i * samples_per_symbol
-            idx_end = idx_start + samples_per_symbol
-            time_slice = t[idx_start:idx_end] # time slice for the current symbol
-            qpsk_waveform[idx_start:idx_end] = (
-                #eqn from Haupt pg 86
-                1/np.sqrt(2)*np.cos(2*self.freq*np.pi * time_slice + phase_offset)
-                #add vertical dashed lines at time slices of the symbols
-            )
-            t_vertical_lines.append(idx_start/self.sample_rate)
+        
+        # Create time vector for the entire waveform
+        total_samples = len(symbols) * samples_per_symbol
+        t = np.arange(total_samples) / self.sample_rate
+        
+        # Upsample symbols to match sampling rate
+        # Each symbol is held constant for samples_per_symbol duration
+        upsampled_symbols = np.repeat(symbols, samples_per_symbol)
+        
+        # Generate complex phasor at carrier frequency
+        phasor = np.exp(1j * 2 * np.pi * self.freq * t)
+        
+        # Modulate: multiply upsampled symbols by phasor
+        qpsk_waveform = upsampled_symbols * phasor
 
         if bool_noise:
             # add noise to the QPSK wavefrorm
             qpsk_waveform = self.noise_adder(qpsk_waveform, noise_power)
 
-        return t, qpsk_waveform, t_vertical_lines, symbols
+        return t, qpsk_waveform, symbols
     
     def message_to_bits(self, message):
         """

@@ -45,7 +45,7 @@ class Receiver:
         return bits
 
     # Error checking for the start sequence
-    def matched_filter(self, sampled_symbols):
+    def error_handling(self, sampled_symbols):
         #print("Error checking")
         #print("Error checking")
         ## look for the start sequence ##
@@ -88,30 +88,25 @@ class Receiver:
 
     # sample the received signal and do error checking
     def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, fc):
-        ## tune to baseband ##
-        base_band_signal = qpsk_waveform * np.exp(1j*2*np.pi*(-fc))
-
-        ## compute the Hilbert transform ##
-        #print("Applying Hilbert Transform...")
-        #print("Applying Hilbert Transform...")
-        analytic_signal = hilbert(np.real(base_band_signal))  # hilbert transformation
-        
-        # sample the analytic signal
-        #print("Sampling the analytic signal...")
-        #print("Sampling the analytic signal...")
-        sampled_symbols = self.sample_signal(analytic_signal, sample_rate, symbol_rate)
+       ## tune to baseband ##
+        print("Tuning to basband...")
+        baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
+        analytic_sig = baseband_sig
+            # sample the analytic signal
+        print("Sampling the analytic signal...")
+        sampled_symbols = self.sample_signal(analytic_sig, sample_rate, symbol_rate)
 
         # decode the symbols and error check the start sequence
-        #print("Decoding symbols and checking for start sequence...")
-        #print("Decoding symbols and checking for start sequence...")
-        best_bits = self.matched_filter(sampled_symbols)
+        print("Decoding symbols and checking for start sequence...")
+        best_bits = self.error_handling(sampled_symbols)
 
-        return analytic_signal, best_bits
+        return analytic_sig, best_bits
+
 
     def plot_data(self, analytical_output, t):
         # constellation plot
         plt.figure(figsize=(10, 4))
-        plt.plot(np.real(analytical_output), np.imag(analytical_output), '.')
+        plt.scatter(np.real(analytical_output), np.imag(analytical_output))
         plt.grid(True)
         plt.title('Constellation Plot of Sampled Symbols')
         plt.xlabel('Real')
@@ -122,7 +117,7 @@ class Receiver:
         plt.figure(figsize=(10, 4))
         plt.plot(t, analytical_output.real, label='I (real part)')
         plt.plot(t, analytical_output.imag, label='Q (imag part)')
-        plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
+        plt.title('Baseband Time Signal  (Real and Imag Parts)')
         plt.xlabel('Time (s)')
         plt.ylabel('Amplitude')
         plt.grid()
