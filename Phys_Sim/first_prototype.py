@@ -118,38 +118,41 @@ desired_f = 960e6
 def main():
     symbol_rate = 10e6
     fs_sampling = 4e9 #sample frequency
-    sig_gen = Sig_Gen.SigGen()
+    sig_gen = Sig_Gen.SigGen(sample_rate = fs_sampling, symbol_rate = symbol_rate)
     sig_gen.freq = f_carrier
     sig_gen.sample_rate =fs_sampling
     sig_gen.symbol_rate = symbol_rate 
 
-    repeater = Repeater.Repeater(desired_frequency=desired_f, sampling_frequency=fs_sampling, gain=2)
+    repeater = Repeater.Repeater(sampling_frequency=fs_sampling, symbol_rate=symbol_rate)
 
+    repeater.desired_frequency=desired_f
     user_input = input("Enter a message to be sent: ")
     message_bits = sig_gen.message_to_bits(user_input)
 
     print(message_bits)
-    t, qpsk, lines, symbols = sig_gen.generate_qpsk(message_bits)
-    
-    analytic_signal, bits = sample_read_output(qpsk,fs_sampling, symbol_rate, f_carrier)
+    sig_gen.generate_qpsk(message_bits)
+    t = sig_gen.time_vector
+    qpsk = sig_gen.qpsk_waveform
+
+    analytic_signal, bits = sample_read_output(qpsk,fs_sampling, symbol_rate, t, f_carrier)
     print(f"After generation: {bits}")
 
     qpsk_mixed = repeater.mix(qpsk, sig_gen.freq, t)
     #symbol_rate *= desired_f / f_carrier
     #fs_sampling *= desired_f / f_carrier
-    analytic_signal, bits = sample_read_output(qpsk_mixed,fs_sampling, symbol_rate, desired_f)
+    analytic_signal, bits = sample_read_output(qpsk_mixed,fs_sampling, symbol_rate, t, desired_f)
     print(f"After mixing: {bits}")
 
     qpsk_filtered = repeater.filter(desired_f + 20e6, qpsk_mixed, order=10)
     
-    analytic_signal, bits = sample_read_output(qpsk_filtered,fs_sampling, symbol_rate, desired_f)
+    analytic_signal, bits = sample_read_output(qpsk_filtered,fs_sampling, symbol_rate,t, desired_f)
     print(f"After filter: {bits}")
 
-    qpsk_amp = repeater.amplify(input_signal=qpsk_filtered)
+    #qpsk_amp = repeater.amplify(input_signal=qpsk_filtered)
     
-    plotting(t, qpsk, qpsk_mixed, qpsk_filtered, qpsk_amp, sig_gen.sample_rate)
-    analytic_signal, bits = sample_read_output(qpsk_amp,fs_sampling, symbol_rate, desired_f)
-    print(f"After amp: {bits}")
+    #plotting(t, qpsk, qpsk_mixed, qpsk_filtered, qpsk_amp, sig_gen.sample_rate)
+    #analytic_signal, bits = sample_read_output(qpsk_amp,fs_sampling, symbol_rate, t, desired_f)
+    #print(f"After amp: {bits}")
 
 
 if __name__ == "__main__":

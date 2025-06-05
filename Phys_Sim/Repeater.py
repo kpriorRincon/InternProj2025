@@ -4,7 +4,7 @@ from scipy import signal
 
 def find_peak(positive_mags, positive_freq_values):
     # Get indices of the 4 largest peaks
-    top4_indices = np.argpartition(positive_mags, -2)[-2:]
+    top4_indices = np.argpartition(positive_mags, -4)[-4:]
     # Sort them by magnitude (descending)
     top4_sorted = top4_indices[np.argsort(positive_mags[top4_indices])[::-1]]
 
@@ -71,11 +71,23 @@ class Repeater:
 
         # Implement filtering logic here
 
+        numtaps = 101  # order of filter
+        lowcut = 850e6
+        highcut = 960e6
+        fir_coeff = signal.firwin(numtaps, [lowcut, highcut], pass_zero=False, fs=self.sampling_frequency)
+        # pass-zero = whether DC / 0Hz is in the passband
+        
+        filtered_sig = signal.lfilter(fir_coeff, 1.0, mixed_qpsk)
+        #first param is for coefficients in numerator (feedforward) of transfer function
+        #sec param is for coeff in denom (feedback)
+        #FIR are purely feedforward, as they do not depend on previous outputs
 
-        b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_frequency) # butterworth filter coefficients
+
+
+        #b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_frequency) # butterworth filter coefficients
 
         # Apply filter
-        filtered_sig = signal.filtfilt(b, a, mixed_qpsk)   # filtered signal
+        #filtered_sig = signal.filtfilt(b, a, mixed_qpsk)   # filtered signal
         
         return filtered_sig
 
@@ -179,7 +191,7 @@ class Repeater:
         plt.ylabel("Magnitude (dB)")
         plt.title("FFT of QPSK After Filtering")
         plt.xlim(0, fs / 2)  # From 0 to fs in MHz
-        plt.ylim(0, np.max(mag_input) + 10)
+        plt.ylim(-50, np.max(mag_input) + 10)
         plt.grid(True)
         plt.legend()
         plt.tight_layout()
@@ -202,14 +214,16 @@ class Repeater:
         # Compute FFT
         x_t_lim = 3 / self.symbol_rate
         n = len(t)
+        window = np.hanning(n)
+
         freqs = np.fft.fftfreq(n, d=1/fs)
         positive_freqs = freqs > 0
         positive_freq_values = freqs[positive_freqs]
 
         # FFT of original and shifted signals
-        fft_input = np.fft.fft(input_qpsk)
-        fft_shifted = np.fft.fft(qpsk_mixed)
-        fft_filtered = np.fft.fft(qpsk_filtered)
+        fft_input = np.fft.fft(input_qpsk * window)
+        fft_shifted = np.fft.fft(qpsk_mixed * window)
+        fft_filtered = np.fft.fft(qpsk_filtered * window) 
         # Convert magnitude to dB
         mag_input = 20 * np.log10(np.abs(fft_input))
         mag_shifted = 20 * np.log10(np.abs(fft_shifted))
@@ -323,7 +337,7 @@ class Repeater:
         plt.ylabel("Magnitude (dB)")
         plt.title("FFT of QPSK After Filtering")
         plt.xlim(0, fs / 2)  # From 0 to fs in MHz
-        plt.ylim(0, np.max(mag_input) + 10)
+        plt.ylim(20, np.max(mag_input) + 10)
         plt.grid(True)
         plt.legend()
         plt.tight_layout()
