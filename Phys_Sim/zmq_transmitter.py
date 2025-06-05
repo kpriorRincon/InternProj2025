@@ -1,3 +1,6 @@
+# Scipts for a ZeroMQ system that implments the bent-pipe communication
+# This script acts as the transmitter that receives commands from the controller
+
 import zmq
 import pickle
 
@@ -14,36 +17,40 @@ context = zmq.Context()
 # Control socket
 ctrl = context.socket(zmq.REP)
 ctrl.bind("tcp://127.0.0.1:6001") # sets up a REQ-REP connection with the controller/computer
-
-# Data socket
-data = context.socket(zmq.PUSH)
-data.bind("tcp://127.0.0.1:3001") # sets up a PUSH-PULL connection with the repeater
+ctrl.setsockopt(zmq.LINGER, 0)
 
 # ---------------------------------------------------
 
 # Send a request to the transmitter to get information and start encoding a message
 
 # Receiving request from controller
-print("Waiting for request from controller...")
+print("Transmitter: Waiting for request from controller...")
 req = ctrl.recv_json()
-print("Request received.")
+print("Transmitter: Request received.")
 
 # Extracting the message and frequencies from the request
 message = req['message']
 f_in = req['freq in']
 f_out = req['freq out']
 
-symbol_rate = 10e6
-f_sample = 4e9 
+# symbol_rate = 10e6
+# f_sample = 4e9 
+
+with open('data_dict.pkl', 'rb') as infile:
+    init_data = pickle.load(infile)
+
+f_sample = init_data['sample rate']
+symbol_rate = init_data['symbol rate']
+
 sig_gen = Sig_Gen.SigGen(f_sample, symbol_rate)
 sig_gen.freq = f_in
 sig_gen.sample_rate = f_sample
 sig_gen.symbol_rate = symbol_rate 
 
 message_bin = sig_gen.message_to_bits(message)
-print("Message converted to binary.")
+print("Transmitter: Message converted to binary.")
 sig_gen.generate_qpsk(message_bin)
-print("QPSK signal generated.")
+print("Transmitter: QPSK signal generated.")
 
 t = sig_gen.time_vector
 tx_qpsk = sig_gen.qpsk_waveform
@@ -57,16 +64,16 @@ rep = {"time": t,
        "message in binary": message_bin}
 
 # Sending the generated QPSK signal and data to the controller
-print("Sending data to controller...")
+print("Transmitter: Sending data to controller...")
 ctrl.send_pyobj(rep)
 
 # ---------------------------------------------------
 
 # Send the QPSK signal to the repeater
 
-print("Waiting for request from controller...")
+print("Transmitter: Waiting for request from controller...")
 req = ctrl.recv_string()
-print("Request received.")
+print("Transmitter: Request received.")
 ctrl.send_string("Request received")
 
 tx_to_rep = {"time": t,
@@ -75,5 +82,7 @@ tx_to_rep = {"time": t,
 with open('tx_to_rep.pkl','wb') as outfile:
     pickle.dump(tx_to_rep, outfile)
 
-print("Signal sent.")
+print("Transmitter: Signal sent.")
 
+ctrl.close()
+context.term()

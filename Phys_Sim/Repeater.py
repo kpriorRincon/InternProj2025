@@ -1,9 +1,36 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+
+def find_peak(positive_mags, positive_freq_values):
+    # Get indices of the 4 largest peaks
+    top4_indices = np.argpartition(positive_mags, -2)[-2:]
+    # Sort them by magnitude (descending)
+    top4_sorted = top4_indices[np.argsort(positive_mags[top4_indices])[::-1]]
+
+    # Extract the corresponding frequencies
+    top4_freqs = positive_freq_values[top4_sorted]
+    top4_mags = positive_mags[top4_sorted]
+
+    # Choose the frequency in the middle (median)
+    middle_freq = np.median(top4_freqs)
+
+    # Optional: pick magnitude at the closest frequency to median
+    closest_idx = np.argmin(np.abs(positive_freq_values - middle_freq))
+    peak_mag = positive_mags[closest_idx]
+
+    # Result
+    peak_freq = middle_freq
+
+    return peak_freq, peak_mag
+
 class Repeater:
-    def __init__(self, sampling_frequency):
+    def __init__(self, sampling_frequency, symbol_rate):
         self.desired_frequency = None  # Default frequency set to 1 GHz
         self.sampling_frequency = sampling_frequency
+        self.symbol_rate = symbol_rate
         self.gain = None
-
+        
 
         self.qpsk_mixed = None
         self.qpsk_filtered = None
@@ -20,7 +47,6 @@ class Repeater:
         Returns:
         - The mixed signal.
         """
-        import numpy as np
         # Implement mixing logic here
         #Complex sinusoid (real-world)
         #mixing_signal = np.cos(2 * np.pi * (self.desired_freqeuncy + qpsk_frequency) * t)
@@ -41,8 +67,10 @@ class Repeater:
         Returns:
         - The filtered signal.
         """
+        # don't apply filter
+
         # Implement filtering logic here
-        from scipy import signal
+
 
         b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_frequency) # butterworth filter coefficients
 
@@ -71,8 +99,7 @@ class Repeater:
         - input_qpsk: The original QPSK signal.
         - qpsk_shifted: The shifted QPSK signal.
         """
-        import numpy as np
-        import matplotlib.pyplot as plt
+
         # Compute FFT
         n = len(t)
         freqs = np.fft.fftfreq(n, d=1/fs)
@@ -118,7 +145,7 @@ class Repeater:
         #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
-        plt.title("FFT of QPSK Before Frequency Shift")
+        plt.title("FFT of Incoming QPSK")
         plt.xlim(0, fs / 2)  # From 0 to fs in MHz
         plt.ylim(0, np.max(mag_input) + 10)
         plt.grid(True)
@@ -134,7 +161,7 @@ class Repeater:
         plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
-        plt.title("FFT of QPSK After Frequency Shift")
+        plt.title("FFT of QPSK After Mixing")
         plt.xlim(0, fs / 2)  # From 0 to fs in MHz
         plt.ylim(0, np.max(mag_input) + 10)
         plt.grid(True)
@@ -171,9 +198,9 @@ class Repeater:
         return
     
     def plot_to_png(self, t, input_qpsk, qpsk_mixed, qpsk_filtered, fs):
-        import numpy as np
         import matplotlib.pyplot as plt
         # Compute FFT
+        x_t_lim = 3 / self.symbol_rate
         n = len(t)
         freqs = np.fft.fftfreq(n, d=1/fs)
         positive_freqs = freqs > 0
@@ -195,18 +222,26 @@ class Repeater:
         plt.title("Original QPSK Signal (Time Domain)")
         plt.xlabel("Time (μs)")
         plt.ylabel("Amplitude")
-        plt.xlim(0, 1e-7)
+        plt.xlim(0, x_t_lim)
         plt.grid(True)
 
         plt.subplot(1, 2, 2)
+        
+        """
         positive_mags = mag_input[positive_freqs]
         positive_freq_values = freqs[positive_freqs]
         peak_index = np.argmax(positive_mags)
         peak_freq = positive_freq_values[peak_index]
         peak_mag = positive_mags[peak_index]
+        """
+
+        positive_mags = mag_input[positive_freqs]
+        positive_freq_values = freqs[positive_freqs]
+        peak_freq, peak_mag = find_peak(positive_mags, positive_freq_values)
+
         plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
-        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
-        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
+        plt.text(peak_freq + 100e6, peak_mag + 6, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
         #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
@@ -226,20 +261,27 @@ class Repeater:
         plt.title("Shifted QPSK Signal (Time Domain)")
         plt.xlabel("Time (μs)")
         plt.ylabel("Amplitude")
-        plt.xlim(0, 1e-7)
+        plt.xlim(0, x_t_lim)
         plt.grid(True)
 
         
 
         plt.subplot(1, 2, 2)
+        """
         positive_mags = mag_shifted[positive_freqs]
         positive_freq_values = freqs[positive_freqs]
         peak_index = np.argmax(positive_mags)
         peak_freq = positive_freq_values[peak_index]
         peak_mag = positive_mags[peak_index]
+        """
+        positive_mags = mag_shifted[positive_freqs]
+        positive_freq_values = freqs[positive_freqs]
+
+        peak_freq, peak_mag = find_peak(positive_mags, positive_freq_values)
+
         plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
-        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
-        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
+        plt.text(peak_freq + 100e6, peak_mag + 6, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
         plt.title("FFT of QPSK After Frequency Shift")
@@ -257,19 +299,26 @@ class Repeater:
         plt.title("Filtered QPSK Signal (Time Domain)")
         plt.xlabel("Time (μs)")
         plt.ylabel("Amplitude")
-        plt.xlim(0, 1e-7)
+        plt.xlim(0, x_t_lim)
         plt.grid(True)
 
         plt.subplot(1, 2, 2)
+        
+        """
         positive_mags = mag_filtered[positive_freqs]
         positive_freq_values = freqs[positive_freqs]
         peak_index = np.argmax(positive_mags)
         peak_freq = positive_freq_values[peak_index]
-        peak_mag = positive_mags[peak_index]
+        peak_mag = positive_mags[peak_index]"""
         #print(freqs[peak_index-3:peak_index+3])
+
+        positive_mags = mag_filtered[positive_freqs]
+        positive_freq_values = freqs[positive_freqs]
+        peak_freq, peak_mag = find_peak(positive_mags, positive_freq_values)
+
         plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
-        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq:.2f} GHz')
-        plt.text(peak_freq, peak_mag + 5, f'{peak_freq:.2f} GHz', color='r', ha='center')
+        plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
+        plt.text(peak_freq, peak_mag + 6, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
         plt.title("FFT of QPSK After Filtering")
@@ -285,12 +334,10 @@ class Repeater:
 
     def handler(self, t, qpsk_waveform, f_carrier):
         
-        qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)
-        
-        cutoff_freq = self.desired_frequency + 30e6
-        
-        qpsk_filtered = self.filter(cutoff_freq, qpsk_mixed)
-        
+        qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)        
+        cuttoff_freq = self.desired_frequency + 30e6
+        qpsk_filtered = self.filter(cuttoff_freq, qpsk_mixed)
+        qpsk_filtered = self.amplify(qpsk_filtered)
         self.plot_to_png(t, qpsk_waveform, qpsk_mixed, qpsk_filtered, self.sampling_frequency)
 
         self.qpsk_mixed = qpsk_mixed

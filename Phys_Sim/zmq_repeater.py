@@ -1,3 +1,6 @@
+# Scipts for a ZeroMQ system that implments the bent-pipe communication
+# This script acts as the repeater that receives commands from the controller
+
 import zmq
 import pickle
 import time
@@ -11,44 +14,65 @@ from sim_qpsk_noisy_demod import sample_read_output
 from scipy.signal import hilbert
 import numpy as np
 
+
+def Noise_Addr(input_wave, noise_power):
+    #define noise
+    noise =np.random.normal(0,noise_power,len(input_wave))
+    return input_wave+noise
+
 context = zmq.Context()
 
 # Control socket
 ctrl = context.socket(zmq.REP)
 ctrl.bind("tcp://127.0.0.1:6002") # sets up a REQ-REP connection with the controller/computer
+ctrl.setsockopt(zmq.LINGER, 0)
 
 # ---------------------------------------------------
 
 # Getting the signal from the transmitter
 
-print("Waiting for request from controller...")
+print("Repeater: Waiting for request from controller...")
 req = ctrl.recv_string()
-print("Request received.")
+print("Repeater: Request received.")
 ctrl.send_string("Request received")
 time.sleep(0.5)
 with open('tx_to_rep.pkl', 'rb') as infile:
     tx = pickle.load(infile)
-print("Signal acquired.")
+print("Repeater: Signal acquired.")
 
 # ---------------------------------------------------
 
 # Modulating the signal and sending data back to the controller 
-print("Waiting for request from controller...")
+print("Repeater: Waiting for request from controller...")
 freq = ctrl.recv_json()
 f_out = freq['freq out']
 f_in = freq['freq in']
-symbol_rate = 10e6
-f_sample = 4e9 
-incoming_qpsk = tx['tx signal']
+
+# symbol_rate = 10e6
+# f_sample = 4e9 
+
+with open('data_dict.pkl', 'rb') as infile:
+    init_data = pickle.load(infile)
+
+f_sample = init_data['sample rate']
+symbol_rate = init_data['symbol rate']
+noise_bool = init_data['noise_bool']
+noise_power = init_data['noise_power']
+gain = init_data['gain']
+if noise_bool:
+    incoming_qpsk = Noise_Addr(tx['tx signal'], noise_power)
+else:
+    incoming_qpsk = tx['tx signal']
+
 t = tx['time']
-repeater = Repeater.Repeater(sampling_frequency=f_sample)
+repeater = Repeater.Repeater(sampling_frequency=f_sample, symbol_rate=symbol_rate)
 repeater.desired_frequency = f_out
 
-qpsk_mixed = np.real(repeater.mix(qpsk_signal=incoming_qpsk, qpsk_frequency=f_in, t=t))
+qpsk_mixed = repeater.mix(qpsk_signal=incoming_qpsk, qpsk_frequency=f_in, t=t)
 symbol_rate *= f_out / f_in
 f_sample *= f_out / f_in
-qpsk_filtered = repeater.filter(f_out + 20e6, qpsk_mixed, order=10)
-repeater.gain = 2
+qpsk_filtered = repeater.filter(f_out+20e6,qpsk_mixed)
+repeater.gain = gain
 qpsk_amp = repeater.amplify(input_signal=qpsk_filtered)
 
 rep = {"Incoming Signal": incoming_qpsk,
@@ -56,17 +80,17 @@ rep = {"Incoming Signal": incoming_qpsk,
        "Filtered Signal": qpsk_filtered,
        "Outgoing Signal": qpsk_amp}
 
-print("Sending data to controller...")
+print("Repeater: Sending data to controller...")
 ctrl.send_pyobj(rep)
-print("Data sent.")
+print("Repeater: Data sent.")
 
 # ---------------------------------------------------
 
 # Send the QPSK signal to the receiver
 
-print("Waiting for request from controller...")
+print("Repeater: Waiting for request from controller...")
 req = ctrl.recv_string()
-print("Request received.")
+print("Repeater: Request received.")
 ctrl.send_string("Request received")
 
 rep_to_rx = {"time": t,
@@ -75,6 +99,7 @@ rep_to_rx = {"time": t,
 with open('rep_to_rx.pkl','wb') as outfile:
     pickle.dump(rep_to_rx, outfile)
 
-print("Signal sent.")
+print("Repeater: Signal sent.")
 
-
+ctrl.close()
+context.term()

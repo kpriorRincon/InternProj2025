@@ -28,7 +28,7 @@ symbol_rate = 10e6
 symbol_rate = 20e6
 sample_rate = 4e9
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
-repeater = Repeater.Repeater(sampling_frequency=sample_rate)
+repeater = Repeater.Repeater(sampling_frequency=sample_rate, symbol_rate=symbol_rate)
 receiver = Receiver.Receiver(sampling_rate=sample_rate)
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
@@ -103,8 +103,18 @@ def simulate_page():
                     global decoded_string
                     message_input = message.value
 
+
+
+
+
+                    # implement zmq here
+
+
+
+
+
                     #run the sig gen handler
-                    sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
+                    sig_gen.handler(message_input, int(freq_in_slider.value)*1e6) 
 
                     if noise_checkbox.value:
                         global noise_bool
@@ -115,7 +125,6 @@ def simulate_page():
                         noise_bool = False
                         noise_power = 0  # Default value if no noise is added
 
-                    message_input = message.value
 
                     #Sig Gen
                     sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
@@ -135,13 +144,10 @@ def simulate_page():
                     if noise_bool: 
                         repeater.qpsk_filtered = Noise_Addr(repeater.qpsk_filtered, noise_power)
 
-                    #TODO put receiver class here
-                    decoded_bits, decoded_string = receiver.handler(repeater.qpsk_mixed, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_frequency, sig_gen.time_vector)
-
-                    #noise_level = noise_slider.value
-                    #debug:
-                    #print("made it here")
-                    ui.notify('Data stored successfully!')  # Placeholder notification
+                    print(noise_bool)
+                    # run receiver handler
+                    decoded_bits, decoded_string = receiver.handler(repeater.qpsk_filtered, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_frequency, sig_gen.time_vector)
+                    ui.notify('Data stored successfully!') 
 
             
         elif selected_type == 'Continuous Message': 
@@ -219,6 +225,7 @@ def receiver_page():
     #on this page put plots
     global decoded_bits
     global decoded_string
+
     marker = ''
     payload = ''
     for i in range(len(decoded_bits)):
