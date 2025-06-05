@@ -28,7 +28,7 @@ class Receiver:
     
     # QPSK symbol to bit mapping
     def bit_reader(self, symbols):
-        #print("Reading bits from symbols")
+        # print("Reading bits from symbols")
         bits = np.zeros((len(symbols), 2), dtype=int)
         for i in range(len(symbols)):
             angle = np.angle(symbols[i], deg=True) % 360

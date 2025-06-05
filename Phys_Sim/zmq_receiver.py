@@ -51,7 +51,10 @@ analytical_signal, bits = receiver.demodulator(rep_signal, f_sample, symbol_rate
 message = receiver.get_string(bits)
 
 rep = {"bit sequence": bits,
-       "recovered message": message}
+       "recovered message": message,
+       "incoming signal": rep_signal,
+       "filtered signal": rep_signal 
+       }
 
 print("Receiver: Sending data to controller...")
 ctrl.send_pyobj(rep)
