@@ -35,7 +35,7 @@ class Repeater:
 
         return qpsk_shifted
 
-    def filter(self, mixed_qpsk, order=20):
+    def filter(self, cuttoff_frequency, mixed_qpsk, order=5):
         """
         Filters the mixed signal to remove unwanted frequencies.
 
@@ -46,20 +46,9 @@ class Repeater:
 
         # Implement filtering logic here
         from scipy import signal
-        freq_low = self.desired_frequency - 150e6
-        freq_high = self.desired_frequency + 150e6
-
-        #we need to normalize these frequencies by sampling rate/2
-        nyquist = self.sampling_frequency/2
-        low = freq_low/nyquist
-        high =freq_high/nyquist
-        #debug print(low, high)
-        taps = signal.firwin(order+1,[low, high])
-
-        # Apply filter
-        filtered_sig = signal.lfilter(taps, 1.0, mixed_qpsk)  # filtered signal
-        
-        return mixed_qpsk
+        b,a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_frequency)
+        filtered_sig = signal.filtfilt(b,a, mixed_qpsk)
+        return filtered_sig
 
     def amplify(self, input_signal):
         """
@@ -297,7 +286,8 @@ class Repeater:
     def handler(self, t, qpsk_waveform, f_carrier):
         
         qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)        
-        qpsk_filtered = self.filter(qpsk_mixed)
+        cuttoff_freq = self.desired_frequency + 30e6
+        qpsk_filtered = self.filter(cuttoff_freq, qpsk_mixed)
         
         self.plot_to_png(t, qpsk_waveform, qpsk_mixed, qpsk_filtered, self.sampling_frequency)
 
