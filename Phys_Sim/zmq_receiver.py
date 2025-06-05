@@ -9,14 +9,20 @@ import pickle
 import Sig_Gen as Sig_Gen
 import Receiver as Receiver
 import Repeater as Repeater
-from sim_qpsk_noisy_demod import sample_read_output
 from scipy.signal import hilbert
 import numpy as np
 
-def Noise_Addr(input_wave, noise_power):
-    #define noise
-    noise =np.random.normal(0,noise_power,len(input_wave))
-    return input_wave+noise
+def Noise_Addr(sinusoid, noise_power):
+        import numpy as np
+        # Noise parameters
+        mean_noise = 0          # Mean of the noise distribution
+        std_noise = noise_power # Standard deviation of the noise distribution
+
+        # Generate noise
+        noise_real = np.random.normal(mean_noise, std_noise/np.sqrt(2), len(sinusoid))
+        noise_imag = np.random.normal(mean_noise, std_noise/np.sqrt(2), len(sinusoid))
+        noise = noise_real + 1j*noise_imag
+        return sinusoid + noise                    
 
 context = zmq.Context()
 
