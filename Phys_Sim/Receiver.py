@@ -28,7 +28,7 @@ class Receiver:
     
     # QPSK symbol to bit mapping
     def bit_reader(self, symbols):
-        # print("Reading bits from symbols")
+        print("Reading bits from symbols")
         bits = np.zeros((len(symbols), 2), dtype=int)
         for i in range(len(symbols)):
             angle = np.angle(symbols[i], deg=True) % 360
@@ -47,11 +47,14 @@ class Receiver:
     # Error checking for the start sequence
     def matched_filter(self, sampled_symbols):
         #print("Error checking")
+        #print("Error checking")
         ## look for the start sequence ##
         expected_start_sequence = ''.join(str(bit) for pair in self.bit_reader(self.phase_start_sequence) for bit in pair)  # put the start sequence into a string
         best_bits = None                                                                                                    # holds the best bits found
         #print("Expected Start Sequence: ", expected_start_sequence)                                                         # debug statement
+        #print("Expected Start Sequence: ", expected_start_sequence)                                                         # debug statement
         og_sampled_symbols = ''.join(str(bit) for pair in self.bit_reader(sampled_symbols) for bit in pair)                 # original sampled symbols in string format
+        #print("Sampled bits: ", og_sampled_symbols)                                                                         # debug statement
         #print("Sampled bits: ", og_sampled_symbols)                                                                         # debug statement
 
         ## Loop through possible phase shifts ##
@@ -63,15 +66,18 @@ class Receiver:
             decode_bits = self.bit_reader(rotated_bits)                             # decode the rotated bits
             flat_bits = ''.join(str(bit) for pair in decode_bits for bit in pair)   # put the bits into a string
             #print("Rotated bits: ", flat_bits)                                      # debug statement
+            #print("Rotated bits: ", flat_bits)                                      # debug statement
             
             # Check for presence of the known start sequence (first few symbols)
             if expected_start_sequence == flat_bits[0:8]:                   # check only first 8 symbols worth (16 bits)
+                #print(f"Start sequence found with phase shift: {i*90}°")
                 #print(f"Start sequence found with phase shift: {i*90}°")
                 best_bits = flat_bits                                       # store the best bits found
                 break
         
         # Error state if no start sequence was found
         if best_bits is None:
+            #print("Start sequence not found. Defaulting to 0°")
             #print("Start sequence not found. Defaulting to 0°")
             rotated_symbols = sampled_symbols
             decoded_bits = self.bit_reader(rotated_symbols)
@@ -87,13 +93,16 @@ class Receiver:
 
         ## compute the Hilbert transform ##
         #print("Applying Hilbert Transform...")
+        #print("Applying Hilbert Transform...")
         analytic_signal = hilbert(np.real(base_band_signal))  # hilbert transformation
         
         # sample the analytic signal
         #print("Sampling the analytic signal...")
+        #print("Sampling the analytic signal...")
         sampled_symbols = self.sample_signal(analytic_signal, sample_rate, symbol_rate)
 
         # decode the symbols and error check the start sequence
+        #print("Decoding symbols and checking for start sequence...")
         #print("Decoding symbols and checking for start sequence...")
         best_bits = self.matched_filter(sampled_symbols)
 
@@ -130,7 +139,6 @@ class Receiver:
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Madgnitude (dB)')
         plt.grid()
-        plt.legend()
         plt.tight_layout()
         plt.savefig('demod_media/Base_Band_FFT.png')
 

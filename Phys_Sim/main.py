@@ -28,7 +28,7 @@ symbol_rate = 10e6
 symbol_rate = 20e6
 sample_rate = 4e9
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
-repeater = Repeater.Repeater(sampling_frequency=sample_rate)
+repeater = Repeater.Repeater(sampling_frequency=sample_rate, symbol_rate=symbol_rate)
 receiver = Receiver.Receiver(sampling_rate=sample_rate)
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
@@ -121,8 +121,7 @@ def simulate_page():
                     sig_gen.handler(message.value, int(freq_in_slider.value)*1e6) 
                     #iff there is noise add it to the outgoing sig_gen waveform
                     if noise_bool:
-                        pass#workin on noise addr still
-                        #sig_gen.qpsk_waveform = Noise_Addr(sig_gen.qpsk_waveform, noise_power)
+                        sig_gen.qpsk_waveform = Noise_Addr(sig_gen.qpsk_waveform, noise_power)
 
                     #Repeater 
                     repeater.desired_frequency = int(freq_out_slider.value) * 1e6
@@ -134,11 +133,10 @@ def simulate_page():
 
                     #add noise if applicable
                     if noise_bool: 
-                        pass #working on noise_adder
                         repeater.qpsk_filtered = Noise_Addr(repeater.qpsk_filtered, noise_power)
 
                     #TODO put receiver class here
-                    decoded_bits, decoded_string = receiver.handler(repeater.qpsk_filtered, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_frequency, sig_gen.time_vector)
+                    decoded_bits, decoded_string = receiver.handler(repeater.qpsk_mixed, sig_gen.sample_rate, sig_gen.symbol_rate, repeater.desired_frequency, sig_gen.time_vector)
 
                     #noise_level = noise_slider.value
                     #debug:
@@ -206,7 +204,7 @@ def repeater_page():
     ui.button('back', on_click=ui.navigate.back)
     if message_input is not None:
         with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
-            ui.label(f'Input Frequency: {sig_gen.freq/1e6:.1f} MHz      Output Frequency: {repeater.desired_freqeuncy/1e6:.1f} MHz').style('font-size: 2em; font-weight: bold;')
+            ui.label(f'Input Frequency: {sig_gen.freq/1e6:.1f} MHz      Output Frequency: {repeater.desired_frequency/1e6:.1f} MHz').style('font-size: 2em; font-weight: bold;')
 
     ui.image('original_qpsk_rp.png').force_reload()
     ui.image('shifted_qpsk_rp.png').force_reload()
@@ -230,6 +228,9 @@ def receiver_page():
         else:
             payload += str(decoded_bits[i])
     with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.image('demod_media/Constellation.png').force_reload()
+        ui.image('demod_media/Base_Band_Waveform.png').force_reload()
+        ui.image('demod_media/Base_Band_FFT.png').force_reload()
         ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
         ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
         ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
