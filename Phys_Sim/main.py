@@ -215,6 +215,7 @@ def receiver_page():
     #on this page put plots
     global decoded_bits
     global decoded_string
+    
     marker = ''
     payload = ''
     for i in range(len(decoded_bits)):
