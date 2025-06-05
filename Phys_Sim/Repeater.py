@@ -67,6 +67,8 @@ class Repeater:
         Returns:
         - The filtered signal.
         """
+        # don't apply filter
+
         # Implement filtering logic here
 
 
@@ -332,12 +334,10 @@ class Repeater:
 
     def handler(self, t, qpsk_waveform, f_carrier):
         
-        qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)
-        
-        cutoff_freq = self.desired_frequency + 30e6
-        
-        qpsk_filtered = self.filter(cutoff_freq, qpsk_mixed)
-        
+        qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)        
+        cuttoff_freq = self.desired_frequency + 30e6
+        qpsk_filtered = self.filter(cuttoff_freq, qpsk_mixed)
+        qpsk_filtered = self.amplify(qpsk_filtered)
         self.plot_to_png(t, qpsk_waveform, qpsk_mixed, qpsk_filtered, self.sampling_frequency)
 
         self.qpsk_mixed = qpsk_mixed
