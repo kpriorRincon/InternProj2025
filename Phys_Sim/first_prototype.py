@@ -1,7 +1,6 @@
 import Sig_Gen as Sig_Gen
-import Receiver as Receiver
+import Receiver as Receiver # Use demod from here
 import Repeater as Repeater
-from sim_qpsk_noisy_demod import demodulator
 from scipy.signal import hilbert
 import numpy as np
 import matplotlib.pyplot as plt
@@ -125,6 +124,7 @@ def main():
 
     repeater = Repeater.Repeater(sampling_frequency=fs_sampling, symbol_rate=symbol_rate)
 
+    receiver = Receiver.Receiver(sampling_rate=fs_sampling)
     repeater.desired_frequency=desired_f
     user_input = input("Enter a message to be sent: ")
     message_bits = sig_gen.message_to_bits(user_input)
@@ -134,18 +134,18 @@ def main():
     t = sig_gen.time_vector
     qpsk = sig_gen.qpsk_waveform
 
-    analytic_sig, bits = demodulator(qpsk, fs_sampling, symbol_rate, t, f_carrier)    
-    print(f"After generation: {bits}")
+    #analytic_sig, bits = receiver.demodulator(qpsk, fs_sampling, symbol_rate, f_carrier)    
+    #print(f"After generation: {bits}")
 
     qpsk_mixed = repeater.mix(qpsk, sig_gen.freq, t)
     #symbol_rate *= desired_f / f_carrier
     #fs_sampling *= desired_f / f_carrier
-    analytic_sig, bits = demodulator(qpsk_mixed, fs_sampling, symbol_rate, t, f_carrier)    
-    print(f"After mixing: {bits}")
+    #analytic_sig, bits = receiver.demodulator(qpsk_mixed, fs_sampling, symbol_rate, f_carrier)    
+    #print(f"After mixing: {bits}")
 
     qpsk_filtered = repeater.filter(desired_f + 20e6, qpsk_mixed, order=10)
     
-    analytic_sig, bits = demodulator(qpsk_mixed, fs_sampling, symbol_rate, t, f_carrier)    
+    analytic_sig, bits = receiver.demodulator(qpsk_mixed, fs_sampling, symbol_rate, f_carrier)    
     print(f"After filter: {bits}")
 
     #qpsk_amp = repeater.amplify(input_signal=qpsk_filtered)
