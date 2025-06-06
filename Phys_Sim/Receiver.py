@@ -123,7 +123,6 @@ class Receiver:
         plt.ylabel('Amplitude')
         plt.grid()
         plt.legend()
-        plt.tight_layout()
         plt.savefig('demod_media/Base_Band_Waveform.png')
 
         # plot the fft
@@ -135,7 +134,6 @@ class Receiver:
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Madgnitude (dB)')
         plt.grid()
-        plt.tight_layout()
         plt.savefig('demod_media/Base_Band_FFT.png')
 
     def get_string(self, bits):

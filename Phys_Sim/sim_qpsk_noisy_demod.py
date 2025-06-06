@@ -2,7 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import Sig_Gen_Noise as SigGen
-from scipy.signal import hilbert
 from scipy.signal import correlate
 
 #####################################################
@@ -12,8 +11,8 @@ from scipy.signal import correlate
 #####################################################
 
 ######### Global Variables #########
-phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK 01 01 00 10
-phase_end_sequence = np.array([-1+1j, 1+1j, -1-1j, -1+1j]) # M 01 00 11 01
+phase_start_sequence = np.array([1+1j, 1-1j, 1+1j, -1+1j]) # this is the letter ! in QPSK 00100001
+phase_end_sequence = np.array([1+1j, 1-1j, -1-1j, -1-1j]) # / 00101111
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
 ######## Functions ########
@@ -61,11 +60,11 @@ def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
     best_end_idx = len(baseband_sig)
     
     # Define start and end sequences
-    start = 'R'
+    start = '!'
     message_binary = ''.join(format(ord(char), '08b') for char in start)
     start_sequence = [int(bit) for bit in message_binary]
     
-    end = 'M'
+    end = '/'
     message_binary = ''.join(format(ord(char), '08b') for char in end)
     end_sequence = [int(bit) for bit in message_binary]
     
@@ -78,8 +77,8 @@ def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
         
         # Generate reference sequences at baseband
         sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)  # Generate at baseband (0 Hz)
-        _, start_gold, _ = sig_gen.generate_qpsk(start_sequence, False, 0)
-        _, end_gold, _ = sig_gen.generate_qpsk(end_sequence, False, 0)
+        _, start_gold, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0)
+        _, end_gold, _, _ = sig_gen.generate_qpsk(end_sequence, False, 0)
         
         # Apply frequency offset compensation to baseband signal
         freq_offset = f - fc
@@ -222,7 +221,7 @@ def error_handling(sampled_symbols):
 def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     ## tune to baseband ##
     print("Tuning to basband...")
-    baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
+    baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
     # find the desired signal
     lam = 3e8 / fc  # wavelength of the carrier frequency
@@ -235,7 +234,7 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     #analytic_sig = baseband_sig
 
     # plots to see the constellations before and after tuning and after the matched filter
-    fig, axs = plt.subplots(3,1)
+    fig, axs = plt.subplots(2,1)
     axs[0].scatter(np.real(qpsk_waveform), np.imag(qpsk_waveform))
     axs[0].set_xlabel('Real')
     axs[0].set_ylabel('Imaginary')
@@ -248,11 +247,11 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     axs[1].set_ylabel('Imaginary')
     axs[1].grid()
 
-    axs[2].scatter(np.real(analytic_sig), np.imag(analytic_sig))
-    axs[2].set_title("Analytic Signal")
-    axs[2].set_xlabel('Real')
-    axs[2].set_ylabel('Imaginary')
-    axs[2].grid()
+    # axs[2].scatter(np.real(analytic_sig), np.imag(analytic_sig))
+    # axs[2].set_title("Analytic Signal")
+    # axs[2].set_xlabel('Real')
+    # axs[2].set_ylabel('Imaginary')
+    # axs[2].grid()
     
     # sample the analytic signal
     print("Sampling the analytic signal...")
@@ -268,7 +267,7 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
 
 def main():
     # Input message
-    message = "abcde R abcde M abcde"
+    message = "ABCDE!ABCDE/ABCDE"
     print("Message:", message)
 
     # Convert message to binary
@@ -278,14 +277,14 @@ def main():
     print("Binary Message:", grouped_bits)
 
     # Signal generation parameters
-    freq = 920e6            # Carrier frequency for modulation
+    freq = 905e6            # Carrier frequency for modulation
     sample_rate = 5 * freq  # 5 times the carrier frequency for oversampling
     symbol_rate = 1e6      # 10 MHz
 
     # Generate QPSK waveform using your SigGen class
     print("Generating QPSK waveform...")
     sig_gen = SigGen.SigGen(freq, 1.0, sample_rate, symbol_rate)
-    t, qpsk_waveform, _ = sig_gen.generate_qpsk(bit_sequence, False, 0.1)
+    t, qpsk_waveform, _, _ = sig_gen.generate_qpsk(bit_sequence, False, 0.1)
 
     # plt.plot(t, np.imag(qpsk_waveform))
     # plt.xlim(0,50/sample_rate)
