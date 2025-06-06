@@ -99,7 +99,7 @@ print("Repeater: Request received.")
 ctrl.send_string("Request received")
 
 rep_to_rx = {"time": t,
-             "rep signal": qpsk_amp}
+             "rep signal": qpsk_mixed}
 
 with open('rep_to_rx.pkl','wb') as outfile:
     pickle.dump(rep_to_rx, outfile)
