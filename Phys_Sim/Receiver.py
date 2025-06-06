@@ -92,7 +92,8 @@ class Receiver:
         print("Tuning to basband...")
         baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
         analytic_sig = baseband_sig
-            # sample the analytic signal
+        
+        # sample the analytic signal
         print("Sampling the analytic signal...")
         sampled_symbols = self.sample_signal(analytic_sig, sample_rate, symbol_rate)
 

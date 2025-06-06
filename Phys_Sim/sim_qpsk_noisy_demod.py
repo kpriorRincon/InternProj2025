@@ -232,7 +232,7 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     freqs = np.linspace(fc-doppler, fc+doppler, 4)
     start_index, end_index = cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc)
     analytic_sig = baseband_sig[start_index:end_index]
-    #analytic_signal = baseband_sig
+    #analytic_sig = baseband_sig
 
     # plots to see the constellations before and after tuning and after the matched filter
     fig, axs = plt.subplots(3,1)
