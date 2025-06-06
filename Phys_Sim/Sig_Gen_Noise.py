@@ -57,6 +57,7 @@ class SigGen:
         
         # Create time vector for the entire waveform
         total_samples = len(symbols) * samples_per_symbol
+        #create a time vector that is total symbols long
         t = np.arange(total_samples) / self.sample_rate
         
         # Upsample symbols to match sampling rate

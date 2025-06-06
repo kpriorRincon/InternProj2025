@@ -193,7 +193,8 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
 
                     #start receiver plotting:
                     # constellation plot
-                    plt.figure(figsize=(10, 4))
+                    plt.figure(figsize=(5, 5))
+
                     plt.plot(np.real(rx_analytical_signal), np.imag(rx_analytical_signal), '.')
                     plt.grid(True)
                     plt.title('Constellation Plot of Sampled Symbols')
@@ -201,17 +202,6 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.ylabel('Imaginary')
                     plt.savefig('demod_media/Constellation.png')
 
-                    # Plot the waveform and phase
-                    plt.figure(figsize=(10, 4))
-                    plt.plot(t, rx_analytical_signal.real, label='I (real part)')
-                    plt.plot(t, rx_analytical_signal.imag, label='Q (imag part)')
-                    plt.title('Hilbert Transformed Waveform (Real and Imag Parts)')
-                    plt.xlabel('Time (s)')
-                    plt.ylabel('Amplitude')
-                    plt.grid()
-                    plt.legend()
-                    plt.tight_layout()
-                    plt.savefig('demod_media/Base_Band_Waveform.png')
 
                     # plot the fft
                     ao_fft = np.fft.fft(rx_analytical_signal)
