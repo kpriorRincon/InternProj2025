@@ -199,7 +199,10 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.grid(True)
                     plt.title('Constellation Plot of Sampled Symbols')
                     plt.xlabel('Real')
+                    plt.xlim(-1,1)
+                    plt.ylim(-1,1)
                     plt.ylabel('Imaginary')
+                    plt.tight_layout()
                     plt.savefig('demod_media/Constellation.png')
 
 
