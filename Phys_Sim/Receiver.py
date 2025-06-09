@@ -113,30 +113,25 @@ class Receiver:
         return filtered_sig
     
     # sample the received signal and do error checking
-    def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, fc):
+    def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, t, fc):
         ## tune to baseband ##
 
         # print("Tuning to basband...")
-        #baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
+        baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
         from commpy import filters
         # root raised cosine matched filter
-
-        # print("Tuning to basband...")
-        baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
-        
-         # root raised cosine matched filter
         beta = 0.3
         _, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
-        # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+        pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, baseband_sig, 'same')
 
         # sample the analytic signal
-        # print("Sampling the analytic signal...")
+        print("Sampling the analytic signal...")
         sampled_symbols = self.down_sampler(signal, sample_rate, symbol_rate)
 
         # decode the symbols and error check the start sequence
-        # print("Decoding symbols and checking for start sequence...")
+        print("Decoding symbols and checking for start sequence...")
         best_bits = self.error_handling(sampled_symbols)
 
         return signal, sampled_symbols, best_bits

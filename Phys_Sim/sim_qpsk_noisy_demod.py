@@ -13,9 +13,9 @@ import pickle
 #####################################################
 
 ######### Global Variables #########
-#phase_start_sequence = np.array([1+1j, 1-1j, 1+1j, -1+1j]) # this is the letter ! in QPSK 00100001
-phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK 01010010
-#phase_end_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # / 00101111
+phase_start_sequence = np.array([1+1j, 1-1j, 1+1j, -1+1j]) # this is the letter ! in QPSK 00100001
+#phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK 01010010
+phase_end_sequence = np.array([1+1j, 1-1j, -1-1j, -1-1j]) # / 00101111
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
 ######## Functions ########
@@ -147,7 +147,7 @@ def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
         plt.ylabel("Correlation Magnitude (dB)")
         plt.title("Cross Correlation - Start Sequence")
         plt.legend()
-        plt.ylim(65, 85)
+        plt.ylim(0, 150)
         plt.grid(True)
     
 
@@ -230,19 +230,19 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
     # find the desired signal
-    # lam = 3e8 / fc  # wavelength of the carrier frequency
-    # v = 7.8e3 # average speed of a satellite in LEO
-    # doppler = v / lam   # calculated doppler shift
-    # print("Doppler shift: ", doppler)
-    # freqs = np.linspace(fc-doppler, fc+doppler, 4)
-    # start_index, end_index = cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc)
-    # analytic_sig = baseband_sig[start_index:end_index]
+    lam = 3e8 / fc  # wavelength of the carrier frequency
+    v = 7.8e3 # average speed of a satellite in LEO
+    doppler = v / lam   # calculated doppler shift
+    print("Doppler shift: ", doppler)
+    freqs = np.linspace(fc-doppler, fc+doppler, 4)
+    start_index, end_index = cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc)
+    analytic_sig = baseband_sig[start_index:end_index]
 
     # root raised cosine matched filter
     beta = 0.3
     _, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
     pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
-    signal = np.convolve(pulse_shape, baseband_sig, 'same')
+    signal = np.convolve(pulse_shape, analytic_sig, 'same')
 
     # sample the analytic signal
     print("Sampling the analytic signal...")
@@ -258,58 +258,63 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
 
 def main():
     # Input message
-    # message = "garbage !hello world\ garbage"
-    # print("Message:", message)
+    message = "garbage !hello world\ garbage"
+    print("Message:", message)
 
-    # # Convert message to binary
-    # message_binary = ''.join(format(ord(char), '08b') for char in message)
-    # grouped_bits = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
-    # bit_sequence = [int(bit) for bit in message_binary]
-    # print("Binary Message:", grouped_bits)
+    # Convert message to binary
+    message_binary = ''.join(format(ord(char), '08b') for char in message)
+    grouped_bits = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
+    bit_sequence = [int(bit) for bit in message_binary]
+    print("Binary Message:", grouped_bits)
 
-    # Signal generation parameters
-    #freq = 910e6            # Carrier frequency for modulation
+    #Signal generation parameters
+    fc = 910e6          # Carrier frequency for modulation
+    sample_rate = 4e9   # sample rate
+    symbol_rate = 1e6   # symbol rate
     
 
-    # # Generate QPSK waveform using your SigGen class
-    # print("Generating QPSK waveform...")
-    # sig_gen = SigGen.SigGen(freq, 1.0, sample_rate, symbol_rate)
-    # t, qpsk_waveform, _, _ = sig_gen.generate_qpsk(bit_sequence, False, 0.1)
+    # Generate QPSK waveform using your SigGen class
+    print("Generating QPSK waveform...")
+    sig_gen = SigGen.SigGen(fc, 1.0, sample_rate, symbol_rate)
+    t, qpsk_waveform, _, _ = sig_gen.generate_qpsk(bit_sequence, True, 0.1)
+
+    # demodulate
+    analytical_output, sampled_symbols, flat_bits = demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc)
 
 
-    # read in pickle
-    import os
 
-    # Get the directory where your script is located
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_dir, 'controller_data.pkl')
 
-    with open(file_path, 'rb') as infile:
-        data = pickle.load(infile)
+    # # read in pickle
+    # import os
 
-    rep_outgoing_signal = data['repeater outgoing signal']
-    f_out = data['freq out']
-    t = data['time']
+    # # Get the directory where your script is located
+    # script_dir = os.path.dirname(os.path.abspath(__file__))
+    # file_path = os.path.join(script_dir, 'controller_data.pkl')
 
-    sample_rate = 4e9       # 5 times the carrier frequency for oversampling
-    symbol_rate = 10e6      # 10 MHz
+    # with open(file_path, 'rb') as infile:
+    #     data = pickle.load(infile)
+
+    # rep_outgoing_signal = data['repeater outgoing signal']
+    # f_out = data['freq out']
+    # t = data['time']
+
+    # sample_rate = 4e9 
+    # symbol_rate = 10e6
   
-    # decode the waveform
-    print("Decoding QPSK waveform...")
-    analytical_output, sampled_symbols, flat_bits = demodulator(rep_outgoing_signal, sample_rate, symbol_rate, t, f_out)
+    # # decode the waveform
+    # print("Decoding QPSK waveform...")
+    # analytical_output, sampled_symbols, flat_bits = demodulator(rep_outgoing_signal, sample_rate, symbol_rate, t, f_out)
+
+
+
 
     # Convert to ASCII characters
-    decoded_message = get_string(flat_bits)
-    # decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
-    # decoded_message = ''.join(decoded_chars)
-    print("Decoded Message:", decoded_message)
+    original = get_string(message_binary)
+    decoded = get_string(flat_bits)
 
-    # Print the originalcross_correlation
-    # original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
-    # decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
-
-    # print("Transmitted Bits:", original)
-    # print("Decoded Bits:    ", decoded)
+    # Print the original and decoded
+    print("Transmitted Bits:", original)
+    print("Decoded Bits:    ", decoded)
 
     # if original == decoded:
     #     print("Success: bits match!")
