@@ -1,5 +1,5 @@
 # =============================================================================
-# File: main.py
+# File: Gui_zmq_controlled.py
 # Authors: Skylar Harris, Jorge Hernandez, Kobe Prior, Trevor Wiseman
 # Description:
 #   This program provides a graphical user interface (GUI) for simulating a 
