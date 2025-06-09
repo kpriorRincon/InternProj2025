@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Satellite Path in Cesium</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ODczMDNmNS0xYmVkLTRlN2MtOGU2OC0wZmJjZThkODRiYjEiLCJpZCI6MzEwNjA1LCJpYXQiOjE3NDk0ODIyMDJ9.N3NlZUef39D7v3fPB8ivk1sTA313cWC_YyIaJIzBc7E'
+    // Initialize Cesium viewer
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      timeline: true,
+      animation: true
+    });
+
+    // Load the CZML file
+    viewer.dataSources.add(Cesium.CzmlDataSource.load('xposat.czml'))
+      .then((dataSource) => {
+        viewer.clock.shouldAnimate = true; // Start animating
+        viewer.flyTo(dataSource);          // Zoom to satellite
+      });
+  </script>
+</body>
+</html>

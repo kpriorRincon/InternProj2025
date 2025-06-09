@@ -234,26 +234,6 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
     signal = np.convolve(pulse_shape, baseband_sig, 'same')
 
-    # plots to see the constellations before and after tuning and after the matched filter
-    # fig, axs = plt.subplots(2,1)
-    # axs[0].scatter(np.real(qpsk_waveform), np.imag(qpsk_waveform))
-    # axs[0].set_xlabel('Real')
-    # axs[0].set_ylabel('Imaginary')
-    # axs[0].set_title("Raw QPSK")
-    # axs[0].grid()
-
-    # axs[1].scatter(np.real(baseband_sig), np.imag(baseband_sig))
-    # axs[1].set_title("Tuned Signal")
-    # axs[1].set_xlabel('Real')
-    # axs[1].set_ylabel('Imaginary')
-    # axs[1].grid()
-
-    # axs[2].scatter(np.real(signal), np.imag(signal))
-    # axs[2].set_title("Analytic Signal")
-    # axs[2].set_xlabel('Real')
-    # axs[2].set_ylabel('Imaginary')
-    # axs[2].grid()
-    
     # sample the analytic signal
     print("Sampling the analytic signal...")
     sampled_symbols = down_sampler(signal, sample_rate, symbol_rate)
@@ -268,7 +248,7 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
 
 def main():
     # Input message
-    message = "!ABCDE/"
+    message = "!hello world"
     print("Message:", message)
 
     # Convert message to binary
