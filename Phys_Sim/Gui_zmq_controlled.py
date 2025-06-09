@@ -199,17 +199,10 @@ def simulate_page():
                     rx_analytical_signal = data['receiver analytical signal']
                     f_in = data['freq in']
                     f_out = data['freq out']
-<<<<<<< Updated upstream
-=======
                     sampled_symbols = data['sampled symbols']
 
                     # print(sampled_symbols)
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
                     
-
                     #all data read do plots here
                     #generate_plots
 
