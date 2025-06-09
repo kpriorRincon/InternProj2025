@@ -2,27 +2,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 
-def find_peak(positive_mags, positive_freq_values):
-    # Get indices of the 4 largest peaks
-    top4_indices = np.argpartition(positive_mags, -4)[-4:]
-    # Sort them by magnitude (descending)
-    top4_sorted = top4_indices[np.argsort(positive_mags[top4_indices])[::-1]]
+def find_peak(signal, sample_rate, top_n_bins=5):
+    N = len(signal)
+    spectrum = np.abs(np.fft.fft(signal))
+    freqs = np.fft.fftfreq(N, d=1/sample_rate)
 
-    # Extract the corresponding frequencies
-    top4_freqs = positive_freq_values[top4_sorted]
-    top4_mags = positive_mags[top4_sorted]
+    if np.isrealobj(signal):
+        half_N = N // 2
+        spectrum = spectrum[:half_N]
+        freqs = freqs[:half_N]
 
-    # Choose the frequency in the middle (median)
-    middle_freq = np.median(top4_freqs)
+    # Get indices of the top N peaks
+    top_indices = np.argsort(spectrum)[-top_n_bins:]
+    
+    # Calculate weighted centroid of these bins
+    weights = spectrum[top_indices]
+    weighted_freqs = freqs[top_indices]
+    carrier_freq = np.sum(weighted_freqs * weights) / np.sum(weights)
 
-    # Optional: pick magnitude at the closest frequency to median
-    closest_idx = np.argmin(np.abs(positive_freq_values - middle_freq))
-    peak_mag = positive_mags[closest_idx]
+    return carrier_freq
 
-    # Result
-    peak_freq = middle_freq
-
-    return peak_freq, peak_mag
 
 class Repeater:
     def __init__(self, sampling_frequency, symbol_rate):
@@ -72,8 +71,8 @@ class Repeater:
         # Implement filtering logic here
 
         numtaps = 101  # order of filter
-        lowcut = 850e6
-        highcut = 960e6
+        lowcut = self.desired_frequency - 50e6 #850e6
+        highcut = self.desired_frequency + 50e6 #960e6
         fir_coeff = signal.firwin(numtaps, [lowcut, highcut], pass_zero=False, fs=self.sampling_frequency)
         # pass-zero = whether DC / 0Hz is in the passband
         
@@ -255,9 +254,10 @@ class Repeater:
         peak_mag = positive_mags[peak_index]
         """
 
+        peak_mag = 50
         positive_mags = mag_input[positive_freqs]
         positive_freq_values = freqs[positive_freqs]
-        peak_freq, peak_mag = find_peak(positive_mags, positive_freq_values)
+        peak_freq = find_peak(input_qpsk, self.sampling_frequency)
 
         plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
         plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
@@ -297,14 +297,14 @@ class Repeater:
         positive_mags = mag_shifted[positive_freqs]
         positive_freq_values = freqs[positive_freqs]
 
-        peak_freq, peak_mag = find_peak(positive_mags, positive_freq_values)
+        peak_freq = find_peak(qpsk_mixed, self.sampling_frequency)
 
         plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
         plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
-        plt.text(peak_freq + 100e6, peak_mag + 6, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
+        plt.text(peak_freq + 100e6, peak_mag + 6, f'qq{peak_freq/1e6:.1f} MHz', color='r', ha='center')
         plt.xlabel("Frequency (GHz)")
         plt.ylabel("Magnitude (dB)")
-        plt.title("FFT of QPSK After Frequency Shift")
+        plt.title("FFT of QPSK After FrequeXXncy Shift")
         plt.xlim(0, fs / 2)  # From 0 to fs in MHz
         plt.ylim(0, np.max(mag_input) + 10)
         plt.grid(True)
@@ -334,7 +334,7 @@ class Repeater:
 
         positive_mags = mag_filtered[positive_freqs]
         positive_freq_values = freqs[positive_freqs]
-        peak_freq, peak_mag = find_peak(positive_mags, positive_freq_values)
+        peak_freq = find_peak(qpsk_mixed, self.sampling_frequency)
 
         plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
         plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
