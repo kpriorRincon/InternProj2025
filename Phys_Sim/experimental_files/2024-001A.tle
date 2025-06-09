@@ -1,0 +1,38 @@
+date:2025-06-09T16:51:31+00:00
+validtle:1
+satid:58694
+launchyear:2024
+epoch:24274.70763889
+epochday:274
+tleage:251
+tleclassification:U
+active:0
+name:XPOSAT
+meananomly:358.4583
+meanmotion:14.7444
+rightascension:0.0000
+declination:0.0000
+semimajoraxis:7025.0529223375
+altitudeatperigee:631
+altitudeatapogee:663
+inclination:5.931
+eccentricity:0.0023349
+argumentofperigree:250.2758
+nickname:XPOSAT
+idesg:24001A  
+cosparid:2024-001A
+altkm:628.36182169499
+velkms:7.5559768968942
+velkmh:27202
+onumepoch:4044
+onumnow:72690.06
+otype:98
+otypedesc:Inactive TLE
+status:98
+timestamp:2024-09-30T16:59:00+00:00
+nowjuliandate:2460836.2024427
+nowepochdate:25160.7024421296
+TLE:
+XPOSAT
+1 58694U 24001A   24274.70763889  .00000637  00000+0  00000+0 0  9990
+2 58694   5.9310 337.4084 0023349 250.2758 358.4583 14.74444928 40446
