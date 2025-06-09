@@ -290,6 +290,7 @@ def receiver_page():
             payload += str(rx_message_binary[i])
     with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
         ui.image('demod_media/Constellation.png').style('width:60%').force_reload()
+        ui.image('demod_media/Base_Band_Waveform.png').style('width: 70%').force_reload()
         ui.image('demod_media/Base_Band_FFT.png').style('width:70%').force_reload()
         ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
         ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
