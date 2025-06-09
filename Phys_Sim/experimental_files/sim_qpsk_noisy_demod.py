@@ -207,19 +207,6 @@ def error_handling(sampled_symbols):
     
     return best_bits
 
-
-def root_raised_cosine(num_taps, beta, bits_per_hz, sample_rate, base_band_sig):
-    # impulse response
-    time, h = filters.rrcosfilter(num_taps, beta, bits_per_hz, sample_rate)
-    
-    # pulse shape
-    pulse_shape = np.convolve(h, h)/2
-
-    # convolve with baseband signal
-    sig = np.convolve(base_band_sig, pulse_shape, 'valid')
-
-    return sig
-
 def down_sampler(sig, sample_rate, symbol_rate):
     # write some downsampling here
     samples_per_symbol = int(sample_rate/symbol_rate)
