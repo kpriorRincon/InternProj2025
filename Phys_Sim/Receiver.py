@@ -3,7 +3,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import signal
+from scipy.signal import hilbert
 
 class Receiver:
     def __init__(self, sampling_rate):
@@ -80,68 +80,26 @@ class Receiver:
         
         return best_bits
     
-    def filter(self, mixed_qpsk):
-        """
-        Filters the mixed signal to remove unwanted frequencies.
 
-        Returns:
-        - The filtered signal.
-        """
-        # don't apply filter
-
-        # Implement filtering logic here
-
-        numtaps = 101  # order of filter
-        lowcut = self.desired_frequency - 50e6 #850e6
-        highcut = self.desired_frequency + 50e6 #960e6
-        fir_coeff = signal.firwin(numtaps, [lowcut, highcut], pass_zero=False, fs=self.sampling_frequency)
-        # pass-zero = whether DC / 0Hz is in the passband
-        
-        filtered_sig = signal.lfilter(fir_coeff, 1.0, mixed_qpsk)
-        #first param is for coefficients in numerator (feedforward) of transfer function
-        #sec param is for coeff in denom (feedback)
-        #FIR are purely feedforward, as they do not depend on previous outputs
-
-
-
-        delay = (numtaps - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-        padded_signal = np.pad(filtered_sig, (0, delay), mode='constant')
-        filtered_sig = padded_signal[delay:]  # Shift back by delay
-
-
-
-        #b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_frequency) # butterworth filter coefficients
-
-        # Apply filter
-        #filtered_sig = signal.filtfilt(b, a, mixed_qpsk)   # filtered signal
-        
-        return filtered_sig
-    
     # sample the received signal and do error checking
     def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, t, fc):
         ## tune to baseband ##
-
         print("Tuning to basband...")
         baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
         from commpy import filters
         # root raised cosine matched filter
-
-        # print("Tuning to basband...")
-        baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
-        
-         # root raised cosine matched filter
         beta = 0.3
         _, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
-        # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+        pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, baseband_sig, 'same')
 
         # sample the analytic signal
-        # print("Sampling the analytic signal...")
+        print("Sampling the analytic signal...")
         sampled_symbols = self.down_sampler(signal, sample_rate, symbol_rate)
 
         # decode the symbols and error check the start sequence
-        # print("Decoding symbols and checking for start sequence...")
+        print("Decoding symbols and checking for start sequence...")
         best_bits = self.error_handling(sampled_symbols)
 
         return signal, sampled_symbols, best_bits
