@@ -50,13 +50,11 @@ rx_filtered_signal = None
 rx_analytical_signal = None
 f_in = None
 f_out = None
+sampled_symbols = None
 
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
-
-rx_message_binary = None
-decoded_string = None
 
 def Noise_Addr(input_wave, noise_power):
     #define noise
@@ -117,8 +115,6 @@ def simulate_page():
                     """
                     
                     global message_input
-                    global rx_message_binary
-                    global decoded_string
                     global t
                     global tx_signal
                     global tx_vert_lines
@@ -135,6 +131,7 @@ def simulate_page():
                     global rx_analytical_signal
                     global f_in
                     global f_out
+                    global sampled_symbols
 
                     message_input = message.value
                     
@@ -198,12 +195,14 @@ def simulate_page():
                     rx_analytical_signal = data['receiver analytical signal']
                     f_in = data['freq in']
                     f_out = data['freq out']
-                    
+                    sampled_symbols = data['sampled symbols']
 
+                    print(sampled_symbols)
+                    
                     #all data read do plots here
                     #generate_plots
 
-                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_analytical_signal)
+                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rep_filtered_signal, rx_analytical_signal, sampled_symbols)
                     ui.notify('Data stored successfully!') 
 
             
@@ -290,9 +289,9 @@ def receiver_page():
         else:
             payload += str(rx_message_binary[i])
     with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
-        ui.image('demod_media/Constellation.png').force_reload()
-        ui.image('demod_media/Base_Band_Waveform.png').force_reload()
-        ui.image('demod_media/Base_Band_FFT.png').force_reload()
+        ui.image('demod_media/Constellation.png').style('width:60%').force_reload()
+        ui.image('demod_media/Base_Band_Waveform.png').style('width: 70%').force_reload()
+        ui.image('demod_media/Base_Band_FFT.png').style('width:70%').force_reload()
         ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
         ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
         ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')

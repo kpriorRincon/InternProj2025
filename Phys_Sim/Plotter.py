@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_analytical_signal):
+def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_analytical_signal, sampled_symbols):
     #this plot is for time qpsk
                     plt.figure(figsize=(15, 5))
                     plt.plot(t, tx_signal)
@@ -195,12 +195,26 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     # constellation plot
                     plt.figure(figsize=(5, 5))
 
-                    plt.plot(np.real(rx_analytical_signal), np.imag(rx_analytical_signal), '.')
+                    plt.scatter(np.real(sampled_symbols), np.imag(sampled_symbols))
                     plt.grid(True)
                     plt.title('Constellation Plot of Sampled Symbols')
                     plt.xlabel('Real')
+                    plt.xlim(-4e6,4e6)
+                    plt.ylim(-4e6,4e6)
                     plt.ylabel('Imaginary')
+                    plt.tight_layout()
                     plt.savefig('demod_media/Constellation.png')
+
+                     # Plot the waveform and phase
+                    plt.figure(figsize=(10, 4))
+                    plt.plot(t, np.real(rx_analytical_signal), label='I (real part)')
+                    plt.plot(t, np.imag(rx_analytical_signal), label='Q (imag part)')
+                    plt.title('Filtered Baseband Time Signal  (Real and Imag Parts)')
+                    plt.xlabel('Time (s)')
+                    plt.ylabel('Amplitude')
+                    plt.grid()
+                    plt.legend()
+                    plt.savefig('demod_media/Base_Band_Waveform.png')
 
 
                     # plot the fft

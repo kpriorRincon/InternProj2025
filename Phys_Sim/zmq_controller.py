@@ -138,6 +138,7 @@ recovered_message = rx_data['recovered message']
 rx_incoming_signal = rx_data['incoming signal']
 rx_filtered_signal = rx_data['filtered signal']
 rx_analytical_signal = rx_data['analytical signal']
+rx_sampled_symbols = rx_data['sampled symbols']
 
 print('Controller: Original Message:', message)
 print('Controller: Recovered Message:', recovered_message)
@@ -157,7 +158,8 @@ controller_data = {'time': t,
                    'receiver filtered signal': rx_filtered_signal,
                    'receiver analytical signal': rx_analytical_signal,
                    'freq in': f_in,
-                   'freq out': f_out
+                   'freq out': f_out,
+                   'sampled symbols': rx_sampled_symbols
                    }
 
 
