@@ -8,16 +8,24 @@ with open('viewer.html', 'r') as f:
 #start here 
 # The user would be starting here where they enter a series of TLE codes, up to 5
 text_box_container = ui.column().style('order: 2;')
-
+inputs= []
 def update_text_boxes(e):
     #start by clearin gthe simulation container
     #based on e we allocate a number of text boxes
-    for i in range(e):
-        te
-    pass
+    count = int(e.value)
+    text_box_container.clear()
+    inputs.clear()
+    
+    with text_box_container:
+        for i in range(count):
+            tb = ui.input(label=f'Satellite {i + 1}', placeholder=f'Enter name {i + 1}')
+            inputs.append(tb)
+def submit():
+    sats = [tb.value for tb in inputs]
+    ui.notify(f'satellites: P{sats}')  
 
 ui.number(label='How many Satellites?', min=0, max=5, step=1, on_change=update_text_boxes).style('width: 10%')
-
+ui.button('Submit', on_click = submit)
 
 
 def store_TLE():
