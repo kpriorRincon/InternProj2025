@@ -81,13 +81,9 @@ class Repeater:
         #sec param is for coeff in denom (feedback)
         #FIR are purely feedforward, as they do not depend on previous outputs
 
-
-
         delay = (numtaps - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
         padded_signal = np.pad(filtered_sig, (0, delay), mode='constant')
         filtered_sig = padded_signal[delay:]  # Shift back by delay
-
-
 
         #b, a = signal.butter(order, cuttoff_frequency, btype='low', fs=self.sampling_frequency) # butterworth filter coefficients
 

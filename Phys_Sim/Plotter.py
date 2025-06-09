@@ -26,52 +26,52 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
     #this plot is for time qpsk
                     plt.figure(figsize=(15, 5))
                     plt.plot(t, tx_signal)
-                    plt.ylim(-1/np.sqrt(2)*1-.5, 1/np.sqrt(2)*1+.5)
 
-                    #if there are more than 10 symbols only show the first ten symbols
-                    if len(tx_vert_lines) > 10:
-                        plt.xlim(0, 10/symbol_rate)  # Show first 10 symbol periods
-                    #if not don't touch the xlim
+                    # #if there are more than 10 symbols only show the first ten symbols
+                    # if len(tx_vert_lines) > 10:
+                    #     plt.xlim(0, 10/symbol_rate)  # Show first 10 symbol periods
+                    # #if not don't touch the xlim
 
-                    for lines in tx_vert_lines:
-                        #add vertical lines at the symbol boundaries
-                        if len(tx_vert_lines) > 10:
-                            if lines < 10/symbol_rate:
-                                plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
+                    # for lines in tx_vert_lines:
+                    #     #add vertical lines at the symbol boundaries
+                    #     if len(tx_vert_lines) > 10:
+                    #         if lines < 10/symbol_rate:
+                    #             plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
 
-                                #add annotation for the symbol e.g. '00', '01', '10', '11'
-                                # Reverse mapping: symbol -> binary pair
-                                symbol = tx_symbols[tx_vert_lines.index(lines)]
-                                # Reverse the mapping to get binary pair from symbol
-                                reverse_mapping = {v: k for k, v in sig_gen_mapping.items()}
-                                binary_pair = reverse_mapping.get(symbol, '')
-                                formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
-                                #debug
-                                #print(formatted_pair)
-                                x_dist = 1 / (2.7 * symbol_rate) #half the symbol period 
-                                y_dist = 0.707*1 + .2 # 0.807 is the amplitude of the QPSK waveform
-                                plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)  
-                        else:
-                            if lines < len(t):
-                                plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
+                    #             #add annotation for the symbol e.g. '00', '01', '10', '11'
+                    #             # Reverse mapping: symbol -> binary pair
+                    #             symbol = tx_symbols[tx_vert_lines.index(lines)]
+                    #             # Reverse the mapping to get binary pair from symbol
+                    #             reverse_mapping = {v: k for k, v in sig_gen_mapping.items()}
+                    #             binary_pair = reverse_mapping.get(symbol, '')
+                    #             formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
+                    #             #debug
+                    #             #print(formatted_pair)
+                    #             x_dist = 1 / (2.7 * symbol_rate) #half the symbol period 
+                    #             y_dist = 0.707*1 + .2 # 0.807 is the amplitude of the QPSK waveform
+                    #             plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)  
+                    #     else:
+                    #         if lines < len(t):
+                    #             plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
 
-                                #add annotation for the symbol e.g. '00', '01', '10', '11'
-                                # Reverse mapping: symbol -> binary pair
-                                symbol = tx_symbols[tx_vert_lines.index(lines)]
-                                # Reverse the mapping to get binary pair from symbol
-                                reverse_mapping = {v: k for k, v in sig_gen_mapping.items()}
-                                binary_pair = reverse_mapping.get(symbol, '')
-                                formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
-                                #debug
-                                #print(formatted_pair)
-                                x_dist = 1 / (2.7 * symbol_rate) #half the symbol period 
-                                y_dist = 0.707*1 + .2 # 0.807 is the amplitude of the QPSK waveform
-                                plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
+                    #             #add annotation for the symbol e.g. '00', '01', '10', '11'
+                    #             # Reverse mapping: symbol -> binary pair
+                    #             symbol = tx_symbols[tx_vert_lines.index(lines)]
+                    #             # Reverse the mapping to get binary pair from symbol
+                    #             reverse_mapping = {v: k for k, v in sig_gen_mapping.items()}
+                    #             binary_pair = reverse_mapping.get(symbol, '')
+                    #             formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
+                    #             #debug
+                    #             #print(formatted_pair)
+                    #             x_dist = 1 / (2.7 * symbol_rate) #half the symbol period 
+                    #             y_dist = 0.707*1 + .2 # 0.807 is the amplitude of the QPSK waveform
+                    #             plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
                             
-                    if len(tx_vert_lines) > 10:
-                        plt.title(f'QPSK Waveform for \"{message}\" (first 10 symbol periods)')
-                    else:
-                        plt.title(f'QPSK Waveform for \"{message}\"')
+                    # if len(tx_vert_lines) > 10:
+                    #     plt.title(f'QPSK Waveform for \"{message}\" (first 10 symbol periods)')
+                    # else:
+                    #     plt.title(f'QPSK Waveform for \"{message}\"')
+                    plt.title(f'QPSK Waveform for \"{message}\"')
                     plt.xlabel('Time (s)')
                     plt.ylabel('Amplitude')
                     plt.grid()
@@ -129,7 +129,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.title("Original QPSK Signal (Time Domain)")
                     plt.xlabel("Time (μs)")
                     plt.ylabel("Amplitude")
-                    plt.xlim(0, x_t_lim)
+                    # plt.xlim(0, x_t_lim)
                     plt.grid(True)
 
                     plt.subplot(1, 2, 2)
@@ -161,7 +161,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.title("Shifted QPSK Signal (Time Domain)")
                     plt.xlabel("Time (μs)")
                     plt.ylabel("Amplitude")
-                    plt.xlim(0, x_t_lim)
+                    # plt.xlim(0, x_t_lim)
                     plt.grid(True)
 
                     
@@ -191,7 +191,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.title("Filtered QPSK Signal (Time Domain)")
                     plt.xlabel("Time (μs)")
                     plt.ylabel("Amplitude")
-                    plt.xlim(0, x_t_lim)
+                    # plt.xlim(0, x_t_lim)
                     plt.grid(True)
 
                     plt.subplot(1, 2, 2)
@@ -221,12 +221,12 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     # constellation plot
                     plt.figure(figsize=(5, 5))
 
-                    plt.scatter(np.real(sampled_symbols), np.imag(sampled_symbols))
+                    plt.scatter(np.real(sampled_symbols[1:]), np.imag(sampled_symbols[1:]))
                     plt.grid(True)
                     plt.title('Constellation Plot of Sampled Symbols')
                     plt.xlabel('Real')
-                    plt.xlim(-4e6,4e6)
-                    plt.ylim(-4e6,4e6)
+                    # plt.xlim(-0.5e5,0.5e5)
+                    # plt.ylim(-0.5e5,0.5e5)
                     plt.ylabel('Imaginary')
                     plt.tight_layout()
                     plt.savefig('demod_media/Constellation.png')

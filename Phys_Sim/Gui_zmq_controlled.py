@@ -25,7 +25,7 @@ from Plotter import Plotter
 
 
 #global objects for the Sig_Gen, Receiver, and Repeater classes
-symbol_rate = 10e6
+symbol_rate = 5e6
 sample_rate = 4e9
 sig_gen_mapping ={
             (0, 0): (1 + 1j) / np.sqrt(2),
@@ -179,6 +179,7 @@ def simulate_page():
 
                     for process in processes:
                         process.terminate()
+                        
                     with open('controller_data.pkl', 'rb') as infile:
                         data = pickle.load(infile)
 
@@ -198,6 +199,12 @@ def simulate_page():
                     rx_analytical_signal = data['receiver analytical signal']
                     f_in = data['freq in']
                     f_out = data['freq out']
+<<<<<<< Updated upstream
+=======
+                    sampled_symbols = data['sampled symbols']
+
+                    # print(sampled_symbols)
+>>>>>>> Stashed changes
                     
 
                     #all data read do plots here
