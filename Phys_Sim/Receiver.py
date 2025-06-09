@@ -82,13 +82,13 @@ class Receiver:
     
 
     # sample the received signal and do error checking
-    def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, fc):
-        from commpy import filters
+    def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, t, fc):
         ## tune to baseband ##
         print("Tuning to basband...")
-        baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
-        
-         # root raised cosine matched filter
+        baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
+
+        from commpy import filters
+        # root raised cosine matched filter
         beta = 0.3
         _, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
         pulse_shape = np.convolve(pulse_shape, pulse_shape)/2

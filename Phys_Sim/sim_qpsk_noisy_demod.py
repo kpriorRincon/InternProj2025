@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import correlate
 import Sig_Gen_Noise as SigGen
 from commpy import filters 
+import pickle
 
 #####################################################
 #
@@ -12,8 +13,9 @@ from commpy import filters
 #####################################################
 
 ######### Global Variables #########
-phase_start_sequence = np.array([1+1j, 1-1j, 1+1j, -1+1j]) # this is the letter ! in QPSK 00100001
-phase_end_sequence = np.array([1+1j, 1-1j, -1-1j, -1-1j]) # / 00101111
+#phase_start_sequence = np.array([1+1j, 1-1j, 1+1j, -1+1j]) # this is the letter ! in QPSK 00100001
+phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK 01010010
+#phase_end_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # / 00101111
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
 ######## Functions ########
@@ -213,6 +215,14 @@ def down_sampler(sig, sample_rate, symbol_rate):
     symbols = sig[::samples_per_symbol]
     return symbols
 
+def get_string(bits):
+        """Convert bits to string."""
+        # bits is an array
+        #exclude the prefix
+        bits = bits[8:]
+        # convert the bits into a string
+        return ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
+
 # sample the received signal and do error checking
 def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     ## tune to baseband ##
@@ -248,51 +258,63 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
 
 def main():
     # Input message
-    message = "!hello world"
-    print("Message:", message)
+    # message = "garbage !hello world\ garbage"
+    # print("Message:", message)
 
-    # Convert message to binary
-    message_binary = ''.join(format(ord(char), '08b') for char in message)
-    grouped_bits = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
-    bit_sequence = [int(bit) for bit in message_binary]
-    print("Binary Message:", grouped_bits)
+    # # Convert message to binary
+    # message_binary = ''.join(format(ord(char), '08b') for char in message)
+    # grouped_bits = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
+    # bit_sequence = [int(bit) for bit in message_binary]
+    # print("Binary Message:", grouped_bits)
 
     # Signal generation parameters
-    freq = 900e6            # Carrier frequency for modulation
-    sample_rate = 5 * freq  # 5 times the carrier frequency for oversampling
-    symbol_rate = 1e6      # 10 MHz
-
-    # Generate QPSK waveform using your SigGen class
-    print("Generating QPSK waveform...")
-    sig_gen = SigGen.SigGen(freq, 1.0, sample_rate, symbol_rate)
-    t, qpsk_waveform, _, _ = sig_gen.generate_qpsk(bit_sequence, False, 0.1)
-
-    # plt.plot(t, np.imag(qpsk_waveform))
-    # plt.xlim(0,50/sample_rate)
-    # plt.show()
-
+    #freq = 910e6            # Carrier frequency for modulation
     
+
+    # # Generate QPSK waveform using your SigGen class
+    # print("Generating QPSK waveform...")
+    # sig_gen = SigGen.SigGen(freq, 1.0, sample_rate, symbol_rate)
+    # t, qpsk_waveform, _, _ = sig_gen.generate_qpsk(bit_sequence, False, 0.1)
+
+
+    # read in pickle
+    import os
+
+    # Get the directory where your script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, 'controller_data.pkl')
+
+    with open(file_path, 'rb') as infile:
+        data = pickle.load(infile)
+
+    rep_outgoing_signal = data['repeater outgoing signal']
+    f_out = data['freq out']
+    t = data['time']
+
+    sample_rate = 4e9       # 5 times the carrier frequency for oversampling
+    symbol_rate = 10e6      # 10 MHz
+  
     # decode the waveform
-    # apply hilbert transform
     print("Decoding QPSK waveform...")
-    analytical_output, sampled_symbols, flat_bits = demodulator(qpsk_waveform, sample_rate, symbol_rate, t, freq)
+    analytical_output, sampled_symbols, flat_bits = demodulator(rep_outgoing_signal, sample_rate, symbol_rate, t, f_out)
 
     # Convert to ASCII characters
-    decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
-    decoded_message = ''.join(decoded_chars)
+    decoded_message = get_string(flat_bits)
+    # decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
+    # decoded_message = ''.join(decoded_chars)
     print("Decoded Message:", decoded_message)
 
     # Print the originalcross_correlation
-    original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
-    decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
+    # original = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
+    # decoded  = ' '.join(flat_bits[i:i+2] for i in range(0, len(flat_bits), 2))
 
-    print("Transmitted Bits:", original)
-    print("Decoded Bits:    ", decoded)
+    # print("Transmitted Bits:", original)
+    # print("Decoded Bits:    ", decoded)
 
-    if original == decoded:
-        print("Success: bits match!")
-    else:
-        print("Mismatch detected.")
+    # if original == decoded:
+    #     print("Success: bits match!")
+    # else:
+    #     print("Mismatch detected.")
 
 
     # constellation plot
