@@ -99,6 +99,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.ylim(0, np.max(fft_db)+10)
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Magnitude (dB)')
+                    plt.grid()
                     #save plot
                     plt.savefig(f'qpsk_sig_gen/2_qpsk_waveform.png', dpi = 300)
 
