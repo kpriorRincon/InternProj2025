@@ -204,6 +204,9 @@ def simulate_page():
                     sampled_symbols = data['sampled symbols']
 
                     # print(sampled_symbols)
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                     
 

@@ -121,12 +121,15 @@ class Receiver:
     def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, t, fc):
         ## tune to baseband ##
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         print("Tuning to basband...")
         baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
         from commpy import filters
         # root raised cosine matched filter
 =======
+=======
+>>>>>>> Stashed changes
         # print("Tuning to basband...")
         baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
         
