@@ -28,29 +28,6 @@ class SigGen:
         noise = noise_real + 1j*noise_imag
         return sinusoid + noise                                         # returns the sinusoid with added noise
 
-    def root_raised_cosine(self, num_taps, beta, bits_per_hz, sample_rate, bit_sequence):
-        from commpy import filters
-        import numpy as np
-        
-        # impulse response
-        h = filters.rrcosfilter(num_taps, beta, bits_per_hz, sample_rate)
-
-        # FFTs
-        H_fft = np.fft.fft(h)
-        i_fft = np.fft.fft(bit_sequence[0,:])
-        q_fft = np.fft.fft(bit_sequence[1,:])
-
-        # multiply to convolve
-        i_sig_fft = H_fft*i_fft
-        q_sig_fft = H_fft*q_fft
-
-        # take the inverse of the results
-        i = np.fft.ifft(i_sig_fft)
-        q = np.fft.ifft(q_sig_fft)
-
-        # return the i-q signal
-        return i+q
-
     def generate_qpsk(self, bits, bool_noise, noise_power = 0.01):
         """
         Generate a QPSK signal from a sequence of bits.
@@ -85,17 +62,21 @@ class SigGen:
         
         # Upsample symbols to match sampling rate
         # Each symbol is held constant for samples_per_symbol duration
-        upsampled_symbols = np.repeat(symbols, samples_per_symbol)
+        upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1))for x in symbols])
+        print('upsampled symbols length:', len(upsampled_symbols))
 
-        # run through RRC filter
-        beta = 1 - 1/self.symbol_rate 
-        rrc_sig = self.root_raised_cosine(16, beta, samples_per_symbol/self.sample_rate, self.sample_rate, upsampled_symbols)
-        
+        # Root raised cosine filter implementation
+        from commpy import filters
+        beta = 0.3
+        _, pulse_shape = filters.rrcosfilter(300, beta, 1/self.symbol_rate, self.sample_rate)
+        pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+        signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
+
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
         
         # Modulate: multiply upsampled symbols by phasor
-        qpsk_waveform = rrc_sig * phasor
+        qpsk_waveform = signal * phasor
 
         # get vertical lines
         t_vertical_lines = []  # Initialize vertical lines for debugging

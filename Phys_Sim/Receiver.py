@@ -15,16 +15,11 @@ class Receiver:
         self.phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
     # Sample the received signal
-    def sample_signal(self, analytic_signal, sample_rate, symbol_rate):
-        #print("Sampling the analytic signal")
-        ## Sample at symbol midpoints ##
-        samples_per_symbol = int(sample_rate / symbol_rate)             # number of samples per symbol
-        offset = samples_per_symbol // 2                                # offset to sample at the midpoint of each symbol   
-        ## Sample the analytic signal ##
-        sampled_symbols = analytic_signal[offset::samples_per_symbol]   # symbols sampled from the analytical signal
-        sampled_symbols /= np.abs(sampled_symbols)                      # normalize the symbols
-        #print("Done sampling the analytic signal")
-        return sampled_symbols
+    def down_sampler(sig, sample_rate, symbol_rate):
+        # write some downsampling here
+        samples_per_symbol = int(sample_rate/symbol_rate)
+        symbols = sig[::samples_per_symbol]
+        return symbols
     
     # QPSK symbol to bit mapping
     def bit_reader(self, symbols):
@@ -88,26 +83,32 @@ class Receiver:
 
     # sample the received signal and do error checking
     def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, fc):
-       ## tune to baseband ##
+        from commpy import filters
+        ## tune to baseband ##
         print("Tuning to basband...")
         baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * np.arange(len(qpsk_waveform)) / sample_rate)
-        analytic_sig = baseband_sig
         
+         # root raised cosine matched filter
+        beta = 0.3
+        _, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
+        pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+        signal = np.convolve(pulse_shape, baseband_sig, 'same')
+
         # sample the analytic signal
         print("Sampling the analytic signal...")
-        sampled_symbols = self.sample_signal(analytic_sig, sample_rate, symbol_rate)
+        sampled_symbols = self.down_sampler(signal, sample_rate, symbol_rate)
 
         # decode the symbols and error check the start sequence
         print("Decoding symbols and checking for start sequence...")
         best_bits = self.error_handling(sampled_symbols)
 
-        return analytic_sig, best_bits
+        return signal, sampled_symbols, best_bits
 
 
-    def plot_data(self, analytical_output, t):
+    def plot_data(self, analytical_output, sampled_symbols, t):
         # constellation plot
         plt.figure(figsize=(10, 4))
-        plt.scatter(np.real(analytical_output), np.imag(analytical_output))
+        plt.scatter(np.real(sampled_symbols), np.imag(sampled_symbols))
         plt.grid(True)
         plt.title('Constellation Plot of Sampled Symbols')
         plt.xlabel('Real')
@@ -118,7 +119,7 @@ class Receiver:
         plt.figure(figsize=(10, 4))
         plt.plot(t, analytical_output.real, label='I (real part)')
         plt.plot(t, analytical_output.imag, label='Q (imag part)')
-        plt.title('Baseband Time Signal  (Real and Imag Parts)')
+        plt.title('Filtered Baseband Time Signal  (Real and Imag Parts)')
         plt.xlabel('Time (s)')
         plt.ylabel('Amplitude')
         plt.grid()
@@ -130,7 +131,7 @@ class Receiver:
         freqs = np.fft.fftfreq(len(analytical_output), d=1/2*self.sampling_rate)
         plt.figure(figsize=(10, 4))
         plt.plot(freqs, 20*np.log10(ao_fft))
-        plt.title('FFT of the Base Band Signal')
+        plt.title('FFT of the Filtered Base Band Signal')
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Madgnitude (dB)')
         plt.grid()

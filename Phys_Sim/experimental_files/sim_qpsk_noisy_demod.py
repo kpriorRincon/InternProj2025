@@ -153,17 +153,6 @@ def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
     return start_index, end_index
 
 ## Functions used in final implementation ##
-# Sample the received signal
-def sample_signal(analytic_signal, sample_rate, symbol_rate):
-    print("Sampling the analytic signal")
-    ## Sample at symbol midpoints ##
-    samples_per_symbol = int(sample_rate / symbol_rate)             # number of samples per symbol
-    offset = samples_per_symbol // 2                                # offset to sample at the midpoint of each symbol   
-    ## Sample the analytic signal ##
-    sampled_symbols = analytic_signal[offset::samples_per_symbol]   # symbols sampled from the analytical signal
-    sampled_symbols /= np.abs(sampled_symbols)                      # normalize the symbols
-    print("Done sampling the analytic signal")
-    return sampled_symbols
 
 # QPSK symbol to bit mapping
 def bit_reader(symbols):
@@ -185,13 +174,13 @@ def bit_reader(symbols):
 
 # Error checking for the start sequence using a matched filter
 def error_handling(sampled_symbols):
-    print("Error checking")
+    #print("Error checking")
     ## look for the start sequence ##
     expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)    # put the start sequence into a string
     best_bits = None                                                                                            # holds the best bits found
-    print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
+    #print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
     og_sampled_symbols = ''.join(str(bit) for pair in bit_reader(sampled_symbols) for bit in pair)                 # original sampled symbols in string format
-    print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
+    #print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
 
     ## Loop through possible phase shifts ##
     for i in range(0, 7):   # one for each quadrant (0°, 90°, 180°, 270°)
@@ -201,7 +190,7 @@ def error_handling(sampled_symbols):
         # decode the bits
         decode_bits = bit_reader(rotated_bits)                                  # decode the rotated bits
         flat_bits = ''.join(str(bit) for pair in decode_bits for bit in pair)   # put the bits into a string
-        print("Rotated bits: ", flat_bits)                                      # debug statement
+        #print("Rotated bits: ", flat_bits)                                      # debug statement
         
          # Check for presence of the known start sequence (first few symbols)
         if expected_start_sequence == flat_bits[0:8]:                   # check only first 8 symbols worth (16 bits)
@@ -219,19 +208,17 @@ def error_handling(sampled_symbols):
     return best_bits
 
 
-def root_raised_cosine(num_taps, beta, bits_per_hz, sample_rate, bit_sequence):
+def root_raised_cosine(num_taps, beta, bits_per_hz, sample_rate, base_band_sig):
     # impulse response
-    h = filters.rrcosfilter(num_taps, beta, bits_per_hz, sample_rate)
+    time, h = filters.rrcosfilter(num_taps, beta, bits_per_hz, sample_rate)
     
-    # FFTs
-    H_fft = np.fft.fft(h)
-    bit_sequence_fft = np.fft.fft(bit_sequence)
+    # pulse shape
+    pulse_shape = np.convolve(h, h)/2
 
-    # multiply to convolve
-    result_sig_fft = H_fft*bit_sequence_fft
+    # convolve with baseband signal
+    sig = np.convolve(base_band_sig, pulse_shape, 'valid')
 
-    # take the inverse of the results
-    return result_sig_fft
+    return sig
 
 def down_sampler(sig, sample_rate, symbol_rate):
     # write some downsampling here
@@ -255,47 +242,46 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     # analytic_sig = baseband_sig[start_index:end_index]
 
     # root raised cosine matched filter
-    beta = 1 - 1/symbol_rate 
-    rrc_sig = root_raised_cosine(16, beta, symbol_rate/sample_rate, sample_rate, baseband_sig)
-
-    # downsample
-    ds_sig = down_sampler(rrc_sig, sample_rate, symbol_rate)
+    beta = 0.3
+    _, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
+    pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+    signal = np.convolve(pulse_shape, baseband_sig, 'same')
 
     # plots to see the constellations before and after tuning and after the matched filter
-    fig, axs = plt.subplots(2,1)
-    axs[0].scatter(np.real(qpsk_waveform), np.imag(qpsk_waveform))
-    axs[0].set_xlabel('Real')
-    axs[0].set_ylabel('Imaginary')
-    axs[0].set_title("Raw QPSK")
-    axs[0].grid()
+    # fig, axs = plt.subplots(2,1)
+    # axs[0].scatter(np.real(qpsk_waveform), np.imag(qpsk_waveform))
+    # axs[0].set_xlabel('Real')
+    # axs[0].set_ylabel('Imaginary')
+    # axs[0].set_title("Raw QPSK")
+    # axs[0].grid()
 
-    axs[1].scatter(np.real(baseband_sig), np.imag(baseband_sig))
-    axs[1].set_title("Tuned Signal")
-    axs[1].set_xlabel('Real')
-    axs[1].set_ylabel('Imaginary')
-    axs[1].grid()
+    # axs[1].scatter(np.real(baseband_sig), np.imag(baseband_sig))
+    # axs[1].set_title("Tuned Signal")
+    # axs[1].set_xlabel('Real')
+    # axs[1].set_ylabel('Imaginary')
+    # axs[1].grid()
 
-    axs[2].scatter(np.real(ds_sig), np.imag(ds_sig))
-    axs[2].set_title("Analytic Signal")
-    axs[2].set_xlabel('Real')
-    axs[2].set_ylabel('Imaginary')
-    axs[2].grid()
+    # axs[2].scatter(np.real(signal), np.imag(signal))
+    # axs[2].set_title("Analytic Signal")
+    # axs[2].set_xlabel('Real')
+    # axs[2].set_ylabel('Imaginary')
+    # axs[2].grid()
     
     # sample the analytic signal
     print("Sampling the analytic signal...")
-    sampled_symbols = sample_signal(ds_sig, sample_rate, symbol_rate)
+    sampled_symbols = down_sampler(signal, sample_rate, symbol_rate)
 
     # decode the symbols and error check the start sequence
     print("Decoding symbols and checking for start sequence...")
     best_bits = error_handling(sampled_symbols)
 
-    return ds_sig, best_bits
+    return signal, sampled_symbols, best_bits
 
 ##### MAIN TEST Function #####
 
 def main():
     # Input message
-    message = "ABCDE!ABCDE/ABCDE"
+    message = "!ABCDE/"
     print("Message:", message)
 
     # Convert message to binary
@@ -305,7 +291,7 @@ def main():
     print("Binary Message:", grouped_bits)
 
     # Signal generation parameters
-    freq = 905e6            # Carrier frequency for modulation
+    freq = 900e6            # Carrier frequency for modulation
     sample_rate = 5 * freq  # 5 times the carrier frequency for oversampling
     symbol_rate = 1e6      # 10 MHz
 
@@ -322,7 +308,7 @@ def main():
     # decode the waveform
     # apply hilbert transform
     print("Decoding QPSK waveform...")
-    analytical_output, flat_bits = demodulator(qpsk_waveform, sample_rate, symbol_rate, t, freq)
+    analytical_output, sampled_symbols, flat_bits = demodulator(qpsk_waveform, sample_rate, symbol_rate, t, freq)
 
     # Convert to ASCII characters
     decoded_chars = [chr(int(flat_bits[i:i+8], 2)) for i in range(0, len(flat_bits), 8)]
@@ -344,7 +330,7 @@ def main():
 
     # constellation plot
     fig, axs = plt.subplots(3,1)
-    axs[0].scatter(np.real(analytical_output), np.imag(analytical_output))
+    axs[0].scatter(np.real(sampled_symbols), np.imag(sampled_symbols))
     axs[0].grid(True)
     axs[0].set_title('Constellation Plot of Sampled Symbols')
     axs[0].set_xlabel('Real')
@@ -353,7 +339,7 @@ def main():
     # Plot the waveform and phase
     axs[1].plot(np.arange(0,len(analytical_output)), np.real(analytical_output), label='I (real part)')
     axs[1].plot(np.arange(0, len(analytical_output)), np.imag(analytical_output), label='Q (imag part)')
-    axs[1].set_title('Baseband Time Signal (Real and Imag Parts)')
+    axs[1].set_title('Filtered Baseband Signal Time Signal (Real and Imag Parts)')
     axs[1].set_xlabel('Time (s)')
     axs[1].set_ylabel('Amplitude')
     axs[1].grid()
@@ -363,7 +349,7 @@ def main():
     ao_fft = np.fft.fft(analytical_output)
     freqs = np.fft.fftfreq(len(analytical_output), d=1/2*sample_rate)
     axs[2].plot(freqs, 20*np.log10(ao_fft))
-    axs[2].set_title('FFT of the Base Band Signal')
+    axs[2].set_title('FFT of the Filtered Base Band Signal')
     axs[2].set_xlabel('Frequency (Hz)')
     axs[2].set_ylabel('Madgnitude (dB)')
     axs[2].grid()
