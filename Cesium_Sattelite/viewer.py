@@ -27,13 +27,14 @@ def submit():
     sats = [[name.value, line1.value, line2.value] for name, line1, line2 in inputs]
     print(sats)
     #use the sat values and create a czml file
-    # czml_string = satellite_czml(tle_list=sats).get_czml()
+    czml_object = satellite_czml(tle_list=sats)
+    czml_string = czml_object.get_czml()
     # #write this string to a file
-    # with open('sats.czml', 'w') as f:
-    #     f.write(czml_string)
+    with open('sats.czml', 'w') as f:
+         f.write(czml_string)
     # ui.notify(f'satellites: {sats}')  
     # #once everything is ready we can go to the cesium page
-    # ui.navigate.to('/Cesium_page')
+    ui.navigate.to('/Cesium_page')
 
 ui.number(label='How many Satellites?', min=0, max=5, step=1, on_change=update_text_boxes).style('width: 10%')
 ui.button('Submit', on_click = submit).style('order: 3;')
