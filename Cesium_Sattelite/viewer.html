@@ -22,7 +22,7 @@
     });
 
     // Load the CZML file
-    viewer.dataSources.add(Cesium.CzmlDataSource.load('sats.czml'))
+    viewer.dataSources.add(Cesium.CzmlDataSource.load('xposat.czml'))
       .then((dataSource) => {
         viewer.clock.shouldAnimate = true; // Start animating
         viewer.flyTo(dataSource);          // Zoom to satellite

@@ -26,9 +26,11 @@ def submit():
     from satellite_czml import satellite_czml
     sats = [[name.value, line1.value, line2.value] for name, line1, line2 in inputs]
     print(sats)
+    #need to ensure the way the data gets entered is okay, might have to do .strip()
     #use the sat values and create a czml file
     czml_object = satellite_czml(tle_list=sats)
     czml_string = czml_object.get_czml()
+    
     # #write this string to a file
     with open('sats.czml', 'w') as f:
          f.write(czml_string)
