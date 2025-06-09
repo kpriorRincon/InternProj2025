@@ -206,7 +206,7 @@ def simulate_page():
                     #all data read do plots here
                     #generate_plots
 
-                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_analytical_signal)
+                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rep_filtered_signal, rx_analytical_signal, sampled_symbols)
                     ui.notify('Data stored successfully!') 
 
             
@@ -296,10 +296,10 @@ def receiver_page():
         ui.image('demod_media/Constellation.png').style('width:60%').force_reload()
         ui.image('demod_media/Base_Band_Waveform.png').style('width: 70%').force_reload()
         ui.image('demod_media/Base_Band_FFT.png').style('width:70%').force_reload()
-        ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
-        ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
-        ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
-        ui.label(f'Decoded Message: {rx_recovered_message}')
+        ui.label('Bit Sequence:').style('font-size: 2.5em; font-weight: bold;')
+        ui.html(f'''<div style ="font-size: 2.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
+        ui.html(f'''<div style ="font-size: 2.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
+        ui.label(f'Decoded Message: {rx_recovered_message}').style('font-size: 2.5em; font-weight: bold;')
 
     pass
 

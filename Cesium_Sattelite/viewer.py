@@ -15,33 +15,42 @@ def update_text_boxes(e):
     
     with text_box_container:
         ui.label('Insert the TLE data for Satellites')
+        ui.link('Get TLE\'s', target = 'https://orbit.ing-now.com/low-earth-orbit/', new_tab=True)
         for i in range(count):
-            tb = ui.input(label=f'Satellite {i + 1} TLE', placeholder=f'Enter TLE for Sat {i + 1}').style('width: 100%')
-            inputs.append(tb)
+            with ui.row():
+                name = ui.input(label=f'Satellite {i + 1} Name')
+                line1 = ui.input(label=f'Satellite {i + 1} TLE Line 1')
+                line2 = ui.input(label=f'Satellite {i + 1} TLE Line 2')
+            inputs.append((name, line1, line2))
 def submit():
-    sats = [[tb.value] for tb in inputs]
-    ui.notify(f'satellites: {sats}')  
+    from satellite_czml import satellite_czml
+    sats = [[name.value, line1.value, line2.value] for name, line1, line2 in inputs]
+    print(sats)
+    #use the sat values and create a czml file
+    czml_object = satellite_czml(tle_list=sats)
+    czml_string = czml_object.get_czml()
+    # #write this string to a file
+    with open('sats.czml', 'w') as f:
+         f.write(czml_string)
+    # ui.notify(f'satellites: {sats}')  
+    # #once everything is ready we can go to the cesium page
+    ui.navigate.to('/Cesium_page')
 
 ui.number(label='How many Satellites?', min=0, max=5, step=1, on_change=update_text_boxes).style('width: 10%')
 ui.button('Submit', on_click = submit).style('order: 3;')
 
 
-@ui.page('Cesium_page')
+@ui.page('/Cesium_page')
 
 def Cesium_page():
+
     html_directory = os.path.dirname(__file__)#get the directory of the current script
     app.add_static_files('/static', html_directory) # serve the script
-    with open('viewer.html', 'r') as f:
-        cesium_html = f.read()
-#next steps I want the user to be able to copy paste several TLE's for satellites 
+    #next steps I want the user to be able to copy paste several TLE's for satellites 
     with ui.row().style('width: 100%; height: 100vh'):
-        #left
-        with ui.column().style('width: 30%;'):
-            ui.label('nothing')
-        #right
-        with ui.column():
-            ui.label('nothing')
-            ui.html('<iframe src=/static/viewer.html></iframe>').force_reload()
+        with ui.column().style('width: 90%'):
+            ui.html('<iframe src=/static/viewer.html></iframe>').style('width: 100%; height: 90vh; border: none;')
+
 
 
 ui.run()

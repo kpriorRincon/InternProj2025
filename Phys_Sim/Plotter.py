@@ -95,10 +95,11 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 100e6, np.max(fft_db) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.title("FFT of QPSK signal")
-                    plt.xlim(0, 1000e6)
+                    plt.xlim(0, 2*920e6)
                     plt.ylim(0, np.max(fft_db)+10)
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Magnitude (dB)')
+                    plt.grid()
                     #save plot
                     plt.savefig(f'qpsk_sig_gen/2_qpsk_waveform.png', dpi = 300)
 
