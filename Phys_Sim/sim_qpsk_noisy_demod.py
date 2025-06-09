@@ -53,14 +53,9 @@ def find_start_from_minimum_before_peak(correlation_signal, search_window=100):
     return search_start + local_min_idx
 
 # Cross-Correlation
-def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
+def cross_correlation(baseband_sig, sample_rate, symbol_rate):
     start_index = 0
-    end_index = len(baseband_sig)  # Default to full signal
-    current_max = 0
-    best_start_corr = None
-    best_end_corr = None
-    best_start_idx = 0
-    best_end_idx = len(baseband_sig)
+    end_index = len(baseband_sig)
     
     # Define start and end sequences
     start = '!'
@@ -74,53 +69,18 @@ def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
     print(f"Looking for start sequence: {start_sequence}")
     print(f"Looking for end sequence: {end_sequence}")
     
-    # Test different frequencies (for Doppler compensation)
-    for i, f in enumerate(freqs):
-        print(f"Testing frequency {i+1}/{len(freqs)}: {f/1e6:.1f} MHz")
+    # Generate reference sequences at baseband
+    sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)  # Generate at baseband (0 Hz)
+    _, start_gold, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0)
+    _, end_gold, _, _ = sig_gen.generate_qpsk(end_sequence, False, 0)
         
-        # Generate reference sequences at baseband
-        sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)  # Generate at baseband (0 Hz)
-        _, start_gold, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0)
-        _, end_gold, _, _ = sig_gen.generate_qpsk(end_sequence, False, 0)
+    # Correlate with start sequence
+    cor_sig_start = correlate(baseband_sig, np.conj(start_gold), mode='same')
+    cor_sig_end = correlate(baseband_sig, np.conj(end_gold), mode='same')
         
-        # Apply frequency offset compensation to baseband signal
-        freq_offset = f - fc
-        compensated_sig = baseband_sig * np.exp(-1j * 2 * np.pi * freq_offset * np.arange(len(baseband_sig)) / sample_rate)
-        
-        # Correlate with start sequence
-        cor_sig_start = correlate(compensated_sig, np.conj(start_gold), mode='valid')
-        
-        # Find maximum correlation
-        max_corr_abs = np.amax(np.abs(cor_sig_start))
-        
-        if max_corr_abs > current_max:
-            print(f"Stronger correlation found at {f/1e6:.1f} MHz")
-            print(f"Correlation strength: {20*np.log10(max_corr_abs):.1f} dB")
-            
-            current_max = max_corr_abs
-            
-            # Find start index (in original signal coordinates)
-            start_idx_in_corr = find_start_from_minimum_before_peak(cor_sig_start, search_window=100)
-            best_start_idx = start_idx_in_corr  # For 'valid' mode, this is direct
-            
-            # Correlate with end sequence
-            cor_sig_end = correlate(compensated_sig, np.conj(end_gold), mode='valid')
-            end_idx_in_corr = find_start_from_minimum_before_peak(cor_sig_end, search_window=100)
-            best_end_idx = end_idx_in_corr + len(end_gold)  # Add length to get end position
-            
-            # Ensure end_index is not beyond signal length
-            best_end_idx = min(best_end_idx, len(baseband_sig))
-            
-            print(f"Start index: {best_start_idx}")
-            print(f"End index: {best_end_idx}")
-            
-            # Store best correlations for debugging
-            best_start_corr = cor_sig_start
-            best_end_corr = cor_sig_end
-    
-    # Set final indices
-    start_index = best_start_idx
-    end_index = best_end_idx
+    # Find maximum correlation
+    start_index = np.argmax(np.abs(cor_sig_start))
+    #end_index = np.argmax(np.abs(cor_sig_end))
     
     # Final validation
     if start_index >= end_index:
@@ -129,25 +89,25 @@ def cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc):
         end_index = len(baseband_sig)
     
     # Plot the best correlation result
-    if best_start_corr is not None:
+    if cor_sig_start is not None:
         plt.figure(figsize=(12, 4))
-        corr_db = 20*np.log10(np.abs(best_start_corr))
-        plt.plot(np.arange(len(best_start_corr)), corr_db)
+
+        # plot the start correlation
+        plt.plot(np.arange(len(cor_sig_start)), 20*np.log10(np.abs(cor_sig_start)))
+
+        # plot the end correlation
+        plt.plot(np.arange(len(cor_sig_end)), 20*np.log10(cor_sig_end))
         
         # Vertical line at peak
-        peak_idx = np.argmax(np.abs(best_start_corr))
-        plt.axvline(x=peak_idx, color='r', linestyle='--', label='Peak Location')
-        
-        # Horizontal lines for reference levels
-        max_corr_db = np.amax(corr_db)
-        plt.axhline(y=max_corr_db, color='g', linestyle='--', alpha=0.7, label='Peak Level')
-        plt.axhline(y=max_corr_db - 3, color='orange', linestyle='--', alpha=0.7, label='-3dB')
+        plt.axvline(x=start_index, color='r', linestyle='--', label='Start Location')
+        # Vertical line at peak
+        plt.axvline(x=end_index, color='b', linestyle='--', label='End Location')
         
         plt.xlabel("Sample Index")
         plt.ylabel("Correlation Magnitude (dB)")
         plt.title("Cross Correlation - Start Sequence")
         plt.legend()
-        plt.ylim(0, 150)
+        #plt.ylim(0, 150)
         plt.grid(True)
     
 
@@ -176,13 +136,13 @@ def bit_reader(symbols):
 
 # Error checking for the start sequence using a matched filter
 def error_handling(sampled_symbols):
-    #print("Error checking")
+    print("Error checking")
     ## look for the start sequence ##
     expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)    # put the start sequence into a string
     best_bits = None                                                                                            # holds the best bits found
-    #print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
+    print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
     og_sampled_symbols = ''.join(str(bit) for pair in bit_reader(sampled_symbols) for bit in pair)                 # original sampled symbols in string format
-    #print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
+    print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
 
     ## Loop through possible phase shifts ##
     for i in range(0, 7):   # one for each quadrant (0°, 90°, 180°, 270°)
@@ -192,7 +152,7 @@ def error_handling(sampled_symbols):
         # decode the bits
         decode_bits = bit_reader(rotated_bits)                                  # decode the rotated bits
         flat_bits = ''.join(str(bit) for pair in decode_bits for bit in pair)   # put the bits into a string
-        #print("Rotated bits: ", flat_bits)                                      # debug statement
+        print("Rotated bits: ", flat_bits)                                      # debug statement
         
          # Check for presence of the known start sequence (first few symbols)
         if expected_start_sequence == flat_bits[0:8]:                   # check only first 8 symbols worth (16 bits)
@@ -231,11 +191,12 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
 
     # find the desired signal
     lam = 3e8 / fc  # wavelength of the carrier frequency
-    v = 7.8e3 # average speed of a satellite in LEO
+    #v = 7.8e3 # average speed of a satellite in LEO
+    v = 0
     doppler = v / lam   # calculated doppler shift
     print("Doppler shift: ", doppler)
     freqs = np.linspace(fc-doppler, fc+doppler, 4)
-    start_index, end_index = cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc)
+    start_index, end_index = cross_correlation(baseband_sig, sample_rate, symbol_rate)
     analytic_sig = baseband_sig[start_index:end_index]
 
     # root raised cosine matched filter
@@ -276,7 +237,7 @@ def main():
     # Generate QPSK waveform using your SigGen class
     print("Generating QPSK waveform...")
     sig_gen = SigGen.SigGen(fc, 1.0, sample_rate, symbol_rate)
-    t, qpsk_waveform, _, _ = sig_gen.generate_qpsk(bit_sequence, True, 0.1)
+    t, qpsk_waveform, _, _ = sig_gen.generate_qpsk(bit_sequence, False, 0.1)
 
     # demodulate
     analytical_output, sampled_symbols, flat_bits = demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc)
