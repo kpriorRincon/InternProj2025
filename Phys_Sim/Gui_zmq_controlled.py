@@ -206,7 +206,7 @@ def simulate_page():
                     #all data read do plots here
                     #generate_plots
 
-                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rep_filtered_signal, rx_analytical_signal, sampled_symbols)
+                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols)
                     ui.notify('Data stored successfully!') 
 
             
@@ -293,6 +293,8 @@ def receiver_page():
         else:
             payload += str(rx_message_binary[i])
     with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.image('demod_media/incoming.png').force_reload()
+        ui.image('demod_media/filtered.png').force_reload()
         ui.image('demod_media/Constellation.png').style('width:60%').force_reload()
         ui.image('demod_media/Base_Band_Waveform.png').style('width: 70%').force_reload()
         ui.image('demod_media/Base_Band_FFT.png').style('width:70%').force_reload()

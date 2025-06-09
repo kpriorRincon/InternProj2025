@@ -128,7 +128,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.subplot(1, 2, 1)
                     plt.plot(t, np.real(rep_incoming_signal))  # convert time to microseconds
                     plt.title("Original QPSK Signal (Time Domain)")
-                    plt.xlabel("Time (μs)")
+                    plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
                     # plt.xlim(0, x_t_lim)
                     plt.grid(True)
@@ -160,7 +160,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.subplot(1, 2, 1)
                     plt.plot(t, np.real(rep_mixed_signal))
                     plt.title("Shifted QPSK Signal (Time Domain)")
-                    plt.xlabel("Time (μs)")
+                    plt.xlabel("Time (μ\s)")
                     plt.ylabel("Amplitude")
                     # plt.xlim(0, x_t_lim)
                     plt.grid(True)
