@@ -160,7 +160,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.subplot(1, 2, 1)
                     plt.plot(t, np.real(rep_mixed_signal))
                     plt.title("Shifted QPSK Signal (Time Domain)")
-                    plt.xlabel("Time (μ\s)")
+                    plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
                     # plt.xlim(0, x_t_lim)
                     plt.grid(True)
@@ -190,7 +190,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.subplot(1, 2, 1)
                     plt.plot(t, np.real(rep_filtered_signal))
                     plt.title("Filtered QPSK Signal (Time Domain)")
-                    plt.xlabel("Time (μs)")
+                    plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
                     # plt.xlim(0, x_t_lim)
                     plt.grid(True)
@@ -221,7 +221,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     #start receiver plotting:
 
                     #subplot1:incoming signal
-                    plt.figure(figsize=(10,4))
+                    plt.figure(figsize=(20, 6))
                     plt.subplot(1, 2, 1)
                     #time domain
                     plt.plot(t, rx_incoming_signal)
@@ -232,37 +232,44 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.subplot(1,2, 2)
                     #frequency domain
                     ao_fft = np.fft.fft(rx_incoming_signal)
-                    freqs = np.fft.fftfreq(len(rx_incoming_signal), d=1/2*sample_rate)
+                    freqs = np.fft.fftfreq(len(rx_incoming_signal), d=1/sample_rate)
                     db_vals = 20*np.log10(ao_fft)
                     plt.plot(freqs, db_vals)
-                    plt.xlabel("Frequency (GHz)")
+                    plt.xlabel("Frequency (Hz)")
                     plt.ylabel("Magnitude (dB)")
                     plt.title('FFT of Incoming Waveform')
+                    plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
+                    plt.ylim(0, np.max(db_vals) + 10)
                     plt.savefig('demod_media/incoming.png', dpi=300)
+                    plt.clf()
 
 
                     #subplot2: filtered signal
-                    plt.figure(figsize=(10,4))
+                    plt.figure(figsize=(20, 6))
                     plt.subplot(1, 2, 1)
                     #time domain
                     plt.plot(t, rx_filtered_signal)
-                    plt.title("Incoming Waveform")
+                    plt.title("Filtered Waveform")
                     plt.xlabel("Time s")
                     plt.ylabel("Amplitude")
 
                     plt.subplot(1,2, 2)
                     #frequency domain
                     ao_fft = np.fft.fft(rx_filtered_signal)
-                    freqs = np.fft.fftfreq(len(rx_filtered_signal), d=1/2*sample_rate)
+                    freqs = np.fft.fftfreq(len(rx_filtered_signal), d=1/sample_rate)
                     db_vals = 20*np.log10(ao_fft)
-                    plt.plot(freqs, db_vals)
 
+                    plt.plot(freqs, db_vals)
                     plt.title('FFT of the Filtered Signal')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
+                    plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
+                    plt.ylim(0, np.max(db_vals) + 10)
                     plt.grid()
-                    plt.tight_layout()
                     plt.savefig('demod_media/filtered.png', dpi=300)
+                    plt.clf()
+
+
 
                     # constellation plot
                     plt.figure(figsize=(5, 5))
@@ -291,7 +298,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
 
                     # plot the fft
                     ao_fft = np.fft.fft(rx_analytical_signal)
-                    freqs = np.fft.fftfreq(len(rx_analytical_signal), d=1/2*sample_rate)
+                    freqs = np.fft.fftfreq(len(rx_analytical_signal), d=1/sample_rate)
                     db_vals = 20*np.log10(ao_fft)
 
                     peak_freq = 0
