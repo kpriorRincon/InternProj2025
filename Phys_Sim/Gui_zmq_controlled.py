@@ -50,11 +50,13 @@ rx_filtered_signal = None
 rx_analytical_signal = None
 f_in = None
 f_out = None
-sampled_symbols = None
 
 noise_bool = False  # Global variable to control noise addition
 noise_power = 0.1  # Default noise power
 message_input = None  # Global variable to store the message input field
+
+rx_message_binary = None
+decoded_string = None
 
 def Noise_Addr(input_wave, noise_power):
     #define noise
@@ -115,6 +117,8 @@ def simulate_page():
                     """
                     
                     global message_input
+                    global rx_message_binary
+                    global decoded_string
                     global t
                     global tx_signal
                     global tx_vert_lines
@@ -131,7 +135,6 @@ def simulate_page():
                     global rx_analytical_signal
                     global f_in
                     global f_out
-                    global sampled_symbols
 
                     message_input = message.value
                     
@@ -195,14 +198,12 @@ def simulate_page():
                     rx_analytical_signal = data['receiver analytical signal']
                     f_in = data['freq in']
                     f_out = data['freq out']
-                    sampled_symbols = data['sampled symbols']
-
-                    print(sampled_symbols)
                     
+
                     #all data read do plots here
                     #generate_plots
 
-                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rep_filtered_signal, rx_analytical_signal, sampled_symbols)
+                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_analytical_signal)
                     ui.notify('Data stored successfully!') 
 
             
