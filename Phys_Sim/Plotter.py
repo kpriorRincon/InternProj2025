@@ -22,7 +22,7 @@ def find_peak(signal, sample_rate, top_n_bins=5):
     return carrier_freq
 
 
-def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_analytical_signal, sampled_symbols):
+def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols):
     #this plot is for time qpsk
                     plt.figure(figsize=(15, 5))
                     plt.plot(t, tx_signal)
@@ -219,6 +219,51 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
 
 
                     #start receiver plotting:
+
+                    #subplot1:incoming signal
+                    plt.figure(figsize=(10,4))
+                    plt.subplot(1, 2, 1)
+                    #time domain
+                    plt.plot(t, rx_incoming_signal)
+                    plt.title("Incoming Waveform")
+                    plt.xlabel("Time s")
+                    plt.ylabel("Amplitude")
+
+                    plt.subplot(1,2, 2)
+                    #frequency domain
+                    ao_fft = np.fft.fft(rx_incoming_signal)
+                    freqs = np.fft.fftfreq(len(rx_incoming_signal), d=1/2*sample_rate)
+                    db_vals = 20*np.log10(ao_fft)
+                    plt.plot(freqs, db_vals)
+                    plt.xlabel("Frequency (GHz)")
+                    plt.ylabel("Magnitude (dB)")
+                    plt.title('FFT of Incoming Waveform')
+                    plt.savefig('demod_media/incoming.png', dpi=300)
+
+
+                    #subplot2: filtered signal
+                    plt.figure(figsize=(10,4))
+                    plt.subplot(1, 2, 1)
+                    #time domain
+                    plt.plot(t, rx_filtered_signal)
+                    plt.title("Incoming Waveform")
+                    plt.xlabel("Time s")
+                    plt.ylabel("Amplitude")
+
+                    plt.subplot(1,2, 2)
+                    #frequency domain
+                    ao_fft = np.fft.fft(rx_filtered_signal)
+                    freqs = np.fft.fftfreq(len(rx_filtered_signal), d=1/2*sample_rate)
+                    db_vals = 20*np.log10(ao_fft)
+                    plt.plot(freqs, db_vals)
+
+                    plt.title('FFT of the Filtered Signal')
+                    plt.xlabel('Frequency (Hz)')
+                    plt.ylabel('Madgnitude (dB)')
+                    plt.grid()
+                    plt.tight_layout()
+                    plt.savefig('demod_media/filtered.png', dpi=300)
+
                     # constellation plot
                     plt.figure(figsize=(5, 5))
 
