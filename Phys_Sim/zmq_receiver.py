@@ -69,14 +69,15 @@ if noise_bool:
 else:
     rep_signal = rep["rep signal"]
 
-analytical_signal, bits = receiver.demodulator(rep_signal, f_sample, symbol_rate, f_out)
+signal, sampled_symbols, bits = receiver.demodulator(rep_signal, f_sample, symbol_rate, f_out)
 message = receiver.get_string(bits)
 
 rep = {"bit sequence": bits,
        "recovered message": message,
        "incoming signal": rep_signal,
        "filtered signal": rep_signal, 
-       'analytical signal': analytical_signal
+       'analytical signal': signal,
+       'sampled symbols': sampled_symbols
        }
 
 print("Receiver: Sending data to controller...")

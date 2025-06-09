@@ -63,21 +63,17 @@ class SigGen:
         # Upsample symbols to match sampling rate
         # Each symbol is held constant for samples_per_symbol duration
         upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1))for x in symbols])
-        print('upsampled symbols length:', len(upsampled_symbols))
 
         # Root raised cosine filter implementation
         from commpy import filters
         beta = 0.3
-        time_idx, pulse_shape = filters.rrcosfilter(len(symbols), beta, 1/self.symbol_rate, self.sample_rate)
-        print('time length:', len(time_idx))
+        _, pulse_shape = filters.rrcosfilter(300, beta, 1/self.symbol_rate, self.sample_rate)
         pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
-        print('pulse shape length:', len(pulse_shape))
         signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
-        print('signal length:',len(signal))
 
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
-        print('phasor length:',len(phasor))
+
         
         # Modulate: multiply upsampled symbols by phasor
         qpsk_waveform = signal * phasor

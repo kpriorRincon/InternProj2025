@@ -15,7 +15,7 @@ class Receiver:
         self.phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
     # Sample the received signal
-    def down_sampler(sig, sample_rate, symbol_rate):
+    def down_sampler(self,sig, sample_rate, symbol_rate):
         # write some downsampling here
         samples_per_symbol = int(sample_rate/symbol_rate)
         symbols = sig[::samples_per_symbol]
