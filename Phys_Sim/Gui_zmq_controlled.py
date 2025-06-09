@@ -16,7 +16,6 @@
 from nicegui import ui
 import Sig_Gen as Sig_Gen
 import Receiver as Receiver
-import Repeater as Repeater
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle

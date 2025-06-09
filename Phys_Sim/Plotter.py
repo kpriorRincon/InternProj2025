@@ -240,6 +240,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.title('FFT of Incoming Waveform')
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
                     plt.ylim(0, np.max(db_vals) + 10)
+                    plt.grid()
                     plt.savefig('demod_media/incoming.png', dpi=300)
                     plt.clf()
 
