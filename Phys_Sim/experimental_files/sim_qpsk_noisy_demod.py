@@ -1,8 +1,9 @@
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
-import Sig_Gen_Noise as SigGen
 from scipy.signal import correlate
+import Sig_Gen_Noise as SigGen
+from commpy import filters 
 
 #####################################################
 #
@@ -217,6 +218,27 @@ def error_handling(sampled_symbols):
     
     return best_bits
 
+
+def root_raised_cosine(num_taps, beta, bits_per_hz, sample_rate, bit_sequence):
+    # impulse response
+    h = filters.rrcosfilter(num_taps, beta, bits_per_hz, sample_rate)
+    
+    # FFTs
+    H_fft = np.fft.fft(h)
+    bit_sequence_fft = np.fft.fft(bit_sequence)
+
+    # multiply to convolve
+    result_sig_fft = H_fft*bit_sequence_fft
+
+    # take the inverse of the results
+    return result_sig_fft
+
+def down_sampler(sig, sample_rate, symbol_rate):
+    # write some downsampling here
+    samples_per_symbol = int(sample_rate/symbol_rate)
+    symbols = sig[::samples_per_symbol]
+    return symbols
+
 # sample the received signal and do error checking
 def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     ## tune to baseband ##
@@ -224,14 +246,20 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
     # find the desired signal
-    lam = 3e8 / fc  # wavelength of the carrier frequency
-    v = 7.8e3 # average speed of a satellite in LEO
-    doppler = v / lam   # calculated doppler shift
-    print("Doppler shift: ", doppler)
-    freqs = np.linspace(fc-doppler, fc+doppler, 4)
-    start_index, end_index = cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc)
-    analytic_sig = baseband_sig[start_index:end_index]
-    #analytic_sig = baseband_sig
+    # lam = 3e8 / fc  # wavelength of the carrier frequency
+    # v = 7.8e3 # average speed of a satellite in LEO
+    # doppler = v / lam   # calculated doppler shift
+    # print("Doppler shift: ", doppler)
+    # freqs = np.linspace(fc-doppler, fc+doppler, 4)
+    # start_index, end_index = cross_correlation(baseband_sig, freqs, sample_rate, symbol_rate, fc)
+    # analytic_sig = baseband_sig[start_index:end_index]
+
+    # root raised cosine matched filter
+    beta = 1 - 1/symbol_rate 
+    rrc_sig = root_raised_cosine(16, beta, symbol_rate/sample_rate, sample_rate, baseband_sig)
+
+    # downsample
+    ds_sig = down_sampler(rrc_sig, sample_rate, symbol_rate)
 
     # plots to see the constellations before and after tuning and after the matched filter
     fig, axs = plt.subplots(2,1)
@@ -247,21 +275,21 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     axs[1].set_ylabel('Imaginary')
     axs[1].grid()
 
-    # axs[2].scatter(np.real(analytic_sig), np.imag(analytic_sig))
-    # axs[2].set_title("Analytic Signal")
-    # axs[2].set_xlabel('Real')
-    # axs[2].set_ylabel('Imaginary')
-    # axs[2].grid()
+    axs[2].scatter(np.real(ds_sig), np.imag(ds_sig))
+    axs[2].set_title("Analytic Signal")
+    axs[2].set_xlabel('Real')
+    axs[2].set_ylabel('Imaginary')
+    axs[2].grid()
     
     # sample the analytic signal
     print("Sampling the analytic signal...")
-    sampled_symbols = sample_signal(analytic_sig, sample_rate, symbol_rate)
+    sampled_symbols = sample_signal(ds_sig, sample_rate, symbol_rate)
 
     # decode the symbols and error check the start sequence
     print("Decoding symbols and checking for start sequence...")
     best_bits = error_handling(sampled_symbols)
 
-    return analytic_sig, best_bits
+    return ds_sig, best_bits
 
 ##### MAIN TEST Function #####
 
