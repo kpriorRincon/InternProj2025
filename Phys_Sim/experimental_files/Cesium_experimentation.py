@@ -1,5 +1,5 @@
 # run: npm install cesium
-import nicegui as ui
+from nicegui import ui
 cesium_html ='''
 <div id="cesiumContainer" style="width:100%; height:100vh;"></div>
 
