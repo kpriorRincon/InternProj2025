@@ -62,7 +62,7 @@ class SigGen:
         
         # Upsample symbols to match sampling rate
         # Each symbol is held constant for samples_per_symbol duration
-        upsampled_symbols = np.repeat(symbols, samples_per_symbol)
+        upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1))for x in symbols])
         
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
