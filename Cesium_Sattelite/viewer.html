@@ -21,14 +21,63 @@
       animation: true
     });
 
-    // Load the CZML file
     //cache buster
     const cacheBuster = '?t=' + new Date().getTime();
+    // Load the CZML file
     viewer.dataSources.add(Cesium.CzmlDataSource.load('sats.czml' + cacheBuster))
       .then((dataSource) => {
         viewer.clock.shouldAnimate = true; // Start animating
         viewer.flyTo(dataSource);          // Zoom to satellite
       });
+
+      // Set default view to encompass both cylinders
+      viewer.camera.setView({
+        destination: Cesium.Rectangle.fromDegrees(-108.5, 37.0, 100000)
+      });
+
+      viewer.entities.add({
+        name: "Tx",
+        position: Cesium.Cartesian3.fromDegrees(-104.876694, 39.587), // longitude, latitude, height (meters)
+        cylinder: {
+          length: 100000.0, // height of the cylinder in meters
+          topRadius: 20000.0, // top radius in meters
+          bottomRadius: 20000.0, // bottom radius in meters
+          material: Cesium.Color.RED
+        },
+        label: {
+          text: "Tx",
+          font: "18px sans-serif",
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -10)
+        }
+      });
+
+      viewer.entities.add({
+        name: "Rx",
+        position: Cesium.Cartesian3.fromDegrees(-107.712, 37.8989), // longitude, latitude, height (meters)
+        cylinder: {
+          length: 100000.0, // height of the cylinder in meters
+          topRadius: 20000.0, // top radius in meters
+          bottomRadius: 20000.0, // bottom radius in meters
+          material: Cesium.Color.RED
+        },
+        label: {
+          text: "Rx",
+          font: "18px sans-serif",
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -10)
+        }
+      });
+
+
   </script>
 </body>
 </html>

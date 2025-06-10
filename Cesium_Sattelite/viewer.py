@@ -24,8 +24,7 @@ def update_text_boxes(e):
     inputs.clear()
 
     with text_box_container:
-        ui.label('Insert the TLE data for Satellites')
-        ui.link('Get TLE\'s', target='https://orbit.ing-now.com/low-earth-orbit/', new_tab=True)
+        ui.label(f'Select {count} Satellite(s)')
 
         with ui.row().style('width:80%'):
             #create a bunch of buttons for possible sattelites to choose from
@@ -69,8 +68,6 @@ def submit():
     # Convert to CZML
     czml_string = satellite_czml(tle_list=tle_list).get_czml()
 
-    #add time stamp 
-    timestamp = int(time.time())
     #write this string to a file
     with open('sats.czml', 'w') as f:
         f.write(czml_string)
@@ -80,11 +77,16 @@ def submit():
     #navigate to the page to display
     ui.navigate.to('/Cesium_page')
 
-ui.number(label='How many Satellites?', min=0, max=5, step=1, on_change=update_text_boxes).style('width: 10%')
-ui.button('Submit', on_click=submit).style('order: 3;')
+ui.number(label='How many Satellites?', min=1, max=5, step=1, on_change=update_text_boxes).style('width: 10%')
+ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 
 @ui.page('/Cesium_page')
 def Cesium_page():
+    def back_and_clear():
+        global selected
+        selected.clear()
+        ui.navigate.back()
+    ui.button('Back', on_click=back_and_clear)
     html_directory = os.path.dirname(__file__)#get this files working directory
     app.add_static_files('/static', html_directory)#add the files available
     #added ?t=time.time for cache busting

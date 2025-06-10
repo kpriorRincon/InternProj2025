@@ -1,3 +1,6 @@
+# https://celestrak.org/NORAD/elements/
+# go to this site so that you can get TLE current data to put into sattelite_tles.txt
+
 import pickle
 
 with open('sattelite_tles.txt') as f:
