@@ -96,7 +96,6 @@ print("Controller: Response received.")
 # Data from repeater
 rep_incoming_signal = rep_data['Incoming Signal']
 rep_mixed_signal = rep_data['Mixed Signal']
-rep_filtered_signal = rep_data['Filtered Signal']
 rep_outgoing_signal = rep_data['Outgoing Signal']
 
 # ---------------------------------------------------
@@ -150,7 +149,6 @@ controller_data = {'time': t,
                    'transmitter message in binary': message_bin,
                    'repeater incoming signal': rep_incoming_signal,
                    'repeater mixed signal': rep_mixed_signal,
-                   'repeater filtered signal': rep_filtered_signal,
                    'repeater outgoing signal': rep_outgoing_signal,
                    'receiver message in binary': bit_sequence,
                    'receiver recovered message': recovered_message,

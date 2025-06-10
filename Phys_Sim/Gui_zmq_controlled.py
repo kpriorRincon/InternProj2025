@@ -186,7 +186,6 @@ def simulate_page():
                     tx_message_binary = data['transmitter message in binary']
                     rep_incoming_signal = data['repeater incoming signal']
                     rep_mixed_signal = data['repeater mixed signal']
-                    rep_filtered_signal = data['repeater filtered signal']
                     rep_outgoing_signal = data['repeater outgoing signal']
                     rx_message_binary = data['receiver message in binary']
                     rx_recovered_message = data['receiver recovered message']
@@ -202,7 +201,7 @@ def simulate_page():
                     #all data read do plots here
                     #generate_plots
 
-                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols)
+                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols)
                     ui.notify('Data stored successfully!') 
 
             
@@ -269,7 +268,6 @@ def repeater_page():
 
     ui.image('original_qpsk_rp.png').force_reload()
     ui.image('shifted_qpsk_rp.png').force_reload()
-    ui.image('filtered_qpsk_rp.png').force_reload()
 
 
 #simulation receiver page

@@ -77,13 +77,11 @@ repeater.desired_frequency = f_out
 qpsk_mixed = repeater.mix(qpsk_signal=incoming_qpsk, qpsk_frequency=f_in, t=t)
 symbol_rate *= f_out / f_in
 f_sample *= f_out / f_in
-qpsk_filtered = repeater.filter(f_out+20e6,qpsk_mixed)
 repeater.gain = gain
-qpsk_amp = repeater.amplify(input_signal=qpsk_filtered)
+qpsk_amp = repeater.amplify(input_signal=qpsk_mixed)
 
 rep = {"Incoming Signal": incoming_qpsk,
        "Mixed Signal": qpsk_mixed,
-       "Filtered Signal": qpsk_filtered,
        "Outgoing Signal": qpsk_amp}
 
 print("Repeater: Sending data to controller...")

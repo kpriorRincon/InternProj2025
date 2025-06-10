@@ -22,7 +22,7 @@ def find_peak(signal, sample_rate, top_n_bins=5):
     return carrier_freq
 
 
-def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols):
+def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal, rep_mixed_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols):
     #this plot is for time qpsk
                     plt.figure(figsize=(15, 5))
                     plt.plot(t, tx_signal)
@@ -111,17 +111,13 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     freqs = np.fft.fftfreq(n, d=1/sample_rate)
                     positive_freqs = freqs > 0
                     positive_freq_values = freqs[positive_freqs]
-
                     # FFT of original and shifted signals
                     fft_input = np.fft.fft(rep_incoming_signal)
                     fft_shifted = np.fft.fft(rep_mixed_signal)
-                    fft_filtered = np.fft.fft(rep_filtered_signal)
                     # Convert magnitude to dB
                     mag_input = 20 * np.log10(np.abs(fft_input))
                     mag_shifted = 20 * np.log10(np.abs(fft_shifted))
-                    mag_filtered = 20 * np.log10(np.abs(fft_filtered))
 
-                    
                     plt.figure(figsize=(20, 6))
 
                     # --- Time-domain plot: Original QPSK ---
@@ -155,7 +151,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     # --- Time-domain plot: Shifted QPSK ---
                     plt.subplot(1, 2, 1)
                     plt.plot(t, np.real(rep_mixed_signal))
-                    plt.title("Shifted QPSK Signal (Time Domain)")
+                    plt.title("QPSK Signal after Mixing (Time Domain)")
                     plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
                     # plt.xlim(0, x_t_lim)
@@ -169,7 +165,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.text(peak_freq + 100e6, np.max(mag_input) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.xlabel("Frequency (GHz)")
                     plt.ylabel("Magnitude (dB)")
-                    plt.title("FFT of QPSK After Frequency Shift")
+                    plt.title("FFT of QPSK After Mixing")
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
                     plt.ylim(0, np.max(mag_input) + 10)
                     plt.grid(True)
@@ -179,31 +175,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.savefig('shifted_qpsk_rp.png')
                     plt.clf()
 
-                    plt.subplot(1, 2, 1)
-                    plt.plot(t, np.real(rep_filtered_signal))
-                    plt.title("Filtered QPSK Signal (Time Domain)")
-                    plt.xlabel("Time (s)")
-                    plt.ylabel("Amplitude")
-                    # plt.xlim(0, x_t_lim)
-                    plt.grid(True)
-
-                    plt.subplot(1, 2, 2)
-                    peak_freq = find_peak(rep_filtered_signal, sample_rate)
-                    #print(freqs[peak_index-3:peak_index+3])
-                    plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
-                    plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
-                    plt.text(peak_freq + 100e6, np.max(mag_input) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
-                    plt.xlabel("Frequency (GHz)")
-                    plt.ylabel("Magnitude (dB)")
-                    plt.title("FFT of QPSK After Filtering")
-                    plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
-                    plt.ylim(0, np.max(mag_input) + 10)
-                    plt.grid(True)
-                    plt.legend()
-                    plt.tight_layout()
-
-                    plt.savefig('filtered_qpsk_rp.png')
-                    plt.clf()
+                
                     #end repeater plotting
 
 
