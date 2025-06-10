@@ -96,7 +96,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.text(peak_freq + 100e6, np.max(fft_db) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.title("FFT of QPSK signal")
                     plt.xlim(0, 2*920e6)
-                    plt.ylim(0, np.max(fft_db)+10)
+                    plt.ylim(-np.max(fft_db)+10, np.max(fft_db)+10)
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Magnitude (dB)')
                     plt.grid()
@@ -140,7 +140,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.ylabel("Magnitude (dB)")
                     plt.title("FFT of QPSK Before Frequency Shift")
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
-                    plt.ylim(0, np.max(mag_input) + 10)
+                    plt.ylim(-np.max(mag_input) + 10, np.max(mag_input) + 10)
                     plt.grid(True)
                     plt.legend()
                     plt.tight_layout()
@@ -167,7 +167,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.ylabel("Magnitude (dB)")
                     plt.title("FFT of QPSK After Mixing")
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
-                    plt.ylim(0, np.max(mag_input) + 10)
+                    plt.ylim(-np.max(mag_input) + 10, np.max(mag_input) + 10)
                     plt.grid(True)
                     plt.legend()
                     plt.tight_layout()
@@ -204,7 +204,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.ylabel("Magnitude (dB)")
                     plt.title('FFT of Incoming Waveform')
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
-                    plt.ylim(0, np.max(db_vals) + 10)
+                    plt.ylim(-np.max(db_vals) + 10, np.max(db_vals) + 10)
                     plt.grid()
                     plt.savefig('demod_media/incoming.png', dpi=300)
                     plt.clf()
@@ -234,7 +234,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
-                    plt.ylim(0, np.max(db_vals) + 10)
+                    plt.ylim(-np.max(db_vals) + 10, np.max(db_vals) + 10)
                     plt.grid()
                     plt.savefig('demod_media/filtered.png', dpi=300)
                     plt.clf()
