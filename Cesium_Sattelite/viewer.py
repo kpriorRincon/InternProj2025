@@ -2,6 +2,8 @@ from nicegui import ui, app
 import os
 import time
 import pickle
+
+selected = set()
 # Load TLE data from pickle file if it exists
 tle_pickle_path = os.path.join(os.path.dirname(__file__), 'sattelite_tles.pkl')
 if os.path.exists(tle_pickle_path):
@@ -24,23 +26,43 @@ def update_text_boxes(e):
     with text_box_container:
         ui.label('Insert the TLE data for Satellites')
         ui.link('Get TLE\'s', target='https://orbit.ing-now.com/low-earth-orbit/', new_tab=True)
-        for i in range(count):
-            with ui.row().style('width:60%'):
-                #create 
-                name = ui.input(label=f'Satellite {i + 1} Name').style('width: 30%')
-                line1 = ui.input(label=f'Satellite {i + 1} TLE Line 1').style('width: 35%')
-                line2 = ui.input(label=f'Satellite {i + 1} TLE Line 2').style('width: 35%')
-                # Store the input references for later retrieval
-                inputs.append([name, line1, line2])
+
+        with ui.row().style('width:80%'):
+            #create a bunch of buttons for possible sattelites to choose from
+            global selected
+            selected = set()
+            def on_sat_button_click(sat_name, button):
+                if sat_name in selected:
+                    selected.remove(sat_name)
+                    button.props('color=primary')
+                elif len(selected) < count:
+                    selected.add(sat_name)
+                    button.props('color=green')
+                # Prevent selecting more than count satellites
+                else:
+                    return
+
+            count = int(e.value)
+            sat_buttons = {}
+            for sat_name in saved_tles['names']:
+                btn = ui.button(
+                    sat_name,
+                    on_click=lambda e, n=sat_name, b=None: on_sat_button_click(n, sat_buttons[n])
+                ).props('color=primary')
+                sat_buttons[sat_name] = btn
+                
 
 def submit():
     tle_list = []
-    for name, line1, line2 in inputs:
-        n = name.value.strip() if name.value else ''
-        l1 = line1.value.strip() if line1.value else ''
-        l2 = line2.value.strip() if line2.value else ''
-        if n and l1 and l2:
-            tle_list.append([n, l1, l2])
+    #get the corresponding data from the selected buttons 
+    for names in selected:
+            #build the TLE array in the format ['ISS (ZARYA)','1 25544U 98067A   21016.23305200  .00001366  00000-0  32598-4 0  9992', '2 25544  51.6457  14.3113 0000235 231.0982 239.8264 15.49297436265049']
+            line1 = saved_tles['line1s'][saved_tles['names'].index(names)] # get the line1 correspondin to the name
+            line2 = saved_tles['line2s'][saved_tles['names'].index(names)]
+            tle_list.append([names, line1,line2])
+            
+            #debug
+            print(tle_list)
     print(tle_list)  # This is your array of arrays
     #convert tle_list to czml 
     from satellite_czml import satellite_czml

@@ -1,6 +1,6 @@
 import pickle
 
-with open('Cesium_Sattelite/sattelite_tles.txt') as f:
+with open('sattelite_tles.txt') as f:
     names = []
     line1s = []
     line2s = []
@@ -10,6 +10,10 @@ with open('Cesium_Sattelite/sattelite_tles.txt') as f:
             names.append(lines[i].strip())
             line1s.append(lines[i+1].strip())
             line2s.append(lines[i+2].strip())
+
+# print(len(line1s))
+# print(len(names))
+# print(len(line2s))
 
 #create a pickle file that contains all of the arrays
 with open('sattelite_tles.pkl', 'wb') as pf:
