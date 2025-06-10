@@ -1,7 +1,8 @@
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import correlate
+from scipy.signal import fftconvolve, correlate
+from scipy.fft import fft, ifft, fftfreq 
 import Sig_Gen_Noise as SigGen
 from commpy import filters 
 import pickle
@@ -13,9 +14,23 @@ import pickle
 #####################################################
 
 ######### Global Variables #########
-phase_start_sequence = np.array([1+1j, 1-1j, 1+1j, -1+1j]) # this is the letter ! in QPSK 00100001
-#phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK 01010010
-phase_end_sequence = np.array([1+1j, 1-1j, -1-1j, -1-1j]) # / 00101111
+phase_start_sequence = np.array([-1-1j, -1-1j, 1-1j, -1+1j, 
+                                 1-1j, 1-1j, -1+1j, 1+1j,
+                                 1+1j, 1-1j, 1-1j, -1-1j,
+                                 1-1j, -1-1j, 1+1j, -1+1j])    # gold code start 
+                                                                # 11 11 10 01 
+                                                                # 10 10 01 00 
+                                                                # 00 10 10 11 
+                                                                # 10 11 00 01
+#phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is R in QPSK
+phase_end_sequence = np.array([1+1j, 1-1j, -1+1j, 1-1j,
+                               1-1j, 1+1j, 1+1j, 1-1j,
+                               1+1j, -1-1j, -1-1j, -1+1j,
+                               1+1j, -1+1j, 1+1j, 1-1j])   # gold code end 
+                                                            # 00 10 01 10 
+                                                            # 10 00 00 10 
+                                                            # 00 11 11 01 
+                                                            # 00 01 00 10
 phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
 
 ######## Functions ########
@@ -35,84 +50,6 @@ def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
     phase_noise = np.random.randn(len(x_symbols)) * 0.1
     r = x_symbols * np.exp(1j * phase_noise) + n * np.sqrt(noise_power)
     return r
-
-# find the minimum
-def find_start_from_minimum_before_peak(correlation_signal, search_window=100):
-    corr_mag = np.abs(correlation_signal)
-    peak_idx = np.argmax(corr_mag)
-    
-    # Search for minimum before peak
-    search_start = max(0, peak_idx - search_window)
-    search_end = peak_idx
-    
-    if search_start >= search_end:
-        return peak_idx
-    
-    search_region = corr_mag[search_start:search_end]
-    local_min_idx = np.argmin(search_region)
-    return search_start + local_min_idx
-
-# Cross-Correlation
-def cross_correlation(baseband_sig, sample_rate, symbol_rate):
-    start_index = 0
-    end_index = len(baseband_sig)
-    
-    # Define start and end sequences
-    start = '!'
-    message_binary = ''.join(format(ord(char), '08b') for char in start)
-    start_sequence = [int(bit) for bit in message_binary]
-    
-    end = '/'
-    message_binary = ''.join(format(ord(char), '08b') for char in end)
-    end_sequence = [int(bit) for bit in message_binary]
-    
-    print(f"Looking for start sequence: {start_sequence}")
-    print(f"Looking for end sequence: {end_sequence}")
-    
-    # Generate reference sequences at baseband
-    sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)  # Generate at baseband (0 Hz)
-    _, start_gold, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0)
-    _, end_gold, _, _ = sig_gen.generate_qpsk(end_sequence, False, 0)
-        
-    # Correlate with start sequence
-    cor_sig_start = correlate(baseband_sig, np.conj(start_gold), mode='same')
-    cor_sig_end = correlate(baseband_sig, np.conj(end_gold), mode='same')
-        
-    # Find maximum correlation
-    start_index = np.argmax(np.abs(cor_sig_start))
-    #end_index = np.argmax(np.abs(cor_sig_end))
-    
-    # Final validation
-    if start_index >= end_index:
-        print("Warning: start_index >= end_index, using default values")
-        start_index = 0
-        end_index = len(baseband_sig)
-    
-    # Plot the best correlation result
-    if cor_sig_start is not None:
-        plt.figure(figsize=(12, 4))
-
-        # plot the start correlation
-        plt.plot(np.arange(len(cor_sig_start)), 20*np.log10(np.abs(cor_sig_start)))
-
-        # plot the end correlation
-        plt.plot(np.arange(len(cor_sig_end)), 20*np.log10(cor_sig_end))
-        
-        # Vertical line at peak
-        plt.axvline(x=start_index, color='r', linestyle='--', label='Start Location')
-        # Vertical line at peak
-        plt.axvline(x=end_index, color='b', linestyle='--', label='End Location')
-        
-        plt.xlabel("Sample Index")
-        plt.ylabel("Correlation Magnitude (dB)")
-        plt.title("Cross Correlation - Start Sequence")
-        plt.legend()
-        #plt.ylim(0, 150)
-        plt.grid(True)
-    
-
-
-    return start_index, end_index
 
 ## Functions used in final implementation ##
 
@@ -136,13 +73,15 @@ def bit_reader(symbols):
 
 # Error checking for the start sequence using a matched filter
 def error_handling(sampled_symbols):
-    print("Error checking")
+    #print("Error checking")
     ## look for the start sequence ##
     expected_start_sequence = ''.join(str(bit) for pair in bit_reader(phase_start_sequence) for bit in pair)    # put the start sequence into a string
+    expected_end_sequence = ''.join(str(bit) for pair in bit_reader(phase_end_sequence) for bit in pair)
     best_bits = None                                                                                            # holds the best bits found
-    print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
+    #print("Expected Start Sequence: ", expected_start_sequence)                                                 # debug statement
+    #print("Expected End Sequence: ", expected_end_sequence) 
     og_sampled_symbols = ''.join(str(bit) for pair in bit_reader(sampled_symbols) for bit in pair)                 # original sampled symbols in string format
-    print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
+    #print("Sampled bits: ", og_sampled_symbols)                                                                    # debug statement
 
     ## Loop through possible phase shifts ##
     for i in range(0, 7):   # one for each quadrant (0°, 90°, 180°, 270°)
@@ -152,7 +91,7 @@ def error_handling(sampled_symbols):
         # decode the bits
         decode_bits = bit_reader(rotated_bits)                                  # decode the rotated bits
         flat_bits = ''.join(str(bit) for pair in decode_bits for bit in pair)   # put the bits into a string
-        print("Rotated bits: ", flat_bits)                                      # debug statement
+        #print("Rotated bits: ", flat_bits)                                      # debug statement
         
          # Check for presence of the known start sequence (first few symbols)
         if expected_start_sequence == flat_bits[0:8]:                   # check only first 8 symbols worth (16 bits)
@@ -176,12 +115,171 @@ def down_sampler(sig, sample_rate, symbol_rate):
     return symbols
 
 def get_string(bits):
-        """Convert bits to string."""
-        # bits is an array
-        #exclude the prefix
-        bits = bits[8:]
-        # convert the bits into a string
-        return ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
+    """Convert bits to string."""
+    
+    # if len(bits) % 8 != 0:
+    #     raise ValueError(f"Bit list length ({len(bits)}) must be multiple of 8")
+    
+    ascii_chars = []
+
+    # Process 8 bits at a time
+    for i in range(0, len(bits), 8):
+        # Get 8 bits (one byte)
+        byte_bits = bits[i:i+8]
+        
+        # Convert bits to binary string then to integer
+        byte_str = ''.join(map(str, byte_bits))
+        byte_value = int(byte_str, 2)
+        
+        # Convert to ASCII character
+        ascii_chars.append(chr(byte_value))
+
+    return ''.join(ascii_chars)
+
+def rrc_filter(beta, N, Ts, fs):
+    
+    """
+    Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response
+
+    Parameters:
+    - beta : Roll-off factor (0 < beta <= 1)
+    - N : Total number of taps in the filter (the filter span)
+    - Ts : Symbol period 
+    - fs : Sampling frequency/rate (Hz)
+
+    Returns:
+    - h : The impulse response of the RRC filter in the time domain
+    - time : The time vector of the impulse response
+
+    """
+
+    # The number of samples in each symbol
+    samples_per_symbol = int(fs * Ts)
+
+    # The filter span in symbols
+    total_symbols = N / samples_per_symbol
+
+    # The total amount of time that the filter spans
+    total_time = total_symbols * Ts
+
+    # The time vector to compute the impulse response
+    time = np.linspace(-total_time / 2, total_time / 2, N, endpoint=False)
+
+    # ---------------------------- Generating the RRC impulse respose ----------------------------
+
+    # The root raised-cosine impulse response is generated from taking the square root of the raised-cosine impulse response in the frequency domain
+
+    # Raised-cosine filter impulse response in the time domain
+    num = np.cos( (np.pi * beta * time) / (Ts) )
+    denom = 1 - ( (2 * beta * time) / (Ts) ) ** 2
+    g = np.sinc(time / Ts) * (num / denom)
+
+    # Raised-cosine filter impulse response in the frequency domain
+    fg = fft(g)
+
+    # Root raised-cosine filter impulse response in the frequency domain
+    fh = np.sqrt(fg)
+
+    # Root raised-cosine filter impulse respone in the time domain
+    h = ifft(fh)
+
+    return time, h 
+
+def buffer_correlation(bits):
+    start_index = 0
+    end_index = len(bits)
+    start_found = False
+    # Define start and end sequences
+    # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
+    start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
+                      1, 0, 1, 0, 0, 1, 0, 0,
+                      0, 0, 1, 0, 1, 0, 1, 1,
+                      1, 0, 1, 1, 0, 0, 0, 1]
+    
+    # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
+    end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
+                    1, 0, 0, 0, 0, 0, 1, 0, 
+                    0, 0, 1, 1, 1, 1, 0, 1, 
+                    0, 0, 0, 1, 0, 0, 1, 0]
+    for i in range(0, len(bits)):
+        if bits[i:i+32] == start_sequence:
+            start_index = i
+            start_found = True
+    
+    if start_found:
+        print("found start...\nlooking for end...")
+        for i in range(start_index, len(bits)):
+            if bits[i:i+32] == end_sequence:
+                end_index = i
+
+    return start_index, end_index
+
+#Cross-Correlation
+def cross_correlation(baseband_sig, sample_rate, symbol_rate):
+    start_index = 0
+    end_index = len(baseband_sig)
+    
+    # Define start and end sequences
+    # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
+    start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
+                      1, 0, 1, 0, 0, 1, 0, 0,
+                      0, 0, 1, 0, 1, 0, 1, 1,
+                      1, 0, 1, 1, 0, 0, 0, 1]
+    
+    # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
+    end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
+                    1, 0, 0, 0, 0, 0, 1, 0, 
+                    0, 0, 1, 1, 1, 1, 0, 1, 
+                    0, 0, 0, 1, 0, 0, 1, 0]
+    
+    print(f"Looking for start sequence: {start_sequence}")
+    print(f"Looking for end sequence: {end_sequence}")
+
+    sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)
+    _, start_waveform, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0.1)
+
+    # reduce signal strength   
+    baseband_sig = (baseband_sig - baseband_sig.min()) / (baseband_sig.max() - baseband_sig.min())
+    # print("Signal intensity: ", baseband_sig.max())
+    
+    # Correlate with start sequence
+    correlated_signal = fftconvolve(baseband_sig, np.conj(np.flip(start_waveform)), mode='full')
+    #correlated_signal = correlate(baseband_sig, np.conj(start_waveform), mode='full')
+    correlated_signal = (correlated_signal -correlated_signal.min()) / (correlated_signal.max() - correlated_signal.min())
+    start_waveform = (start_waveform -start_waveform.min())/ (start_waveform.max() - start_waveform.min())
+    
+    # Find maximum correlation
+    #start_index = np.argmax(np.abs(correlated_signal)) - 16*int(sample_rate/symbol_rate)
+    start_index = np.argmax(np.abs(correlated_signal))
+    print("Start Index: ", start_index)
+    symbols = down_sampler(baseband_sig[start_index:], sample_rate, symbol_rate)
+    bits = error_handling(symbols)
+    print("Correlated bit sequence: ", bits)
+    
+    # Plot the best correlation result
+    plt.figure(figsize=(12, 4))
+
+    # plot the start correlation
+    plot_start = 0
+    print("plot start index: ", plot_start)
+    plot_end = len(correlated_signal)
+    print("plot end index: ", plot_end)
+    t = np.arange(plot_start, plot_end)
+    plt.plot(np.arange(0, len(baseband_sig)), np.abs(baseband_sig[plot_start:plot_end]), label='received signal')
+    plt.plot(np.arange(0, len(correlated_signal)), np.abs(correlated_signal[plot_start:plot_end]), '--', label='correlated signal')
+    plt.plot(np.arange(start_index, start_index+len(start_waveform)), np.abs(start_waveform), ':', label='start sequence')
+    
+    # Vertical line at peak
+    plt.axvline(x=start_index, color='r', linestyle='--', label='Start Location')
+    
+    plt.xlabel("Sample Index")
+    plt.ylabel("Correlation Magnitude (dB)")
+    plt.title("Cross Correlation - Start Sequence")
+    plt.legend()
+    #plt.ylim(0, 150)
+    plt.grid(True)
+    
+    return start_index, end_index
 
 # sample the received signal and do error checking
 def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
@@ -189,41 +287,81 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     print("Tuning to basband...")
     baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
-    # find the desired signal
+    # root raised cosine matched filter
+    beta = 0.3
+    #_, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
+    _, pulse_shape = rrc_filter(beta, 300, 1/symbol_rate, sample_rate)
+    pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+    signal = np.convolve(pulse_shape, baseband_sig, 'same')
+
+    #find the desired signal
     lam = 3e8 / fc  # wavelength of the carrier frequency
     #v = 7.8e3 # average speed of a satellite in LEO
     v = 0
     doppler = v / lam   # calculated doppler shift
     print("Doppler shift: ", doppler)
     freqs = np.linspace(fc-doppler, fc+doppler, 4)
-    start_index, end_index = cross_correlation(baseband_sig, sample_rate, symbol_rate)
-    analytic_sig = baseband_sig[start_index:end_index]
-
-    # root raised cosine matched filter
-    beta = 0.3
-    _, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
-    pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
-    signal = np.convolve(pulse_shape, analytic_sig, 'same')
+    start_index, end_index = cross_correlation(signal, sample_rate, symbol_rate)
+    analytic_sig = signal[start_index:end_index]
+    
+    # # error checking
+    # error_check = signal[:start_index]
+    # error_symbols = down_sampler(error_check, sample_rate, symbol_rate)
+    # error_handling(error_symbols)
 
     # sample the analytic signal
     print("Sampling the analytic signal...")
-    sampled_symbols = down_sampler(signal, sample_rate, symbol_rate)
+    sampled_symbols = down_sampler(analytic_sig, sample_rate, symbol_rate)
 
     # decode the symbols and error check the start sequence
     print("Decoding symbols and checking for start sequence...")
     best_bits = error_handling(sampled_symbols)
+
+    ################################ Buffer Correlation Method #########################################
+    # # sample the analytic signal
+    # print("Sampling the analytic signal...")
+    # sampled_symbols = down_sampler(signal, sample_rate, symbol_rate)
+
+    # # get to bits
+    # bit_string = error_handling(sampled_symbols)
+    # print("Here are my bits: ", bit_string)
+    # bits = [int(bit) for bit in bit_string]
+
+    # # match to start and end
+    # start, end = buffer_correlation(bits)
+    # print("start index:", start)
+    # print("end index: ", end)
+    # best_bits = bits[start:end]
 
     return signal, sampled_symbols, best_bits
 
 ##### MAIN TEST Function #####
 
 def main():
+
+    # Define start and end sequences
+    # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
+    start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
+                      1, 0, 1, 0, 0, 1, 0, 0,
+                      0, 0, 1, 0, 1, 0, 1, 1,
+                      1, 0, 1, 1, 0, 0, 0, 1]
+    
+    # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
+    end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
+                    1, 0, 0, 0, 0, 0, 1, 0, 
+                    0, 0, 1, 1, 1, 1, 0, 1, 
+                    0, 0, 0, 1, 0, 0, 1, 0]
+
     # Input message
-    message = "garbage !hello world\ garbage"
-    print("Message:", message)
+    bad_data = " garbage garbage garbage garbage"
+    message = " will this always work for checking the stuff? "
+    start = get_string(start_sequence)
+    end = get_string(end_sequence)
+    tx_message = bad_data + start + message + end + bad_data
+    print("Message:", tx_message)
 
     # Convert message to binary
-    message_binary = ''.join(format(ord(char), '08b') for char in message)
+    message_binary = ''.join(format(ord(char), '08b') for char in tx_message)
     grouped_bits = ' '.join(message_binary[i:i+2] for i in range(0, len(message_binary), 2))
     bit_sequence = [int(bit) for bit in message_binary]
     print("Binary Message:", grouped_bits)
