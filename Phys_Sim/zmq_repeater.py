@@ -64,6 +64,7 @@ symbol_rate = init_data['symbol rate']
 noise_bool = init_data['noise_bool']
 noise_power = init_data['noise_power']
 gain = init_data['gain']
+
 if noise_bool:
     incoming_qpsk = Noise_Addr(tx['tx signal'], noise_power)
 else:

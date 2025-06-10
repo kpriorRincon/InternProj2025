@@ -57,10 +57,6 @@ message_input = None  # Global variable to store the message input field
 rx_message_binary = None
 decoded_string = None
 
-def Noise_Addr(input_wave, noise_power):
-    #define noise
-    noise =np.random.normal(0,noise_power,len(input_wave))
-    return input_wave+noise
 #front page
 with ui.row().style('height: 100vh; width: 100%; display: flex; justify-content: center; align-items: center;'):
     with ui.link(target='\simulate_page'):
@@ -143,6 +139,7 @@ def simulate_page():
                         global noise_bool
                         noise_bool = True
                         global noise_power
+                        noise_power = 10**(noise_slider.value/10)
                     else:
                         noise_bool = False
                         noise_power = 0  # Default value if no noise is added
@@ -205,7 +202,7 @@ def simulate_page():
                     #all data read do plots here
                     #generate_plots
 
-                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols)
+                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal,rep_mixed_signal, rep_filtered_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols)
                     ui.notify('Data stored successfully!') 
 
             
