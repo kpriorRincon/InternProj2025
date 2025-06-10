@@ -135,10 +135,6 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
 
                     plt.subplot(1, 2, 2)
 
-
-                    peak_mag = 115
-                    positive_mags = mag_input[positive_freqs]
-                    positive_freq_values = freqs[positive_freqs]
                     peak_freq = find_peak(rep_incoming_signal, sample_rate)
                     plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
@@ -168,10 +164,6 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     
 
                     plt.subplot(1, 2, 2)
-                    peak_mag = 115
-                    positive_mags = mag_input[positive_freqs]
-                    positive_freq_values = freqs[positive_freqs]
-                    peak_freq = find_peak(rep_mixed_signal, sample_rate)
                     plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 100e6, np.max(mag_input) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
@@ -196,9 +188,6 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.grid(True)
 
                     plt.subplot(1, 2, 2)
-                    peak_mag = 115
-                    positive_mags = mag_input[positive_freqs]
-                    positive_freq_values = freqs[positive_freqs]
                     peak_freq = find_peak(rep_filtered_signal, sample_rate)
                     #print(freqs[peak_index-3:peak_index+3])
                     plt.plot(freqs, mag_filtered, label="Filtered QPSK", alpha=0.8)
@@ -231,10 +220,14 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
 
                     plt.subplot(1,2, 2)
                     #frequency domain
+                    peak_freq = find_peak(rx_incoming_signal, sample_rate)
+
                     ao_fft = np.fft.fft(rx_incoming_signal)
                     freqs = np.fft.fftfreq(len(rx_incoming_signal), d=1/sample_rate)
                     db_vals = 20*np.log10(ao_fft)
                     plt.plot(freqs, db_vals)
+                    plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
+                    plt.text(peak_freq + 150e6, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.xlabel("Frequency (Hz)")
                     plt.ylabel("Magnitude (dB)")
                     plt.title('FFT of Incoming Waveform')
@@ -256,11 +249,15 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
 
                     plt.subplot(1,2, 2)
                     #frequency domain
+                    peak_freq = find_peak(rx_incoming_signal, sample_rate)
+
                     ao_fft = np.fft.fft(rx_filtered_signal)
                     freqs = np.fft.fftfreq(len(rx_filtered_signal), d=1/sample_rate)
                     db_vals = 20*np.log10(ao_fft)
 
                     plt.plot(freqs, db_vals)
+                    plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
+                    plt.text(peak_freq + 150e6, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.title('FFT of the Filtered Signal')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
