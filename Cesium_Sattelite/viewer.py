@@ -1,5 +1,16 @@
 from nicegui import ui, app
 import os
+import time
+import pickle
+# Load TLE data from pickle file if it exists
+tle_pickle_path = os.path.join(os.path.dirname(__file__), 'sattelite_tles.pkl')
+if os.path.exists(tle_pickle_path):
+    with open(tle_pickle_path, 'rb') as f:
+        saved_tles = pickle.load(f)
+else:
+    saved_tles = []
+
+
 
 text_box_container = ui.column().style('order: 2; width: 70%')
 inputs = []
@@ -15,6 +26,7 @@ def update_text_boxes(e):
         ui.link('Get TLE\'s', target='https://orbit.ing-now.com/low-earth-orbit/', new_tab=True)
         for i in range(count):
             with ui.row().style('width:60%'):
+                #create 
                 name = ui.input(label=f'Satellite {i + 1} Name').style('width: 30%')
                 line1 = ui.input(label=f'Satellite {i + 1} TLE Line 1').style('width: 35%')
                 line2 = ui.input(label=f'Satellite {i + 1} TLE Line 2').style('width: 35%')
@@ -32,12 +44,15 @@ def submit():
     print(tle_list)  # This is your array of arrays
     #convert tle_list to czml 
     from satellite_czml import satellite_czml
-    import time
     # Convert to CZML
     czml_string = satellite_czml(tle_list=tle_list).get_czml()
+
+    #add time stamp 
+    timestamp = int(time.time())
     #write this string to a file
     with open('sats.czml', 'w') as f:
         f.write(czml_string)
+
     #clear input
     inputs.clear()
     #navigate to the page to display
@@ -48,16 +63,13 @@ ui.button('Submit', on_click=submit).style('order: 3;')
 
 @ui.page('/Cesium_page')
 def Cesium_page():
-    import time
-    html_directory = os.path.dirname(__file__)
-    app.add_static_files('/static', html_directory)
-    # Add a cache-busting query parameter using the file's modification time
-    viewer_path = os.path.join(html_directory, 'viewer.html')
-    mtime = int(os.path.getmtime(viewer_path)) if os.path.exists(viewer_path) else int(time.time())
+    html_directory = os.path.dirname(__file__)#get this files working directory
+    app.add_static_files('/static', html_directory)#add the files available
+    #added ?t=time.time for cache busting
     ui.html(
         f'''
         <div style="position: fixed; top: 0; right: 0; width: 70vw; height: 95vh; border: none; margin: 1vh 1vw 0 0; padding: 0; overflow: hidden; z-index: 999999; box-shadow: 0 0 10px rgba(0,0,0,0.2); background: #fff; border-radius: 12px;">
-            <iframe style="width: 100%; height: 100%; border: none;" src="/static/viewer.html?cb={mtime}"></iframe>
+            <iframe style="width: 100%; height: 100%; border: none;" src="/static/viewer.html?t={int(time.time())}"></iframe>
         </div>
         '''
     )
