@@ -40,7 +40,7 @@
         position: Cesium.Cartesian3.fromDegrees(-104.876694, 39.587), // longitude, latitude, height (meters)
         cylinder: {
           length: 100000.0, // height of the cylinder in meters
-          topRadius: 20000.0, // top radius in meters
+          topRadius: 5000.0, // top radius in meters
           bottomRadius: 20000.0, // bottom radius in meters
           material: Cesium.Color.RED
         },
@@ -52,16 +52,16 @@
           outlineWidth: 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -10)
+          pixelOffset: new Cesium.Cartesian2(-30, -10) // Offset left and down
         }
       });
 
       viewer.entities.add({
         name: "Rx",
-        position: Cesium.Cartesian3.fromDegrees(-107.712, 37.8989), // longitude, latitude, height (meters)
+        position: Cesium.Cartesian3.fromDegrees(-104.6764, 39.8563), // longitude, latitude, height (meters)
         cylinder: {
           length: 100000.0, // height of the cylinder in meters
-          topRadius: 20000.0, // top radius in meters
+          topRadius: 5000.0, // top radius in meters
           bottomRadius: 20000.0, // bottom radius in meters
           material: Cesium.Color.RED
         },
@@ -73,10 +73,9 @@
           outlineWidth: 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -10)
+          pixelOffset: new Cesium.Cartesian2(30, -10) // Offset right and down
         }
       });
-
 
   </script>
 </body>
