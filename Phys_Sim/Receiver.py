@@ -287,7 +287,7 @@ class Receiver:
         """Convert bits to string."""
         # bits is an array
         #exclude the prefix
-        bits = bits[8:]
+        bits = bits[32:-32]
         # convert the bits into a string
         return ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
 
