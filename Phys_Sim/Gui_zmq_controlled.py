@@ -80,7 +80,7 @@ def simulate_page():
         simulation_container
         selected_type = simulation_type_dropdown.value
         simulation_container.clear()
-        if selected_type == 'Single Message':
+        if selected_type == 'Basic Simulation':
             with simulation_container:
                 ui.label('Single Message Simulation').style('font-size: 2em; font-weight: bold; ')
                 ui.label('Enter message to be sent')
@@ -110,7 +110,7 @@ def simulate_page():
                     This function is triggered when the user clicks the submit button.
                     It collects the values from the input fields and stores them for further processing.
                     """
-                    
+
                     global message_input
                     global rx_message_binary
                     global decoded_string
@@ -206,13 +206,13 @@ def simulate_page():
                     ui.notify('Data stored successfully!') 
 
             
-        elif selected_type == 'Continuous Message': 
+        elif selected_type == 'Advanced Simulation': 
             with simulation_container:
-                ui.notify("Continuous Message Simulation is not yet implemented.")
+                ui.notify("Advanced Simulation not yet ported")
 
     choices = [
-        'Single Message', 
-        'Continuous Message'
+        'Basic Simulation', 
+        'Advanced Simulation'
     ]
     simulation_type_dropdown = ui.select(choices, on_change=open_simulation_single_message).style('width: 200px; height: 40px;')
 
@@ -242,17 +242,20 @@ def signal_generator_page():
             ui.label(f'Message entered: {message_input}').style('font-size: 2em; font-weight: bold;')
             #we want to show the header in a different color as the actual message 
             bit_sequence = tx_message_binary
-            marker = ''
+            marker_front = ''
+            marker_back = ''
             payload = ''
             for i in range(len(bit_sequence)):
                 #get the first 8 bits as the marker
-                if i < 8:
-                    marker += str(bit_sequence[i])
+                if i < 32:
+                    marker_front += str(bit_sequence[i])
+                elif i > len(bit_sequence) - 32:
+                    marker_back += str(bit_sequence[i])
                 else:
                     payload += str(bit_sequence[i])
             ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
-            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
-            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
+            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span> | <span style = 'color:#0072BD'>Marker</span></div>''').style('text-align: center;')
+            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker_front}</span> | <span style = 'color:black; '>{payload}</span> | <span style = 'color:#0072BD'>{marker_back}</span></div>''').style('text-align: center;')
 
             #need to insure we get the most up to date image that's why we use .force_reload()
             ui.image('qpsk_sig_gen/baseband.png').style('width: 70%; height: auto;').force_reload()
@@ -281,14 +284,19 @@ def receiver_page():
     #on this page put plots
 
 
-    marker = ''
+    marker_front = ''
+    marker_back = ''
     payload = ''
+
     for i in range(len(rx_message_binary)):
         #get the first 8 bits as the marker
-        if i < 8:
-            marker += str(rx_message_binary[i])
+        if i < 32:
+            marker_front += str(rx_message_binary[i])
+        elif i > len(rx_message_binary) - 32:
+            marker_back += str(rx_message_binary[i])
         else:
             payload += str(rx_message_binary[i])
+
     with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
         ui.image('demod_media/incoming.png').force_reload()
         ui.image('demod_media/filtered.png').force_reload()
@@ -296,8 +304,9 @@ def receiver_page():
         ui.image('demod_media/Base_Band_Waveform.png').style('width: 70%').force_reload()
         ui.image('demod_media/Base_Band_FFT.png').style('width:70%').force_reload()
         ui.label('Bit Sequence:').style('font-size: 2.5em; font-weight: bold;')
-        ui.html(f'''<div style ="font-size: 2.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
-        ui.html(f'''<div style ="font-size: 2.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
+
+        ui.html(f'''<div style ="font-size: 2.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span> | <span style = 'color:#0072BD'>Marker</span></div>''').style('text-align: center;')
+        ui.html(f'''<div style ="font-size: 2.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker_front}</span> | <span style = 'color:black; '>{payload}</span> | <span style = 'color:#0072BD'>{marker_back}</span></div>''').style('text-align: center;')
         ui.label(f'Decoded Message: {rx_recovered_message}').style('font-size: 2.5em; font-weight: bold;')
 
     pass
