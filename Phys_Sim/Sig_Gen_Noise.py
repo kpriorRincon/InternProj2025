@@ -145,7 +145,7 @@ class SigGen:
             # add noise to the QPSK wavefrorm
             qpsk_waveform = self.noise_adder(qpsk_waveform, noise_power)
 
-        return t, qpsk_waveform, symbols, t_vertical_lines
+        return t, qpsk_waveform, symbols, t_vertical_lines, upsampled_symbols
     
     def message_to_bits(self, message):
         """
