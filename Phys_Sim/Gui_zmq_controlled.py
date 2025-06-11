@@ -242,17 +242,20 @@ def signal_generator_page():
             ui.label(f'Message entered: {message_input}').style('font-size: 2em; font-weight: bold;')
             #we want to show the header in a different color as the actual message 
             bit_sequence = tx_message_binary
-            marker = ''
+            marker_front = ''
+            marker_back = ''
             payload = ''
             for i in range(len(bit_sequence)):
                 #get the first 8 bits as the marker
-                if i < 8:
-                    marker += str(bit_sequence[i])
+                if i < 32:
+                    marker_front += str(bit_sequence[i])
+                elif i > len(bit_sequence) - 32:
+                    marker_back += str(bit_sequence[i])
                 else:
                     payload += str(bit_sequence[i])
             ui.label('Bit Sequence:').style('font-size: 1.5em; font-weight: bold;')
-            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span></div>''').style('text-align: center;')
-            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
+            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D;"><span style = 'color:#0072BD'>Marker</span> | <span style = 'color:black'>Message</span> | <span style = 'color:#0072BD'>Marker</span></div>''').style('text-align: center;')
+            ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker_front}</span> | <span style = 'color:black; '>{payload}</span></div> | <span style = 'color:#0072BD'>{marker_back}}</span></div>''').style('text-align: center;')
 
             #need to insure we get the most up to date image that's why we use .force_reload()
             ui.image('qpsk_sig_gen/baseband.png').style('width: 70%; height: auto;').force_reload()

@@ -83,7 +83,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     #start plot for upsampled symbols
                     plt.figure(figsize=(15, 5))
                     plt.plot(t, np.real(tx_upsampled_symbols), color='b', label='I (real part)')
-                    plt.plot(t, np.imag(tx_upsampled_symbols), color='g', label='Q (imag part)')
+                    plt.plot(t, np.imag(tx_upsampled_symbols), color='r', linestyle='--', label='Q (imag part)')
                     plt.legend()
                     plt.title(f'QPSK Waveform Baseband no pulse shaping \"{message_input}\"')
                     plt.xlabel('Time (s)')
