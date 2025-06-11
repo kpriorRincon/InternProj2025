@@ -121,7 +121,7 @@ class SigGen:
         from commpy import filters
         beta = 0.3
         _, pulse_shape = self.rrc_filter(beta, 300, 1/self.symbol_rate, self.sample_rate)
-        pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+        # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
 
         # Generate complex phasor at carrier frequency
@@ -145,7 +145,7 @@ class SigGen:
             # add noise to the QPSK wavefrorm
             qpsk_waveform = self.noise_adder(qpsk_waveform, noise_power)
 
-        return t, qpsk_waveform, symbols, t_vertical_lines
+        return t, qpsk_waveform, symbols, t_vertical_lines, upsampled_symbols
     
     def message_to_bits(self, message):
         """

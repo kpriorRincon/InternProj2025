@@ -71,9 +71,7 @@ else:
 
 t = rep['time']
 
-filtered_signal = receiver.filter(rep_signal, f_out, f_sample)
-
-signal, sampled_symbols, bits = receiver.demodulator(filtered_signal, f_sample, symbol_rate, t, f_out)
+signal, sampled_symbols, bits, filtered_signal = receiver.demodulator(rep_signal, f_sample, symbol_rate, t, f_out)
 message = receiver.get_string(bits)
 
 rep = {"bit sequence": bits,

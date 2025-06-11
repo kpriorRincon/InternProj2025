@@ -59,6 +59,7 @@ tx_qpsk = tx_data['qpsk']
 tx_vert_lines = tx_data['vertical lines']
 tx_symbols = tx_data['symbols']
 message_bin = tx_data['message in binary']
+tx_upsampled_symbols = tx_data['upsampled symbols']
 
 # ---------------------------------------------------
 
@@ -143,6 +144,7 @@ print('Controller: Original Message:', message)
 print('Controller: Recovered Message:', recovered_message)
 
 controller_data = {'time': t, 
+                   'transmitter upsampled symbols': tx_upsampled_symbols,
                    'transmitter signal': tx_qpsk,
                    'transmitter vertical lines': tx_vert_lines,
                    'transmitter symbols': tx_symbols,
