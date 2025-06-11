@@ -311,7 +311,10 @@ def receiver_page():
 
     pass
 
-
+@ui.page('/advanced_page')
+def advanced_page():
+    #TODO bring things over from Cesium_Sattelite/viewer
+    pass
 
 # TODO implement the control page when we are able to
 #control page
