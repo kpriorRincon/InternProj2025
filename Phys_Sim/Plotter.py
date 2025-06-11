@@ -246,9 +246,10 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     freqs = np.fft.fftfreq(len(rx_filtered_signal), d=1/sample_rate)
                     db_vals = 20*np.log10(ao_fft)
 
+                    peak_freq = 0
                     plt.plot(freqs, db_vals)
-                    #plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
-                    #plt.text(peak_freq + 150e6, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
+                    plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
+                    plt.text(peak_freq + 0.3e9, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.title('FFT of the Baseband Signal After Filtering')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
@@ -296,7 +297,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     plt.subplot(1, 2, 2)
                     plt.plot(freqs, db_vals)
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
-                    plt.text(peak_freq + 0.2, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
+                    plt.text(peak_freq + 0.3e9, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.title('FFT of Final Demodulated Signal')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')

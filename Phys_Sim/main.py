@@ -69,6 +69,8 @@ with ui.row().style('height: 100vh; width: 100%; display: flex; justify-content:
 @ui.page('/simulate_page')
 def simulate_page():
     """This function creates the simulation page where the user can select a simulation type and input parameters."""
+    with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.html('<u>Project Red Mountain</u>').style('font-size: 3em; font-weight: bold;')
     simulation_container = ui.column().style('order: 2;')
     with ui.row().style('justify-content: center;'):
         ui.label('Simulation Type').style('font-size: 2em; font-weight: bold;')
@@ -216,16 +218,16 @@ def simulate_page():
     ]
     simulation_type_dropdown = ui.select(choices, on_change=open_simulation_single_message).style('width: 200px; height: 40px;')
 
-    with ui.column().style('position: absolute; top: 500px; left: 700px; '):
+    with ui.column().style('position: absolute; top: 600px; left: 700px; '):
         with ui.link(target='/signal_generator_page'):
             ui.image('media/antenna_graphic.png').style('width:200px;')
         ui.label("Signal Generator").style('font-size: 1.5em; font-weight: bold;')
-    with ui.column().style('position: absolute; top: 20px; left: 1000px;'):
+    with ui.column().style('position: absolute; top: 120px; left: 1000px;'):
         ui.label("Repeater").style('font-size: 1.5em; font-weight: bold; margin-left: 55px;')
         with ui.link(target='/repeater_page'):
             ui.image('media/sattelite.png').style('width:300px;')
 
-    with ui.column().style('position: absolute; top: 500px; left: 1500px;'): 
+    with ui.column().style('position: absolute; top: 600px; left: 1500px;'): 
         with ui.link(target='/receiver_page'):
             ui.image('media/antenna_graphic_flipped.png').style('width:200px;')
         ui.label("Receiver").style('font-size: 1.5em; font-weight: bold; margin-left: 110px;')
@@ -236,6 +238,8 @@ def simulate_page():
 def signal_generator_page():
     """This function creates the Signal Generator page where the user can view outputs from the signal generator."""
     ui.button('back', on_click=ui.navigate.back)
+    with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.html('<u>Signal Generator Page</u>').style('font-size: 3em; font-weight: bold;')
     #create the qpsk wave form from the message
     if message_input is not None:
         with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
@@ -265,7 +269,8 @@ def signal_generator_page():
 #simulation Repeater page
 @ui.page('/repeater_page')
 def repeater_page():
-
+    with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.html('<u>Repeater Page</u>').style('font-size: 3em; font-weight: bold;')
     """This function creates the repeater page where the user can view outputs from the repeater."""
     ui.button('back', on_click=ui.navigate.back)
     if message_input is not None:
@@ -279,6 +284,8 @@ def repeater_page():
 #simulation receiver page
 @ui.page('/receiver_page')
 def receiver_page():
+    with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.html('<u>Receiver Page</u>').style('font-size: 3em; font-weight: bold;')
     """This function creates the Receiver page where the user can view outputs from the receiver."""
     ui.button('back', on_click=ui.navigate.back)
     #on this page put plots
