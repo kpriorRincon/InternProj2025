@@ -32,11 +32,11 @@ def attenuator(R, fc, sig):
     sig = (sig - sig.max()) / (sig.max() - sig.min())
     return sig*Pr
 
-def amplifier(sig):
+def variable_amplifier(sig):
     P_target = 1
     Pr = np.max(np.abs(sig))
     gain = P_target / Pr
-    return gain
+    return gain, gain*sig
 
 class Repeater:
     def __init__(self, sampling_frequency, symbol_rate):
@@ -44,7 +44,7 @@ class Repeater:
         self.sampling_frequency = sampling_frequency
         self.symbol_rate = symbol_rate
         self.gain = None
-        
+        self.R = 2000e3 # typical leo height
 
         self.qpsk_mixed = None
         self.qpsk_filtered = None
@@ -364,7 +364,8 @@ class Repeater:
 
 
     def handler(self, t, qpsk_waveform, f_carrier):
-        
+        attenuated_signal = attenuator(self.R, f_carrier, qpsk_waveform)            
+        calculated_gain, amplified_signal = variable_amplifier(attenuated_signal)   # TODO implement in rest of code, i don't want to touch it bc of gui stuff -Trevor
         qpsk_mixed = self.mix(qpsk_waveform, f_carrier, t)        
         cuttoff_freq = self.desired_frequency + 30e6
         qpsk_filtered = self.filter(cuttoff_freq, qpsk_mixed)

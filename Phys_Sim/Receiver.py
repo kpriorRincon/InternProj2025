@@ -42,6 +42,7 @@ class Receiver:
                                                                     # 10 00 00 10 
                                                                     # 00 11 11 01 
                                                                     # 00 01 00 10
+        self.R = 2000e3 # typical leo height
 
     # Sample the received signal
     def down_sampler(self,sig, sample_rate, symbol_rate):
@@ -228,9 +229,12 @@ class Receiver:
     
     # sample the received signal and do error checking
     def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, t, fc):
+        # attenuate signa
+        attenuated_signal = attenuator(self.R, fc, qpsk_waveform)
+
         ## tune to baseband ##
         print("Tuning to basband...")
-        baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
+        baseband_sig = attenuated_signal * np.exp(-1j * 2 * np.pi * fc * t)
 
         # low pass filter
         filtered_sig = self.filter(baseband_sig, sample_rate)
