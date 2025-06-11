@@ -237,6 +237,7 @@ def cross_correlation(baseband_sig, sample_rate, symbol_rate):
 
     sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)
     _, start_waveform, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0.1)
+    _, end_waveform, _, _ = sig_gen.generate_qpsk(end_sequence, False, 0.1)
 
     # reduce signal strength   
     baseband_sig = (baseband_sig - baseband_sig.min()) / (baseband_sig.max() - baseband_sig.min())
@@ -244,15 +245,18 @@ def cross_correlation(baseband_sig, sample_rate, symbol_rate):
     
     # Correlate with start sequence
     correlated_signal = fftconvolve(baseband_sig, np.conj(np.flip(start_waveform)), mode='full')
+    end_cor_signal = fftconvolve(baseband_sig, np.conj(np.flip(end_waveform)), mode='full')
     #correlated_signal = correlate(baseband_sig, np.conj(start_waveform), mode='full')
     correlated_signal = (correlated_signal -correlated_signal.min()) / (correlated_signal.max() - correlated_signal.min())
     start_waveform = (start_waveform -start_waveform.min())/ (start_waveform.max() - start_waveform.min())
+    end_waveform = (end_waveform -end_waveform.min())/ (end_waveform.max() - end_waveform.min())
     
     # Find maximum correlation
     #start_index = np.argmax(np.abs(correlated_signal)) - 16*int(sample_rate/symbol_rate)
-    start_index = np.argmax(np.abs(correlated_signal))
+    start_index = np.argmax(np.abs(correlated_signal)) - 16*int(sample_rate/symbol_rate)
     print("Start Index: ", start_index)
-    symbols = down_sampler(baseband_sig[start_index:], sample_rate, symbol_rate)
+    end_index = np.argmax(np.abs(end_cor_signal))
+    symbols = down_sampler(baseband_sig[start_index:end_index], sample_rate, symbol_rate)
     bits = error_handling(symbols)
     print("Correlated bit sequence: ", bits)
     
@@ -303,11 +307,6 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     freqs = np.linspace(fc-doppler, fc+doppler, 4)
     start_index, end_index = cross_correlation(signal, sample_rate, symbol_rate)
     analytic_sig = signal[start_index:end_index]
-    
-    # # error checking
-    # error_check = signal[:start_index]
-    # error_symbols = down_sampler(error_check, sample_rate, symbol_rate)
-    # error_handling(error_symbols)
 
     # sample the analytic signal
     print("Sampling the analytic signal...")

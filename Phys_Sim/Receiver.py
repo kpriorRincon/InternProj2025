@@ -4,6 +4,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
+from scipy.signal import fftconvolve
+import Sig_Gen_Noise as SigGen
 
 class Receiver:
     def __init__(self, sampling_rate):
@@ -12,7 +14,23 @@ class Receiver:
         self.frequency = None
         # Phase sequence for qpsk modulation corresponds to the letter 'R'
         self.phase_start_sequence = np.array([-1+1j, -1+1j, 1+1j, 1-1j]) # this is the letter R in QPSK
-        self.phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
+        #self.phases = np.array([45, 135, 225, 315])  # QPSK phase angles in degrees
+        self.phase_start_sequence = np.array([-1-1j, -1-1j, 1-1j, -1+1j, 
+                                 1-1j, 1-1j, -1+1j, 1+1j,
+                                 1+1j, 1-1j, 1-1j, -1-1j,
+                                 1-1j, -1-1j, 1+1j, -1+1j])    # gold code start 
+                                                                # 11 11 10 01 
+                                                                # 10 10 01 00 
+                                                                # 00 10 10 11 
+                                                                # 10 11 00 01
+        self.phase_end_sequence = np.array([1+1j, 1-1j, -1+1j, 1-1j,
+                                    1-1j, 1+1j, 1+1j, 1-1j,
+                                    1+1j, -1-1j, -1-1j, -1+1j,
+                                    1+1j, -1+1j, 1+1j, 1-1j])   # gold code end 
+                                                                    # 00 10 01 10 
+                                                                    # 10 00 00 10 
+                                                                    # 00 11 11 01 
+                                                                    # 00 01 00 10
 
     # Sample the received signal
     def down_sampler(self,sig, sample_rate, symbol_rate):
@@ -80,6 +98,40 @@ class Receiver:
         
         return best_bits
     
+    def cross_correlation(self, baseband_sig, sample_rate, symbol_rate):
+        start_index = 0
+        end_index = len(baseband_sig)
+        
+        # Define start and end sequences
+        # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
+        start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
+                        1, 0, 1, 0, 0, 1, 0, 0,
+                        0, 0, 1, 0, 1, 0, 1, 1,
+                        1, 0, 1, 1, 0, 0, 0, 1]
+        
+        # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
+        end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
+                        1, 0, 0, 0, 0, 0, 1, 0, 
+                        0, 0, 1, 1, 1, 1, 0, 1, 
+                        0, 0, 0, 1, 0, 0, 1, 0]
+        
+        print(f"Looking for start sequence: {start_sequence}")
+        print(f"Looking for end sequence: {end_sequence}")
+
+        sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)
+        _, start_waveform, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0.1)
+        _, end_waveform, _, _ = sig_gen.generate_qpsk(end_sequence, False, 0.1)
+        
+        # Correlate with start sequence
+        correlated_signal = fftconvolve(baseband_sig, np.conj(np.flip(start_waveform)), mode='full')
+        end_cor_signal = fftconvolve(baseband_sig, np.conj(np.flip(end_waveform)), mode='full')
+        
+        # Find maximum correlation
+        start_index = np.argmax(np.abs(correlated_signal)) - 16*int(sample_rate/symbol_rate)
+        end_index = np.argmax(np.abs(end_cor_signal))
+        
+        return start_index, end_index
+
     def filter(self, mixed_qpsk, f_out, sample_rate):
         """
         Filters the mixed signal to remove unwanted frequencies.
@@ -168,20 +220,29 @@ class Receiver:
     # sample the received signal and do error checking
     def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, t, fc):
         ## tune to baseband ##
-
-        # print("Tuning to basband...")
+        print("Tuning to basband...")
         baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
-        from commpy import filters
         # root raised cosine matched filter
         beta = 0.3
+        #_, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
         _, pulse_shape = self.rrc_filter(beta, 300, 1/symbol_rate, sample_rate)
         pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, baseband_sig, 'same')
 
+        #find the desired signal
+        lam = 3e8 / fc  # wavelength of the carrier frequency
+        #v = 7.8e3 # average speed of a satellite in LEO
+        v = 0
+        doppler = v / lam   # calculated doppler shift
+        print("Doppler shift: ", doppler)
+        freqs = np.linspace(fc-doppler, fc+doppler, 4)
+        start_index, end_index = self.cross_correlation(signal, sample_rate, symbol_rate)
+        analytic_sig = signal[start_index:end_index]
+
         # sample the analytic signal
         print("Sampling the analytic signal...")
-        sampled_symbols = self.down_sampler(signal, sample_rate, symbol_rate)
+        sampled_symbols = self.down_sampler(analytic_sig, sample_rate, symbol_rate)
 
         # decode the symbols and error check the start sequence
         print("Decoding symbols and checking for start sequence...")
