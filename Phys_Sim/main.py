@@ -223,7 +223,7 @@ def simulate_page():
             ui.image('media/antenna_graphic.png').style('width:200px;')
         ui.label("Signal Generator").style('font-size: 1.5em; font-weight: bold;')
     with ui.column().style('position: absolute; top: 120px; left: 1000px;'):
-        ui.label("Repeater").style('font-size: 1.5em; font-weight: bold; margin-left: 55px;')
+        ui.label("Repeater").style('font-size: 1.5em; font-weight: bold; margin-left: 75px;')
         with ui.link(target='/repeater_page'):
             ui.image('media/sattelite.png').style('width:300px;')
 
