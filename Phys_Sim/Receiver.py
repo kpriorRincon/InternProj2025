@@ -132,7 +132,7 @@ class Receiver:
         
         return start_index, end_index
 
-    def filter(self, mixed_qpsk, f_out, sample_rate):
+    def filter(self, input_signal, sample_rate):
         """
         Filters the mixed signal to remove unwanted frequencies.
 
@@ -143,12 +143,10 @@ class Receiver:
         # Implement filtering logic here
 
         numtaps = 101  # order of filter
-        lowcut = f_out - 50e6 #850e6
-        highcut = f_out + 50e6 #960e6
-        fir_coeff = signal.firwin(numtaps, [lowcut, highcut], pass_zero=False, fs=sample_rate)
-        # pass-zero = whether DC / 0Hz is in the passband
+        cutoff_freq = 500
+        fir_coeff = signal.firwin(numtaps, cutoff_freq, pass_zero='lowpass', fs=sample_rate)
         
-        filtered_sig = signal.lfilter(fir_coeff, 1.0, mixed_qpsk)
+        filtered_sig = signal.lfilter(fir_coeff, 1.0, input_signal)
         #first param is for coefficients in numerator (feedforward) of transfer function
         #sec param is for coeff in denom (feedback)
         #FIR are purely feedforward, as they do not depend on previous outputs
@@ -223,12 +221,15 @@ class Receiver:
         print("Tuning to basband...")
         baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
+        # low pass filter
+        filtered_sig = self.filter(baseband_sig, sample_rate)
+
         # root raised cosine matched filter
         beta = 0.3
         #_, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
         _, pulse_shape = self.rrc_filter(beta, 300, 1/symbol_rate, sample_rate)
         pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
-        signal = np.convolve(pulse_shape, baseband_sig, 'same')
+        signal = np.convolve(pulse_shape, filtered_sig, 'same')
 
         #find the desired signal
         lam = 3e8 / fc  # wavelength of the carrier frequency
@@ -248,7 +249,7 @@ class Receiver:
         print("Decoding symbols and checking for start sequence...")
         best_bits = self.error_handling(sampled_symbols)
 
-        return signal, sampled_symbols, best_bits
+        return signal, sampled_symbols, best_bits, filtered_sig
 
 
     def plot_data(self, analytical_output, sampled_symbols, t):

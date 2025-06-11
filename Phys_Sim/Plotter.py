@@ -234,19 +234,19 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
                     plt.subplot(1,2, 2)
                     #frequency domain
-                    peak_freq = find_peak(rx_incoming_signal, sample_rate)
+                    # peak_freq = find_peak(rx_incoming_signal, sample_rate)
 
                     ao_fft = np.fft.fft(rx_filtered_signal)
                     freqs = np.fft.fftfreq(len(rx_filtered_signal), d=1/sample_rate)
                     db_vals = 20*np.log10(ao_fft)
 
                     plt.plot(freqs, db_vals)
-                    plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
-                    plt.text(peak_freq + 150e6, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
+                    #plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
+                    #plt.text(peak_freq + 150e6, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.title('FFT of the Filtered Signal')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
-                    plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
+                    plt.xlim(-sample_rate/2, sample_rate / 2)  # From 0 to fs in MHz
                     plt.ylim(-np.max(db_vals) + 10, np.max(db_vals) + 10)
                     plt.grid()
                     plt.savefig('demod_media/filtered.png', dpi=300)
