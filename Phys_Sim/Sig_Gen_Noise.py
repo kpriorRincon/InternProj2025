@@ -158,10 +158,23 @@ class SigGen:
         Returns:
             list: List of bits (0s and 1s).
         """
-        message = 'R'+ message  # Add 'R' at the start of the message as our marker
+                # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
+        start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
+                        1, 0, 1, 0, 0, 1, 0, 0,
+                        0, 0, 1, 0, 1, 0, 1, 1,
+                        1, 0, 1, 1, 0, 0, 0, 1]
+        
+        # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
+        end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
+                        1, 0, 0, 0, 0, 0, 1, 0, 
+                        0, 0, 1, 1, 1, 1, 0, 1, 
+                        0, 0, 0, 1, 0, 0, 1, 0]
+        
         message_binary = ''.join(format(ord(x), '08b') for x in message)
 
-        # print(message_binary)
+        # Add start and end sequences to the message binary
+        message_binary = ''.join(str(bit) for bit in start_sequence) + message_binary + ''.join(str(bit) for bit in end_sequence)
+        print(message_binary)
         # Convert string input to list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
         return bit_sequence
