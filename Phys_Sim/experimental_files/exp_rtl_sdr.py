@@ -25,9 +25,10 @@ t = np.arange(total_samples) / sdr.sample_rate
 x = sdr.read_samples(total_samples) # get rid of initial empty samples
 symbol_rate = sdr.sample_rate / 5
 signal, sampled_symbols, best_bits = ed.demodulator(x, sdr.sample_rate, symbol_rate, t, sdr.center_freq)
+print("bits: ", best_bits)
+print("Message: ", ed.get_string(best_bits))
 
 # plot the data
-
 # constellation plot
 fig, axs = plt.subplots(3,1)
 axs[0].scatter(np.real(sampled_symbols), np.imag(sampled_symbols))
