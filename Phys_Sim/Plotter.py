@@ -82,8 +82,12 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
                     #start plot for upsampled symbols
                     plt.figure(figsize=(15, 5))
-                    plt.plot(t, np.real(tx_upsampled_symbols), color='b', label='I (real part)')
-                    plt.plot(t, np.imag(tx_upsampled_symbols), color='r', linestyle='--', label='Q (imag part)')
+                    plt.stem(t, np.real(tx_upsampled_symbols), linefmt='b-', markerfmt=' ', basefmt=' ', label='I (real part)')
+                    plt.stem(t, np.imag(tx_upsampled_symbols), linefmt='r--', markerfmt=' ', basefmt=' ', label='Q (imag part)')
+                    #create a horizontal line 
+                    plt.axhline(y=0, xmin = 0, xmax = len(t), color='b', linestyle='-', linewidth=1)
+                    plt.axhline(y=0, color='r', linestyle='--', linewidth=1)
+
                     plt.legend()
                     plt.title(f'QPSK Waveform Baseband no pulse shaping \"{message_input}\"')
                     plt.xlabel('Time (s)')
@@ -265,7 +269,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     # plt.ylim(-0.5e5,0.5e5)
                     plt.ylabel('Imaginary')
                     plt.tight_layout()
-                    plt.savefig('demod_media/Constellation.png')
+                    plt.savefig('demod_media/Constellation.png', dpi = 300)
 
                      # Plot the waveform and phase
                     plt.figure(figsize=(10, 4))

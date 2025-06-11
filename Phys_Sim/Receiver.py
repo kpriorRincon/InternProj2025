@@ -263,8 +263,8 @@ class Receiver:
 
         # Plot the waveform and phase
         plt.figure(figsize=(10, 4))
-        plt.plot(t, analytical_output.real, label='I (real part)')
-        plt.plot(t, analytical_output.imag, label='Q (imag part)')
+        plt.plot(t, np.real(analytical_output), label='I (real part)')
+        plt.plot(t, np.imag(analytical_output), label='Q (imag part)')
         plt.title('Filtered Baseband Time Signal  (Real and Imag Parts)')
         plt.xlabel('Time (s)')
         plt.ylabel('Amplitude')
