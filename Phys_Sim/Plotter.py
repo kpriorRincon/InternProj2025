@@ -22,7 +22,7 @@ def find_peak(signal, sample_rate, top_n_bins=5):
     return carrier_freq
 
 
-def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message, rep_incoming_signal, rep_mixed_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols):
+def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, tx_upsampled_symbols,sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, rx_sampled_symbols):
     #this plot is for time qpsk
                     plt.figure(figsize=(15, 5))
                     plt.plot(t, tx_signal)
@@ -71,7 +71,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     #     plt.title(f'QPSK Waveform for \"{message}\" (first 10 symbol periods)')
                     # else:
                     #     plt.title(f'QPSK Waveform for \"{message}\"')
-                    plt.title(f'QPSK Waveform for \"{message}\"')
+                    plt.title(f'QPSK Waveform for \"{message_input}\"')
                     plt.xlabel('Time (s)')
                     plt.ylabel('Amplitude')
                     plt.grid()
@@ -79,6 +79,19 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.savefig(f'qpsk_sig_gen/1_qpsk_waveform.png', dpi=300)    
                     #print("Debug: plot generated")
                     #END of time plot
+
+                    #start plot for upsampled symbols
+                    plt.figure(figsize=(15, 5))
+                    plt.plot(t, np.real(tx_upsampled_symbols), color='b', label='I (real part)')
+                    plt.plot(t, np.imag(tx_upsampled_symbols), color='g', label='Q (imag part)')
+                    plt.legend()
+                    plt.title(f'QPSK Waveform Baseband no pulse shaping \"{message_input}\"')
+                    plt.xlabel('Time (s)')
+                    plt.ylabel('Amplitude')
+                    plt.grid()
+                    # Save the plot to a file
+                    plt.savefig(f'qpsk_sig_gen/baseband.png', dpi=300)  
+
 
                     #frequency for qpsk tx
                     #same figure size as above
@@ -244,7 +257,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     # constellation plot
                     plt.figure(figsize=(5, 5))
 
-                    plt.scatter(np.real(sampled_symbols[1:]), np.imag(sampled_symbols[1:]))
+                    plt.scatter(np.real(rx_sampled_symbols[1:]), np.imag(rx_sampled_symbols[1:]))
                     plt.grid(True)
                     plt.title('Constellation Plot of Sampled Symbols')
                     plt.xlabel('Real')

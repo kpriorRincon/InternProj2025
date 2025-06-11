@@ -47,14 +47,15 @@ sig_gen_noise.symbol_rate = symbol_rate
 
 message_bin = sig_gen_noise.message_to_bits(message)
 print("Transmitter: Message converted to binary.")
-t, tx_qpsk, tx_symbols, tx_vert_lines = sig_gen_noise.generate_qpsk(message_bin, False, 0)
+t, tx_qpsk, tx_symbols, tx_vert_lines, upsampled_symbols = sig_gen_noise.generate_qpsk(message_bin, False, 0)
 print("Transmitter: QPSK signal generated.")
 
 rep = {"time": t, 
        "qpsk": tx_qpsk, 
        "vertical lines": tx_vert_lines, 
        "symbols": tx_symbols,
-       "message in binary": message_bin}
+       "message in binary": message_bin,
+       "upsampled symbols": upsampled_symbols}
 
 # Sending the generated QPSK signal and data to the controller
 print("Transmitter: Sending data to controller...")

@@ -183,6 +183,7 @@ def simulate_page():
                     tx_signal = data['transmitter signal']
                     tx_vert_lines = data['transmitter vertical lines']
                     tx_symbols = data['transmitter symbols']
+                    tx_upsampled_symbols = data['transmitter upsampled symbols']
                     tx_message_binary = data['transmitter message in binary']
                     rep_incoming_signal = data['repeater incoming signal']
                     rep_mixed_signal = data['repeater mixed signal']
@@ -194,14 +195,14 @@ def simulate_page():
                     rx_analytical_signal = data['receiver analytical signal']
                     f_in = data['freq in']
                     f_out = data['freq out']
-                    sampled_symbols = data['sampled symbols']
+                    rx_sampled_symbols = data['sampled symbols']
 
-                    # print(sampled_symbols)
+                    # print(rx_sampled_symbols)
                     
                     #all data read do plots here
                     #generate_plots
 
-                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, sampled_symbols)
+                    Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, tx_upsampled_symbols,sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, rx_sampled_symbols)
                     ui.notify('Data stored successfully!') 
 
             
