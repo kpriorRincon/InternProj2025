@@ -119,8 +119,8 @@ class Receiver:
         print(f"Looking for end sequence: {end_sequence}")
 
         sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)
-        _, start_waveform, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0.1)
-        _, end_waveform, _, _ = sig_gen.generate_qpsk(end_sequence, False, 0.1)
+        _, start_waveform, _, _,_= sig_gen.generate_qpsk(start_sequence, False, 0.1)
+        _, end_waveform, _, _, _= sig_gen.generate_qpsk(end_sequence, False, 0.1)
         
         # Correlate with start sequence
         correlated_signal = fftconvolve(baseband_sig, np.conj(np.flip(start_waveform)), mode='full')
