@@ -80,7 +80,7 @@ def simulate_page():
         simulation_container
         selected_type = simulation_type_dropdown.value
         simulation_container.clear()
-        if selected_type == 'Single Message':
+        if selected_type == 'Basic Simulation':
             with simulation_container:
                 ui.label('Single Message Simulation').style('font-size: 2em; font-weight: bold; ')
                 ui.label('Enter message to be sent')
@@ -206,13 +206,13 @@ def simulate_page():
                     ui.notify('Data stored successfully!') 
 
             
-        elif selected_type == 'Continuous Message': 
+        elif selected_type == 'Advanced Simulation': 
             with simulation_container:
-                ui.notify("Continuous Message Simulation is not yet implemented.")
+                ui.notify("Advanced Simulation not yet ported")
 
     choices = [
-        'Single Message', 
-        'Continuous Message'
+        'Basic Simulation', 
+        'Advanced Simulation'
     ]
     simulation_type_dropdown = ui.select(choices, on_change=open_simulation_single_message).style('width: 200px; height: 40px;')
 
