@@ -7,6 +7,17 @@ from scipy import signal
 from scipy.signal import fftconvolve
 import Sig_Gen_Noise as SigGen
 
+
+def attenuator(R, fc, sig):
+    lam = 3e8/fc # wavelength of the signal
+    fspl = (lam/(4*np.pi*R))**2
+    Pt = np.max(np.abs(sig))
+    Gt = 1.5
+    Gr = Gt
+    Pr = Pt*Gt*Gr*fspl
+    sig = (sig - sig.max()) / (sig.max() - sig.min())
+    return sig*Pr
+
 class Receiver:
     def __init__(self, sampling_rate):
         #constructor

@@ -22,6 +22,21 @@ def find_peak(signal, sample_rate, top_n_bins=5):
 
     return carrier_freq
 
+def attenuator(R, fc, sig):
+    lam = 3e8/fc # wavelength of the signal
+    fspl = (lam/(4*np.pi*R))**2
+    Pt = np.max(np.abs(sig))
+    Gt = 1.5
+    Gr = Gt
+    Pr = Pt*Gt*Gr*fspl
+    sig = (sig - sig.max()) / (sig.max() - sig.min())
+    return sig*Pr
+
+def amplifier(sig):
+    P_target = 1
+    Pr = np.max(np.abs(sig))
+    gain = P_target / Pr
+    return gain
 
 class Repeater:
     def __init__(self, sampling_frequency, symbol_rate):
