@@ -144,7 +144,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.grid(True)
                     plt.legend()
                     plt.tight_layout()
-                    plt.savefig('original_qpsk_rp.png')
+                    plt.savefig('repeater_plots/original_qpsk_rp.png')
 
                     plt.clf()
 
@@ -172,7 +172,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, s
                     plt.legend()
                     plt.tight_layout()
 
-                    plt.savefig('shifted_qpsk_rp.png')
+                    plt.savefig('repeater_plots/shifted_qpsk_rp.png')
                     plt.clf()
 
                 

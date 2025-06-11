@@ -254,9 +254,11 @@ def signal_generator_page():
             ui.html(f'''<div style ="font-size: 1.5em; font-weight: bold; color: #D2042D; text-wrap:wrap; word-break: break-all;"><span style = 'color:#0072BD'>{marker}</span> | <span style = 'color:black; '>{payload}</span></div>''').style('text-align: center;')
 
             #need to insure we get the most up to date image that's why we use .force_reload()
-#simulation Repeater page
+            ui.image('qpsk_sig_gen/baseband.png').style('width: 70%; height: auto;').force_reload()
             ui.image('qpsk_sig_gen/1_qpsk_waveform.png').style('width: 70%; height: auto;').force_reload()
             ui.image('qpsk_sig_gen/2_qpsk_waveform.png').style('width: 70%; height: auto;').force_reload()
+
+#simulation Repeater page
 @ui.page('/repeater_page')
 def repeater_page():
 
@@ -266,8 +268,8 @@ def repeater_page():
         with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
             ui.label(f'Input Frequency: {f_in/1e6:.1f} MHz      Output Frequency: {f_out/1e6:.1f} MHz').style('font-size: 2em; font-weight: bold;')
 
-    ui.image('original_qpsk_rp.png').force_reload()
-    ui.image('shifted_qpsk_rp.png').force_reload()
+    ui.image('repeater_plots/original_qpsk_rp.png').force_reload()
+    ui.image('repeater_plots/shifted_qpsk_rp.png').force_reload()
 
 
 #simulation receiver page
