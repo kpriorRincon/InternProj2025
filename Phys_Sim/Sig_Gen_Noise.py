@@ -121,7 +121,7 @@ class SigGen:
         from commpy import filters
         beta = 0.3
         _, pulse_shape = self.rrc_filter(beta, 300, 1/self.symbol_rate, self.sample_rate)
-        pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+        # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
 
         # Generate complex phasor at carrier frequency

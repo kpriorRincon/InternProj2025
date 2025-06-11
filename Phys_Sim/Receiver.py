@@ -228,7 +228,7 @@ class Receiver:
         beta = 0.3
         #_, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
         _, pulse_shape = self.rrc_filter(beta, 300, 1/symbol_rate, sample_rate)
-        pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
+        # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, filtered_sig, 'same')
 
         #find the desired signal

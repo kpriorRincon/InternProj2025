@@ -82,11 +82,11 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
                     #start plot for upsampled symbols
                     plt.figure(figsize=(15, 5))
-                    plt.stem(t, np.real(tx_upsampled_symbols), linefmt='b-', markerfmt=' ', basefmt=' ', label='I (real part)')
-                    plt.stem(t, np.imag(tx_upsampled_symbols), linefmt='r--', markerfmt=' ', basefmt=' ', label='Q (imag part)')
+                    plt.plot(t, np.real(tx_upsampled_symbols), 'b-', label='I (real part)')
+                    plt.plot(t, np.imag(tx_upsampled_symbols), 'r--', label='Q (imag part)')
                     #create a horizontal line 
-                    plt.axhline(y=0, color='b', linestyle='-', linewidth=1)
-                    plt.axhline(y=0, color='r', linestyle='--', linewidth=1)
+                    # plt.axhline(y=0, color='b', linestyle='-', linewidth=1)
+                    # plt.axhline(y=0, color='r', linestyle='--', linewidth=1)
 
                     plt.legend()
                     plt.title(f'QPSK Waveform Baseband no pulse shaping \"{message_input}\"')
@@ -231,11 +231,13 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     plt.figure(figsize=(20, 6))
                     plt.subplot(1, 2, 1)
                     #time domain
-                    plt.plot(t, rx_filtered_signal)
-                    plt.title("Filtered Waveform")
+                    plt.plot(t, np.real(rx_filtered_signal), 'b-',label='I (real part)')
+                    plt.plot(t, np.imag(rx_filtered_signal), 'r--', label='Q (imag part)')        
+                    plt.legend()           
+                    plt.title("Baseband Signal After Filtering")
                     plt.xlabel("Time s")
                     plt.ylabel("Amplitude")
-
+                    plt.grid()
                     plt.subplot(1,2, 2)
                     #frequency domain
                     # peak_freq = find_peak(rx_incoming_signal, sample_rate)
@@ -247,7 +249,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     plt.plot(freqs, db_vals)
                     #plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     #plt.text(peak_freq + 150e6, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
-                    plt.title('FFT of the Filtered Signal')
+                    plt.title('FFT of the Baseband Signal After Filtering')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
                     plt.xlim(-sample_rate/2, sample_rate / 2)  # From 0 to fs in MHz
@@ -259,7 +261,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
 
                     # constellation plot
-                    plt.figure(figsize=(5, 5))
+                    plt.figure(figsize=(4, 4))
 
                     plt.scatter(np.real(rx_sampled_symbols[1:]), np.imag(rx_sampled_symbols[1:]))
                     plt.grid(True)
@@ -271,16 +273,18 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     plt.tight_layout()
                     plt.savefig('demod_media/Constellation.png', dpi = 300)
 
-                     # Plot the waveform and phase
-                    plt.figure(figsize=(10, 4))
-                    plt.plot(t, np.real(rx_analytical_signal), label='I (real part)')
-                    plt.plot(t, np.imag(rx_analytical_signal), label='Q (imag part)')
-                    plt.title('Filtered Baseband Time Signal  (Real and Imag Parts)')
+
+                    #subplot showing left and right
+                    plt.figure(figsize=(20, 6))
+                    # Plot the waveform and phase
+                    plt.subplot(1, 2, 1)
+                    plt.plot(t, np.real(rx_analytical_signal), 'b-', label='I (real part)')
+                    plt.plot(t, np.imag(rx_analytical_signal), 'r--', label='Q (imag part)')
+                    plt.title('Final Demodulated Signal (Real and Imag Parts)')
                     plt.xlabel('Time (s)')
                     plt.ylabel('Amplitude')
                     plt.grid()
                     plt.legend()
-                    plt.savefig('demod_media/Base_Band_Waveform.png')
 
 
                     # plot the fft
@@ -289,13 +293,12 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     db_vals = 20*np.log10(ao_fft)
 
                     peak_freq = 0
-                    plt.figure(figsize=(10, 4))
+                    plt.subplot(1, 2, 2)
                     plt.plot(freqs, db_vals)
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 0.2, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
-                    plt.title('FFT of the Base Band Signal')
+                    plt.title('FFT of Final Demodulated Signal')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
                     plt.grid()
-                    plt.tight_layout()
-                    plt.savefig('demod_media/Base_Band_FFT.png')
+                    plt.savefig('demod_media/final_sig.png')
