@@ -11,6 +11,7 @@ import os
 import requests
 from datetime import datetime, timedelta, timezone
 
+
 def get_up_to_date_TLE():
     """
     Downloads and parses the most recent TLE data from Celestrak, but only once every 8 hours.
@@ -25,26 +26,29 @@ def get_up_to_date_TLE():
 
     def should_update():
         if not os.path.exists(timestamp_file):
-            return True #if the timestamp file is just now being created then we should update
+            return True  # if the timestamp file is just now being created then we should update
         with open(timestamp_file, 'r') as f:
             last_time = datetime.fromisoformat(f.read().strip())
-        return datetime.now(timezone.utc) - last_time > update_interval #returns true if the current time is more than 8 hours the last time 
+        # returns true if the current time is more than 8 hours the last time
+        return datetime.now(timezone.utc) - last_time > update_interval
 
     def update_timestamp():
         with open(timestamp_file, 'w') as f:
-            f.write(datetime.now(timezone.utc).isoformat())#write the date and time to the timestamp file
+            # write the date and time to the timestamp file
+            f.write(datetime.now(timezone.utc).isoformat())
 
     # Only download if needed
     if should_update():
         headers = {'User-Agent': 'Mozilla/5.0 (compatible; TLE-fetcher/1.0)'}
-        response = requests.get(url, headers = headers)
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             with open(tle_file, 'w') as f:
                 f.write(response.text)
             update_timestamp()
             print('TLE data updated and saved.')
         else:
-            print(f'Failed to retrieve TLE data. Status: {response.status_code}')
+            print(
+                f'Failed to retrieve TLE data. Status: {response.status_code}')
     else:
         print('TLE data is up to date. No download needed.')
 
