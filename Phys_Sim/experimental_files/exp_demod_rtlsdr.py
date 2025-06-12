@@ -9,6 +9,31 @@ from rtlsdr import RtlSdr
 import exp_demodulator as ed
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import fftconvolve
+import Sig_Gen_Noise as SigGen
+
+# detection function
+def detect(sig, sample_rate, symbol_rate):
+    # define the detection threshold
+    threshold = 0.7
+
+    # Define start and end sequences
+    start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
+                      1, 0, 1, 0, 0, 1, 0, 0,
+                      0, 0, 1, 0, 1, 0, 1, 1,
+                      1, 0, 1, 1, 0, 0, 0, 1]
+    sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)
+    _, start, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0.1)
+
+    # detection algorithm
+    sig = (sig - np.max(sig)) / (np.max(sig) - np.min(sig))
+    cor_sig = fftconvolve(sig, np.conj(np.flip(start)))
+    cor_sig = (cor_sig - np.max(cor_sig)) / (np.max(cor_sig) - np.min(cor_sig))
+    cor_power = np.max(np.abs(cor_sig))
+    if cor_power > threshold:
+        start_cor = True
+    
+    return start_cor
 
 # configure the RTL SDR
 sdr = RtlSdr()
@@ -18,12 +43,20 @@ sdr.freq_correction = 60  # PPM
 print(sdr.valid_gains_db)
 sdr.gain = 49.6
 print(sdr.gain)
-
-# run the receiver code
 total_samples = 2048
 t = np.arange(total_samples) / sdr.sample_rate
-x = sdr.read_samples(total_samples) # get rid of initial empty samples
 symbol_rate = sdr.sample_rate / 5
+start_cor = False
+x = None
+
+# run the detection algorithm continuously until signal is found
+print("Searching for the signal...")
+while start_cor == False:
+    x = sdr.read_samples(total_samples) # get rid of initial empty samples
+    start_cor = detect(x)
+print("Signal found \ndemodulating...")
+
+# after the signal is found demodulate and display
 signal, sampled_symbols, best_bits = ed.demodulator(x, sdr.sample_rate, symbol_rate, t, sdr.center_freq)
 print("bits: ", best_bits)
 print("Message: ", ed.get_string(best_bits))

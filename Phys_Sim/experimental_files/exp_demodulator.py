@@ -55,7 +55,7 @@ def noise_adder(x_symbols, noise_power=0.1, num_symbols=100):
 
 # QPSK symbol to bit mapping
 def bit_reader(symbols):
-    print("Reading bits from symbols")
+    # print("Reading bits from symbols")
     bits = np.zeros((len(symbols), 2), dtype=int)
     for i in range(len(symbols)):
         angle = np.angle(symbols[i], deg=True) % 360
@@ -232,8 +232,8 @@ def cross_correlation(baseband_sig, sample_rate, symbol_rate):
                     0, 0, 1, 1, 1, 1, 0, 1, 
                     0, 0, 0, 1, 0, 0, 1, 0]
     
-    print(f"Looking for start sequence: {start_sequence}")
-    print(f"Looking for end sequence: {end_sequence}")
+    # print(f"Looking for start sequence: {start_sequence}")
+    # print(f"Looking for end sequence: {end_sequence}")
 
     sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)
     _, start_waveform, _, _ = sig_gen.generate_qpsk(start_sequence, False, 0.1)
@@ -254,34 +254,34 @@ def cross_correlation(baseband_sig, sample_rate, symbol_rate):
     # Find maximum correlation
     #start_index = np.argmax(np.abs(correlated_signal)) - 16*int(sample_rate/symbol_rate)
     start_index = np.argmax(np.abs(correlated_signal)) - 16*int(sample_rate/symbol_rate)
-    print("Start Index: ", start_index)
+    # print("Start Index: ", start_index)
     end_index = np.argmax(np.abs(end_cor_signal))
     symbols = down_sampler(baseband_sig[start_index:end_index], sample_rate, symbol_rate)
     bits = error_handling(symbols)
-    print("Correlated bit sequence: ", bits)
+    # print("Correlated bit sequence: ", bits)
     
     # Plot the best correlation result
-    plt.figure(figsize=(12, 4))
+    # plt.figure(figsize=(12, 4))
 
-    # plot the start correlation
-    plot_start = 0
-    print("plot start index: ", plot_start)
-    plot_end = len(correlated_signal)
-    print("plot end index: ", plot_end)
-    t = np.arange(plot_start, plot_end)
-    plt.plot(np.arange(0, len(baseband_sig)), np.abs(baseband_sig[plot_start:plot_end]), label='received signal')
-    plt.plot(np.arange(0, len(correlated_signal)), np.abs(correlated_signal[plot_start:plot_end]), '--', label='correlated signal')
-    plt.plot(np.arange(start_index, start_index+len(start_waveform)), np.abs(start_waveform), ':', label='start sequence')
+    # # plot the start correlation
+    # plot_start = 0
+    # print("plot start index: ", plot_start)
+    # plot_end = len(correlated_signal)
+    # print("plot end index: ", plot_end)
+    # t = np.arange(plot_start, plot_end)
+    # plt.plot(np.arange(0, len(baseband_sig)), np.abs(baseband_sig[plot_start:plot_end]), label='received signal')
+    # plt.plot(np.arange(0, len(correlated_signal)), np.abs(correlated_signal[plot_start:plot_end]), '--', label='correlated signal')
+    # plt.plot(np.arange(start_index, start_index+len(start_waveform)), np.abs(start_waveform), ':', label='start sequence')
     
-    # Vertical line at peak
-    plt.axvline(x=start_index, color='r', linestyle='--', label='Start Location')
+    # # Vertical line at peak
+    # plt.axvline(x=start_index, color='r', linestyle='--', label='Start Location')
     
-    plt.xlabel("Sample Index")
-    plt.ylabel("Correlation Magnitude (dB)")
-    plt.title("Cross Correlation - Start Sequence")
-    plt.legend()
-    #plt.ylim(0, 150)
-    plt.grid(True)
+    # plt.xlabel("Sample Index")
+    # plt.ylabel("Correlation Magnitude (dB)")
+    # plt.title("Cross Correlation - Start Sequence")
+    # plt.legend()
+    # #plt.ylim(0, 150)
+    # plt.grid(True)
     
     return start_index, end_index
 
@@ -299,12 +299,12 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     signal = np.convolve(pulse_shape, baseband_sig, 'same')
 
     #find the desired signal
-    lam = 3e8 / fc  # wavelength of the carrier frequency
-    #v = 7.8e3 # average speed of a satellite in LEO
-    v = 0
-    doppler = v / lam   # calculated doppler shift
-    print("Doppler shift: ", doppler)
-    freqs = np.linspace(fc-doppler, fc+doppler, 4)
+    # lam = 3e8 / fc  # wavelength of the carrier frequency
+    # #v = 7.8e3 # average speed of a satellite in LEO
+    # v = 0
+    # doppler = v / lam   # calculated doppler shift
+    # print("Doppler shift: ", doppler)
+    # freqs = np.linspace(fc-doppler, fc+doppler, 4)
     start_index, end_index = cross_correlation(signal, sample_rate, symbol_rate)
     analytic_sig = signal[start_index:end_index]
 
