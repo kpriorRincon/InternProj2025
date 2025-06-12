@@ -1,35 +1,38 @@
+# Author: Kobe Prior
+# Date: June 10
+# Purpose: This file provides a NiceGUI-based web interface for selecting recently launched satellites,
+#          generating their TLE-based CZML data, and visualizing them in a Cesium viewer.
+
+# import necessary libraries
 from nicegui import ui, app
 import os
 import time
 import pickle
+from get_TLE import get_up_to_date_TLE
 
+saved_tles = get_up_to_date_TLE() #get the most up to date TLE 
+
+#we want to declare these globally so we can reset when needed
 selected = set()
-# Load TLE data from pickle file if it exists
-tle_pickle_path = os.path.join(os.path.dirname(__file__), 'sattelite_tles.pkl')
-if os.path.exists(tle_pickle_path):
-    with open(tle_pickle_path, 'rb') as f:
-        saved_tles = pickle.load(f)
-else:
-    saved_tles = []
+sat_buttons  ={} 
 
+#start of site
+text_box_container = ui.column().style('order: 2; width: 80%')
 
-
-text_box_container = ui.column().style('order: 2; width: 70%')
-inputs = []
 
 def update_text_boxes(e):
-    global inputs
     count = int(e.value)
     text_box_container.clear()
-    inputs.clear()
 
     with text_box_container:
-        ui.label(f'Select {count} Satellite(s)')
+        ui.label(f'Select {count} Satellite(s) out of the last 30 days of launches')
 
-        with ui.row().style('width:80%'):
+        with ui.row().style('width:100%'):
             #create a bunch of buttons for possible sattelites to choose from
-            global selected
+            global selected, sat_buttons
+
             selected = set()
+            sat_buttons.clear()#clear any old references
             def on_sat_button_click(sat_name, button):
                 if sat_name in selected:
                     selected.remove(sat_name)
@@ -37,12 +40,12 @@ def update_text_boxes(e):
                 elif len(selected) < count:
                     selected.add(sat_name)
                     button.props('color=green')
-                # Prevent selecting more than count satellites
-                else:
-                    return
+                print(f'currently selected:{selected}') #selected appears to be working well
 
             count = int(e.value)
             sat_buttons = {}
+
+            #fix late binding error
             for sat_name in saved_tles['names']:
                 btn = ui.button(
                     sat_name,
@@ -52,38 +55,40 @@ def update_text_boxes(e):
                 
 
 def submit():
-    tle_list = []
+    global selected
+    tles = []#empties the list?
     #get the corresponding data from the selected buttons 
+    #print(f'currently selected after submit: {selected}')
     for names in selected:
             #build the TLE array in the format ['ISS (ZARYA)','1 25544U 98067A   21016.23305200  .00001366  00000-0  32598-4 0  9992', '2 25544  51.6457  14.3113 0000235 231.0982 239.8264 15.49297436265049']
             line1 = saved_tles['line1s'][saved_tles['names'].index(names)] # get the line1 correspondin to the name
             line2 = saved_tles['line2s'][saved_tles['names'].index(names)]
-            tle_list.append([names, line1,line2])
+            tles.append([names,line1,line2])
             
-            #debug
-            print(tle_list)
-    print(tle_list)  # This is your array of arrays
+    print(f'TLE list{tles}')  # This is your array of arrays
     #convert tle_list to czml 
-    from satellite_czml import satellite_czml
-    # Convert to CZML
-    czml_string = satellite_czml(tle_list=tle_list).get_czml()
+    from satellite_czml import satellite_czml #note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then at the beginning of __init__() add self.satellites = {}
 
+    # Convert to CZML
+    czml_obj = satellite_czml(tles)#this should create a new object
+    czml_string = czml_obj.get_czml()
+    print(len(czml_string))#testing if the string is gettin appended to or not
     #write this string to a file
     with open('sats.czml', 'w') as f:
+        f.truncate(0)#ensure that this file is being removed from the begining 
         f.write(czml_string)
-
-    #clear input
-    inputs.clear()
     #navigate to the page to display
     ui.navigate.to('/Cesium_page')
 
-ui.number(label='How many Satellites?', min=1, max=5, step=1, on_change=update_text_boxes).style('width: 10%')
+ui.number(label='How many Satellites?', min=1, max=10, step=1, on_change=update_text_boxes).style('width: 10%')
 ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 
 @ui.page('/Cesium_page')
 def Cesium_page():
     def back_and_clear():
-        global selected
+        global selected, sat_buttons
+        for btn in sat_buttons.values():
+            btn.props('color=primary')
         selected.clear()
         ui.navigate.back()
     ui.button('Back', on_click=back_and_clear)
