@@ -174,7 +174,7 @@ class SigGen:
 
         # Add start and end sequences to the message binary
         message_binary = ''.join(str(bit) for bit in start_sequence) + message_binary + ''.join(str(bit) for bit in end_sequence)
-        print(message_binary)
+        # print(message_binary)
         # Convert string input to list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
         return bit_sequence

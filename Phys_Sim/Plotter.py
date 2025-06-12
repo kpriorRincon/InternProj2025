@@ -25,7 +25,7 @@ def find_peak(signal, sample_rate, top_n_bins=5):
 def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, tx_upsampled_symbols,sig_gen_mapping, message_input, rep_incoming_signal, rep_mixed_signal, rx_incoming_signal, rx_filtered_signal, rx_analytical_signal, rx_sampled_symbols):
     #this plot is for time qpsk
                     plt.figure(figsize=(15, 5))
-                    plt.plot(t, tx_signal)
+                    plt.plot(t, np.real(tx_signal))
 
                     # #if there are more than 10 symbols only show the first ten symbols
                     # if len(tx_vert_lines) > 10:
@@ -71,7 +71,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     #     plt.title(f'QPSK Waveform for \"{message}\" (first 10 symbol periods)')
                     # else:
                     #     plt.title(f'QPSK Waveform for \"{message}\"')
-                    plt.title(f'QPSK Waveform for Message: \"{message_input}\"')
+                    plt.title(f'Real Part of the QPSK Modulated Signal for Message: \"{message_input}\"')
                     plt.xlabel('Time (s)')
                     plt.ylabel('Amplitude')
                     plt.grid()
@@ -87,7 +87,6 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     #create a horizontal line 
                     # plt.axhline(y=0, color='b', linestyle='-', linewidth=1)
                     # plt.axhline(y=0, color='r', linestyle='--', linewidth=1)
-
                     plt.legend()
                     plt.title(f'Upsampled Symbols for Message: \"{message_input}\"')
                     plt.xlabel('Time (s)')
@@ -105,13 +104,13 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     fft = np.fft.fft(tx_signal)
                     fft_db = 20 * np.log10(np.abs(fft))
                     # get fft of qpsk signal
-                    peak_freq = find_peak(tx_signal, sample_rate)
+                    peak_freq = np.real(find_peak(tx_signal, sample_rate))
 
                     plt.figure(figsize=(15, 5))
-                    plt.plot(freqs,fft_db)
+                    plt.plot(np.real(freqs),np.real(fft_db))
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 100e6, np.max(fft_db) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
-                    plt.title("FFT of QPSK signal")
+                    plt.title("FFT of the QPSK Modulated Signal")
                     plt.xlim(0, 2*920e6)
                     plt.ylim(-np.max(fft_db)+10, np.max(fft_db)+10)
                     plt.xlabel('Frequency (Hz)')
@@ -139,8 +138,8 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
                     # --- Time-domain plot: Original QPSK ---
                     plt.subplot(1, 2, 1)
-                    plt.plot(t, np.real(rep_incoming_signal))  # convert time to microseconds
-                    plt.title("Original QPSK Signal (Time Domain)")
+                    plt.plot(t, np.real(rep_incoming_signal))
+                    plt.title("Real Part of the Incoming Signal")
                     plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
                     # plt.xlim(0, x_t_lim)
@@ -148,14 +147,14 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
                     plt.subplot(1, 2, 2)
 
-                    peak_freq = find_peak(rep_incoming_signal, sample_rate)
-                    plt.plot(freqs, mag_input, label="Original QPSK", alpha=0.8)
+                    peak_freq = np.real(find_peak(rep_incoming_signal, sample_rate))
+                    plt.plot(np.real(freqs), np.real(mag_input), label="Original QPSK", alpha=0.8)
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 100e6, np.max(mag_input) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     #plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
                     plt.xlabel("Frequency (GHz)")
                     plt.ylabel("Magnitude (dB)")
-                    plt.title("FFT of QPSK Before Frequency Shift")
+                    plt.title("FFT of the Incoming Signal")
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
                     plt.ylim(-np.max(mag_input) + 10, np.max(mag_input) + 10)
                     plt.grid(True)
@@ -168,7 +167,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     # --- Time-domain plot: Shifted QPSK ---
                     plt.subplot(1, 2, 1)
                     plt.plot(t, np.real(rep_mixed_signal))
-                    plt.title("QPSK Signal after Mixing (Time Domain)")
+                    plt.title("Real Part of the Signal after Mixing")
                     plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
                     # plt.xlim(0, x_t_lim)
@@ -177,12 +176,13 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     
 
                     plt.subplot(1, 2, 2)
-                    plt.plot(freqs, mag_shifted, label="Shifted QPSK", alpha=0.8)
+                    peak_freq = np.real(find_peak(rep_mixed_signal, sample_rate))
+                    plt.plot(np.real(freqs), np.real(mag_shifted), label="Shifted QPSK", alpha=0.8)
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 100e6, np.max(mag_input) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.xlabel("Frequency (GHz)")
                     plt.ylabel("Magnitude (dB)")
-                    plt.title("FFT of QPSK After Mixing")
+                    plt.title("FFT of the Signal after Mixing")
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
                     plt.ylim(-np.max(mag_input) + 10, np.max(mag_input) + 10)
                     plt.grid(True)
@@ -202,24 +202,24 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     plt.figure(figsize=(20, 6))
                     plt.subplot(1, 2, 1)
                     #time domain
-                    plt.plot(t, rx_incoming_signal)
-                    plt.title("Incoming Waveform")
-                    plt.xlabel("Time s")
+                    plt.plot(t, np.real(rx_incoming_signal))
+                    plt.title("Real Part of the Incoming Singal")
+                    plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
 
                     plt.subplot(1,2, 2)
                     #frequency domain
-                    peak_freq = find_peak(rx_incoming_signal, sample_rate)
+                    peak_freq = np.real(find_peak(rx_incoming_signal, sample_rate))
 
                     ao_fft = np.fft.fft(rx_incoming_signal)
                     freqs = np.fft.fftfreq(len(rx_incoming_signal), d=1/sample_rate)
-                    db_vals = 20*np.log10(ao_fft)
-                    plt.plot(freqs, db_vals)
+                    db_vals = 20*np.log10(np.abs(ao_fft))
+                    plt.plot(np.real(freqs), np.real(db_vals))
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 150e6, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.xlabel("Frequency (Hz)")
                     plt.ylabel("Magnitude (dB)")
-                    plt.title('FFT of Incoming Waveform')
+                    plt.title('FFT of the Incoming Signal')
                     plt.xlim(0, sample_rate / 2)  # From 0 to fs in MHz
                     plt.ylim(-np.max(db_vals) + 10, np.max(db_vals) + 10)
                     plt.grid()
@@ -234,8 +234,8 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     plt.plot(t, np.real(rx_filtered_signal), 'b-',label='I (real part)')
                     plt.plot(t, np.imag(rx_filtered_signal), 'r--', label='Q (imag part)')        
                     plt.legend()           
-                    plt.title("Baseband Signal After Filtering")
-                    plt.xlabel("Time s")
+                    plt.title("Baseband Signal after a Low Pass Filter")
+                    plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
                     plt.grid()
                     plt.subplot(1,2, 2)
@@ -244,17 +244,15 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
                     ao_fft = np.fft.fft(rx_filtered_signal)
                     freqs = np.fft.fftfreq(len(rx_filtered_signal), d=1/sample_rate)
-                    db_vals = 20*np.log10(ao_fft)
+                    db_vals = 20*np.log10(np.abs(ao_fft))
 
                     peak_freq = 0
-                    plt.plot(freqs, db_vals)
+                    plt.plot(np.real(freqs), np.real(db_vals))
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 0.3e9, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
                     plt.title('FFT of the Baseband Signal After Filtering')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
-                    plt.xlim(-sample_rate/2, sample_rate / 2)  # From 0 to fs in MHz
-                    plt.ylim(-np.max(db_vals) + 10, np.max(db_vals) + 10)
                     plt.grid()
                     plt.savefig('demod_media/filtered.png', dpi=300)
                     plt.clf()
@@ -266,7 +264,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
                     plt.scatter(np.real(rx_sampled_symbols[1:]), np.imag(rx_sampled_symbols[1:]))
                     plt.grid(True)
-                    plt.title('Constellation Plot of Sampled Symbols')
+                    plt.title('Constellation Plot of the Symbols after Downsampling')
                     plt.xlabel('Real')
                     # plt.xlim(-0.5e5,0.5e5)
                     # plt.ylim(-0.5e5,0.5e5)
@@ -291,14 +289,14 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     # plot the fft
                     ao_fft = np.fft.fft(rx_analytical_signal)
                     freqs = np.fft.fftfreq(len(rx_analytical_signal), d=1/sample_rate)
-                    db_vals = 20*np.log10(ao_fft)
+                    db_vals = 20*np.log10(np.abs(ao_fft))
 
                     peak_freq = 0
                     plt.subplot(1, 2, 2)
-                    plt.plot(freqs, db_vals)
+                    plt.plot(np.real(freqs), np.real(db_vals))
                     plt.axvline(x=peak_freq, color='r', linestyle='--', label=f'Peak: {peak_freq/1e6:.1f} MHz')
                     plt.text(peak_freq + 0.3e9, np.max(db_vals) - 5, f'{peak_freq/1e6:.1f} MHz', color='r', ha='center')
-                    plt.title('FFT of Final Demodulated Signal')
+                    plt.title('FFT of the Final Demodulated Signal')
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Madgnitude (dB)')
                     plt.grid()
