@@ -71,7 +71,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     #     plt.title(f'QPSK Waveform for \"{message}\" (first 10 symbol periods)')
                     # else:
                     #     plt.title(f'QPSK Waveform for \"{message}\"')
-                    plt.title(f'QPSK Waveform for \"{message_input}\"')
+                    plt.title(f'QPSK Waveform for Message: \"{message_input}\"')
                     plt.xlabel('Time (s)')
                     plt.ylabel('Amplitude')
                     plt.grid()
@@ -89,7 +89,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     # plt.axhline(y=0, color='r', linestyle='--', linewidth=1)
 
                     plt.legend()
-                    plt.title(f'QPSK Waveform Baseband no pulse shaping \"{message_input}\"')
+                    plt.title(f'Upsampled Symbols for Message: \"{message_input}\"')
                     plt.xlabel('Time (s)')
                     plt.ylabel('Amplitude')
                     plt.grid()
