@@ -67,7 +67,7 @@ class SigGen:
         # Root raised cosine filter implementation
         from commpy import filters
         beta = 0.3
-        _, pulse_shape = filters.rrcosfilter(300, beta, 1/self.symbol_rate, self.sample_rate)
+        _, pulse_shape = filters.rrcosfilter(len(t), beta, 1/self.symbol_rate, self.sample_rate)
         # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
 
