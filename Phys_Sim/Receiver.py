@@ -128,8 +128,8 @@ class Receiver:
                         0, 0, 1, 1, 1, 1, 0, 1, 
                         0, 0, 0, 1, 0, 0, 1, 0]
         
-        print(f"Looking for start sequence: {start_sequence}")
-        print(f"Looking for end sequence: {end_sequence}")
+        #print(f"Looking for start sequence: {start_sequence}")
+        #print(f"Looking for end sequence: {end_sequence}")
 
         sig_gen = SigGen.SigGen(0, 1.0, sample_rate, symbol_rate)
         _, start_waveform, _, _,_= sig_gen.generate_qpsk(start_sequence, False, 0.1)
@@ -234,11 +234,11 @@ class Receiver:
         if self.attenuate:
             attenuated_signal = attenuator(self.R, fc, qpsk_waveform)
             ## tune to baseband ##
-            print("Tuning to basband...")
+            #print("Tuning to basband...")
             baseband_sig = attenuated_signal * np.exp(-1j * 2 * np.pi * fc * t)
         else:
             ## tune to baseband ##
-            print("Tuning to basband...")
+            #print("Tuning to basband...")
             baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
         
         # low pass filter
@@ -256,17 +256,17 @@ class Receiver:
         #v = 7.8e3 # average speed of a satellite in LEO
         v = 0
         doppler = v / lam   # calculated doppler shift
-        print("Doppler shift: ", doppler)
+        #print("Doppler shift: ", doppler)
         freqs = np.linspace(fc-doppler, fc+doppler, 4)
         start_index, end_index = self.cross_correlation(signal, sample_rate, symbol_rate)
         analytic_sig = signal[start_index:end_index]
 
         # sample the analytic signal
-        print("Sampling the analytic signal...")
+        #print("Sampling the analytic signal...")
         sampled_symbols = self.down_sampler(analytic_sig, sample_rate, symbol_rate)
 
         # decode the symbols and error check the start sequence
-        print("Decoding symbols and checking for start sequence...")
+        #print("Decoding symbols and checking for start sequence...")
         best_bits = self.error_handling(sampled_symbols)
 
         return signal, sampled_symbols, best_bits, filtered_sig
