@@ -9,7 +9,7 @@ and then pickles these arrays for later use.
 
 import os
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 def get_up_to_date_TLE():
     """
@@ -18,7 +18,6 @@ def get_up_to_date_TLE():
     Returns:
         dict: A dictionary with keys 'names', 'line1s', and 'line2s' containing lists of satellite names and TLE lines.
     """
-
     url = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=last-30-days&FORMAT=tle'
     tle_file = 'sattelite_tles.txt'
     timestamp_file = 'last_tle_fetch.txt'
@@ -29,15 +28,16 @@ def get_up_to_date_TLE():
             return True #if the timestamp file is just now being created then we should update
         with open(timestamp_file, 'r') as f:
             last_time = datetime.fromisoformat(f.read().strip())
-        return datetime.now() - last_time > update_interval #returns true if the current time is more than 8 hours the last time 
+        return datetime.now(timezone.utc) - last_time > update_interval #returns true if the current time is more than 8 hours the last time 
 
     def update_timestamp():
         with open(timestamp_file, 'w') as f:
-            f.write(datetime.now().isoformat())#write the date and time to the timestamp file
+            f.write(datetime.now(timezone.utc).isoformat())#write the date and time to the timestamp file
 
     # Only download if needed
     if should_update():
-        response = requests.get(url)
+        headers = {'User-Agent': 'Mozilla/5.0 (compatible; TLE-fetcher/1.0)'}
+        response = requests.get(url, headers = headers)
         if response.status_code == 200:
             with open(tle_file, 'w') as f:
                 f.write(response.text)

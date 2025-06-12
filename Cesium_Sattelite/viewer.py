@@ -9,8 +9,14 @@ import os
 import time
 import pickle
 from get_TLE import get_up_to_date_TLE
-
-saved_tles = get_up_to_date_TLE() #get the most up to date TLE 
+from satellite_czml import satellite_czml 
+#note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then 
+#at the beginning of __init__() add self.satellites = {}
+#at the top of the class from datetime import datetime, timedelta, timezone
+#also replace all instances of datetime.utcnow() with datetime.now(timezone.utc)
+if __name__ == "__main__":
+    #only do this once since nicegui uses multiprocessing
+    saved_tles = get_up_to_date_TLE() #get the most up to date TLE 
 
 #we want to declare these globally so we can reset when needed
 selected = set()
@@ -67,7 +73,6 @@ def submit():
             
     print(f'TLE list{tles}')  # This is your array of arrays
     #convert tle_list to czml 
-    from satellite_czml import satellite_czml #note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then at the beginning of __init__() add self.satellites = {}
 
     # Convert to CZML
     czml_obj = satellite_czml(tles)#this should create a new object
