@@ -149,7 +149,7 @@ class SigGen:
         plt.ylabel('Amplitude')
         plt.grid()
         # Save the plot to a file
-        plt.savefig(f'qpsk_sig_gen/1_qpsk_waveform.png', dpi=300)    
+        plt.savefig(f'1_qpsk_waveform.png', dpi=300)
         #print("Debug: plot generated")
         return
     

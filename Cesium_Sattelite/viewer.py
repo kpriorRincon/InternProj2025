@@ -20,15 +20,15 @@ also replace all instances of datetime.utcnow() with datetime.now(timezone.utc)'
 from skyfield.api import load, wgs84, EarthSatellite
 saved_tles = get_up_to_date_TLE()  # get the most up to date TLE
 # define the position of the transmitter and receiver
-tx_pos = wgs84.latlon(39.586389, -104.828889,
-                      elevation_m=1600)  # Kobe's seat at Rincon
+tx_pos = wgs84.latlon(39.586389, -104.828889, elevation_m=1600)  # Kobe's seat at Rincon
 rx_pos = wgs84.latlon(39.748056, -105.221667, elevation_m=1600)  # Kobe's dorm
 # we want to declare these globally so we can reset when needed
 selected = set()
 sat_buttons = {}
 tles = []
 count = 0
-
+sat_for_sim = None # To start until we're ready to use it
+time_crossing = None
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
 
@@ -163,8 +163,21 @@ def Cesium_page():
             break
     with ui.column().style('width: 25%'):
         ui.label('Closest Satellite Crossings (1 minute increments for 2 days)').style(
-            'font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; white-space: normal; word-break: break-word;'
-        )
+            'font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; white-space: normal; word-break: break-word;')
+
+
+        def store_sat(name, data):
+            #when the user clicks on one of the rows get information needed for the simulation and store them in 
+            global time_crossing, sat_for_sim 
+            # get the satellite we want
+            for sat in satellites: 
+                if sat.name == name:
+                    sat_for_sim = sat
+                    break
+            time_crossing = data['time']#extracted from data
+            ui.navigate.to('/simulation_page')
+            return
+        
         # Print the first 5 unique satellite crossings with their minimum distances
 
         # description of for loop you count while you go through the crossing list where sat_name is the key in the dictionary and data is 'time', 'uplink_dist', ...
@@ -174,12 +187,12 @@ def Cesium_page():
             print(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
             with ui.row().classes(
                 'bg-gray-400 rounded-lg mb-2 px-4 py-2 cursor-pointer transition hover:bg-green-400'
-                ).on('click', lambda e, n=sat_name, d=data: print(f"Clicked on {n} at {d['time']}")):
+                ).on('click', lambda e, n=sat_name, d=data:(store_sat(n,d), ui.navigate.to('/simulation_page'))):
                 
                 ui.label(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
                 ui.label(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
                 ui.label(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
-
+        
         # get this files working directory
         html_directory = os.path.dirname(__file__)
         # add the files available
@@ -192,6 +205,19 @@ def Cesium_page():
         </div>
         '''
     )
+    @ui.page('/simulation_page')
+    def simulation_page(): 
+        # we will navigate to here whenever a row is clicked
+        global time_crossing, sat_for_sim
+        #for now just create a label that prints out the parameters that will be used in the simulation
+        dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        time_crossing_skyfield = ts.from_datetime(dt_crossing)
+        geocentric = sat_for_sim.at(time_crossing_skyfield)
+        position_vector = geocentric.position.km
+        velocity_vector = geocentric.velocity.km_per_s
+
+        ui.label(f'Position Vector: {position_vector}').style('font-size: 1.5em; font-weight: bold;')
+        ui.label(f'Velocity Vector: {velocity_vector}')
 
 
 ui.run()

@@ -9,7 +9,11 @@ Purpose:
 import numpy as np
 import matplotlib.pyplot as plt
 from nicegui import ui
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import Sig_Gen as SigGen
+
 def main():
     """
     main()
@@ -57,7 +61,9 @@ def main():
         amp_val = int(amp.value)
         symbol_rate_val = int(symbol_rate.value)
         #create sig_gen object with the parameters from gui
-        sig_gen = SigGen.SigGen(freq=freq_val, amp=amp_val, sample_rate = 20*freq_val, symbol_rate = symbol_rate_val)
+        sig_gen = SigGen.SigGen(10*freq_val, symbol_rate_val)
+        sig_gen.amp = amp_val
+        sig_gen.freq = freq_val
         # Get the message from the input field and convert it to a bit sequence
         message = message_input.value
         # Convert the message to a binary bit sequence using the SigGen class
@@ -67,34 +73,10 @@ def main():
             ui.notify('Please enter a valid even number of bits (0s and 1s).')
             return
         # Generate QPSK waveform using the SigGen class
-        t, qpsk_waveform, t_vertical_lines, symbols = sig_gen.generate_qpsk(bit_sequence)
+        sig_gen.generate_qpsk(bit_sequence)
         # Plot the waveform
-        with ui.matplotlib(figsize=(20, 4)) as fig:
-        
-            plt.plot(t, qpsk_waveform)
-            plt.ylim(-1/np.sqrt(2)*sig_gen.amp-.5, 1/np.sqrt(2)*sig_gen.amp+.5)
-            for lines in t_vertical_lines:
-                #add vertical lines at the symbol boundaries
-                if lines < len(t):
-                    plt.axvline(x=lines, color='black', linestyle='--', linewidth=1)
-
-                    #add annotation for the symbol e.g. '00', '01', '10', '11'
-                    # Reverse mapping: symbol -> binary pair
-                    symbol = symbols[t_vertical_lines.index(lines)]
-                    # Reverse the mapping to get binary pair from symbol
-                    reverse_mapping = {v: k for k, v in sig_gen.mapping.items()}
-                    binary_pair = reverse_mapping.get(symbol, '')
-                    formatted_pair =str(binary_pair).replace("(", "").replace(")", "").replace(", ", "")
-                    #debug
-                    #print(formatted_pair)
-                    x_dist = 1 / (2.7 * sig_gen.symbol_rate) #half the symbol period 
-                    y_dist = 0.707*sig_gen.amp + .2 # 0.807 is the amplitude of the QPSK waveform
-                    plt.annotate(formatted_pair, xy=(lines, 0), xytext=(lines + x_dist, y_dist), fontsize=17)
-            plt.title(f'QPSK Waveform for {message}')
-            plt.xlabel('Time (s)')
-            plt.ylabel('Amplitude')
-            plt.grid()
-            plt.show()
+        sig_gen.plot_time_png(message)
+        ui.image('1_qpsk_waveform.png').force_reload()
     #run the UI
     ui.run(native=True)
 
