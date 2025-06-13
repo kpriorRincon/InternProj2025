@@ -121,23 +121,38 @@ def Cesium_page():
     #note that the tles list is a list of lists so we can get each list one by one and take the corresponding data to build EarthSatellite objects
     satellites = [EarthSatellite(tle[1], tle[2], tle[0]) for tle in tles]
     #set the distance that the satellite must be from both ground stations
-    thresh_km = 2000
+    thresh_km =2000
     #define start time and range
     ts = load.timescale()
     now_utc = datetime.now(timezone.utc)
     start_time = ts.utc(now_utc) #convert to skyfield time
     #do in 3 hour steps 
-    time_range = [start_time + timedelta(hours=.7*i) for i in range(240)] # 7 days in 0.7 hour increments
-    #we will iterate over the time range until a satellite is close enough
+    # Increase frequency: check every 5 minutes (0.0833 hours)
+    time_range = [start_time + timedelta(hours=0.0833 * i) for i in range(1008)]  # ~3.5 days
+    # Track first 5 unique satellite crossings, only keep minimum distance per satellite
+    crossings = {}
     for t in time_range:
         for sat in satellites:
-            #double check if sat-tx_pos is correct
             uplink_dist = (sat - tx_pos).at(t).distance().km
-            downlink_dist = (sat- rx_pos).at(t).distance().km
+            downlink_dist = (sat - rx_pos).at(t).distance().km
             if uplink_dist < thresh_km and downlink_dist < thresh_km:
-                print(f"Satellite '{sat.name}' within range at {t.utc_strftime('%Y-%m-%d %H:%M:%S')} UTC")
-                print(f"  Distance to Tx: {uplink_dist:.1f} km")
-                print(f"  Distance to Rx: {downlink_dist:.1f} km")
+                sat_name = sat.name
+                min_dist = min(uplink_dist, downlink_dist)
+                # Only keep the closest approach for each satellite
+                if sat_name not in crossings or min_dist < crossings[sat_name]['min_dist']:
+                    crossings[sat_name] = {
+                        'time': t.utc_strftime('%Y-%m-%d %H:%M:%S'),
+                        'uplink_dist': uplink_dist,
+                        'downlink_dist': downlink_dist,
+                        'min_dist': min_dist
+                    }
+        if len(crossings) >= 5:
+            break
+    # Print the first 5 unique satellite crossings with their minimum distances
+    for i, (sat_name, data) in enumerate(list(crossings.items())[:5], 1):
+        print(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
+        print(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
+        print(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
 
 
 
