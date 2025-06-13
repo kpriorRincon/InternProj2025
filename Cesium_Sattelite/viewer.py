@@ -9,7 +9,7 @@ from nicegui import ui, app
 import os
 import time
 from datetime import datetime, timezone, timedelta
-#function I made to get current TLE data
+# function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
 
 from satellite_czml import satellite_czml
@@ -19,9 +19,10 @@ at the top of the class from datetime import datetime, timedelta, timezone
 also replace all instances of datetime.utcnow() with datetime.now(timezone.utc)'''
 from skyfield.api import load, wgs84, EarthSatellite
 saved_tles = get_up_to_date_TLE()  # get the most up to date TLE
-#define the position of the transmitter and receiver
-tx_pos = wgs84.latlon(39.586389,-104.828889, elevation_m=1600)#Kobe's seat at Rincon
-rx_pos = wgs84.latlon(39.748056,-105.221667,elevation_m=1600)#Kobe's dorm
+# define the position of the transmitter and receiver
+tx_pos = wgs84.latlon(39.586389, -104.828889,
+                      elevation_m=1600)  # Kobe's seat at Rincon
+rx_pos = wgs84.latlon(39.748056, -105.221667, elevation_m=1600)  # Kobe's dorm
 # we want to declare these globally so we can reset when needed
 selected = set()
 sat_buttons = {}
@@ -30,6 +31,7 @@ count = 0
 
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
+
 
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
@@ -111,7 +113,8 @@ ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 @ui.page('/Cesium_page')
 def Cesium_page():
     global count
-    #start of Cesium page
+    # start of Cesium page
+
     def back_and_clear():
         global selected, sat_buttons, tles
         for btn in sat_buttons.values():
@@ -119,20 +122,21 @@ def Cesium_page():
         selected.clear()
         ui.navigate.back()
     ui.button('Back', on_click=back_and_clear)
-    #TODO find the time when the first satellite crosses the line of site of both ground stations e.g. tx_pos and rx_pos 
-    #create the satellites
-    #note that the tles list is a list of lists so we can get each list one by one and take the corresponding data to build EarthSatellite objects
+    # TODO find the time when the first satellite crosses the line of site of both ground stations e.g. tx_pos and rx_pos
+    # create the satellites
+    # note that the tles list is a list of lists so we can get each list one by one and take the corresponding data to build EarthSatellite objects
     satellites = [EarthSatellite(tle[1], tle[2], tle[0]) for tle in tles]
-    #set the distance that the satellite must be from both ground stations
-    thresh_km =2000
-    #define start time and range
+    # set the distance that the satellite must be from both ground stations
+    thresh_km = 2000
+    # define start time and range
     ts = load.timescale()
     now_utc = datetime.now(timezone.utc)
-    start_time = ts.utc(now_utc) #convert to skyfield time
-    #do in 3 hour steps 
+    start_time = ts.utc(now_utc)  # convert to skyfield time
+    # do in 3 hour steps
     # Increase frequency: check every 5 minutes (0.0833 hours)
     # Check every minute for 2 days: 2 days * 24 hours * 60 minutes = 2880 steps
-    time_range = [start_time + timedelta(minutes=i) for i in range(2 * 24 * 60)]
+    time_range = [start_time + timedelta(minutes=i)
+                  for i in range(2 * 24 * 60)]
     # Track unique satellite crossings, only keep minimum distance per satellite we can do the number of satellites the user selected as the cap
     crossings = {}
 
@@ -157,25 +161,30 @@ def Cesium_page():
                     }
         if len(crossings) >= count:
             break
-    ui.label('Closest Satellite Crossings(1 minute increments for 2 days)')
-    # Print the first 5 unique satellite crossings with their minimum distances
+    with ui.column().style('width: 25%'):
+        ui.label('Closest Satellite Crossings (1 minute increments for 2 days)').style(
+            'font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; white-space: normal; word-break: break-word;'
+        )
+        # Print the first 5 unique satellite crossings with their minimum distances
 
-    #description of for loop you count while you go through the crossing list where sat_name is the key in the dictionary and data is 'time', 'uplink_dist', ...
-    #[:count],1 
-    for i, (sat_name, data) in enumerate(list(crossings.items())[:count], 1):
-        print(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
-        ui.label(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
-        print(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
-        ui.label(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
-        print(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
-        ui.label(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
+        # description of for loop you count while you go through the crossing list where sat_name is the key in the dictionary and data is 'time', 'uplink_dist', ...
+        for i, (sat_name, data) in enumerate(list(crossings.items())[:count], 1):
+            print(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
+            print(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
+            print(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
+            with ui.row().classes(
+                'bg-gray-400 rounded-lg mb-2 px-4 py-2 cursor-pointer transition hover:bg-green-400'
+                ).on('click', lambda e, n=sat_name, d=data: print(f"Clicked on {n} at {d['time']}")):
+                
+                ui.label(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
+                ui.label(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
+                ui.label(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
 
+        # get this files working directory
+        html_directory = os.path.dirname(__file__)
+        # add the files available
+        app.add_static_files('/static', html_directory)
 
-
-    # get this files working directory
-    html_directory = os.path.dirname(__file__)
-    app.add_static_files('/static', html_directory)  # add the files available
-    
     ui.html(
         f'''
         <div style="position: fixed; top: 0; right: 0; width: 70vw; height: 95vh; border: none; margin: 1vh 1vw 0 0; padding: 0; overflow: hidden; z-index: 999999; box-shadow: 0 0 10px rgba(0,0,0,0.2); background: #fff; border-radius: 12px;">
@@ -183,5 +192,6 @@ def Cesium_page():
         </div>
         '''
     )
+
 
 ui.run()
