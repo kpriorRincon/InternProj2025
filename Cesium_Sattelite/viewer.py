@@ -8,18 +8,24 @@
 from nicegui import ui, app
 import os
 import time
+from datetime import datetime, timezone, timedelta
+#function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
+
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
 at the beginning of __init__() add self.satellites = {}
 at the top of the class from datetime import datetime, timedelta, timezone
 also replace all instances of datetime.utcnow() with datetime.now(timezone.utc)'''
-
+from skyfield.api import load, wgs84, EarthSatellite
 saved_tles = get_up_to_date_TLE()  # get the most up to date TLE
-
+#define the position of the transmitter and receiver
+tx_pos = wgs84.latlon(39.586389,-104.828889, elevation_m=1600)#Kobe's seat at Rincon
+rx_pos = wgs84.latlon(39.748056,-105.221667,elevation_m=1600)#Kobe's dorm
 # we want to declare these globally so we can reset when needed
 selected = set()
 sat_buttons = {}
+tles = []
 
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
@@ -67,7 +73,8 @@ def update_text_boxes(e):
 def submit():
     """Handles the submit action: collects selected satellites' TLEs, generates CZML, writes it to a file, and navigates to the Cesium viewer page."""
     global selected
-    tles = []  # empties the list?
+    global tles  # empties the list?
+    tles.clear()
     # get the corresponding data from the selected buttons
     # print(f'currently selected after submit: {selected}')
     for names in selected:
@@ -103,12 +110,37 @@ ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 def Cesium_page():
     #start of Cesium page
     def back_and_clear():
-        global selected, sat_buttons
+        global selected, sat_buttons, tles
         for btn in sat_buttons.values():
             btn.props('color=primary')
         selected.clear()
         ui.navigate.back()
     ui.button('Back', on_click=back_and_clear)
+    #TODO find the time when the first satellite crosses the line of site of both ground stations e.g. tx_pos and rx_pos 
+    #create the satellites
+    #note that the tles list is a list of lists so we can get each list one by one and take the corresponding data to build EarthSatellite objects
+    satellites = [EarthSatellite(tle[1], tle[2], tle[0]) for tle in tles]
+    #set the distance that the satellite must be from both ground stations
+    thresh_km = 2000
+    #define start time and range
+    ts = load.timescale()
+    now_utc = datetime.now(timezone.utc)
+    start_time = ts.utc(now_utc) #convert to skyfield time
+    #do in 3 hour steps 
+    time_range = [start_time + timedelta(hours=.7*i) for i in range(240)] # 7 days in 0.7 hour increments
+    #we will iterate over the time range until a satellite is close enough
+    for t in time_range:
+        for sat in satellites:
+            #double check if sat-tx_pos is correct
+            uplink_dist = (sat - tx_pos).at(t).distance().km
+            downlink_dist = (sat- rx_pos).at(t).distance().km
+            if uplink_dist < thresh_km and downlink_dist < thresh_km:
+                print(f"Satellite '{sat.name}' within range at {t.utc_strftime('%Y-%m-%d %H:%M:%S')} UTC")
+                print(f"  Distance to Tx: {uplink_dist:.1f} km")
+                print(f"  Distance to Rx: {downlink_dist:.1f} km")
+
+
+
     # get this files working directory
     html_directory = os.path.dirname(__file__)
     app.add_static_files('/static', html_directory)  # add the files available

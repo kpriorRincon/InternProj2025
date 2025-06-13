@@ -31,9 +31,9 @@
 
     //cache buster
     const cacheBuster = '?t=' + new Date().getTime();
-    //long        lat
-    const tx_pos = Cesium.Cartesian3.fromDegrees(-104.828889, 39.586389, 10000) //exact loaction of Kobe's Seat in Rincon top of the antenna tower
-    const rx_pos = Cesium.Cartesian3.fromDegrees(-105.221667, 39.748056, 10000) //exact location of Kobe's Room at Mines top of the antenna tower
+    //                                            long        lat           opposite order of usual
+    const tx_pos = Cesium.Cartesian3.fromDegrees(-104.828889, 39.586389, 1600) //exact loaction of Kobe's Seat in Rincon top of the antenna tower
+    const rx_pos = Cesium.Cartesian3.fromDegrees(-105.221667, 39.748056, 1600) //exact location of Kobe's Room at Mines top of the antenna tower
     // Load the CZML file
     viewer.dataSources.add(Cesium.CzmlDataSource.load('sats.czml' + cacheBuster))
       .then((dataSource) => {
