@@ -26,12 +26,14 @@ rx_pos = wgs84.latlon(39.748056,-105.221667,elevation_m=1600)#Kobe's dorm
 selected = set()
 sat_buttons = {}
 tles = []
+count = 0
 
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
 
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
+    global count
     count = int(e.value)
     text_box_container.clear()
 
@@ -108,6 +110,7 @@ ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 
 @ui.page('/Cesium_page')
 def Cesium_page():
+    global count
     #start of Cesium page
     def back_and_clear():
         global selected, sat_buttons, tles
@@ -128,9 +131,15 @@ def Cesium_page():
     start_time = ts.utc(now_utc) #convert to skyfield time
     #do in 3 hour steps 
     # Increase frequency: check every 5 minutes (0.0833 hours)
-    time_range = [start_time + timedelta(hours=0.0833 * i) for i in range(1008)]  # ~3.5 days
-    # Track first 5 unique satellite crossings, only keep minimum distance per satellite
+    # Check every minute for 2 days: 2 days * 24 hours * 60 minutes = 2880 steps
+    time_range = [start_time + timedelta(minutes=i) for i in range(2 * 24 * 60)]
+    # Track unique satellite crossings, only keep minimum distance per satellite we can do the number of satellites the user selected as the cap
     crossings = {}
+
+    '''For loops explanation:
+        # For each time step in the 2-day range (1-minute increments), check every satellite's distance to both ground stations.
+        # If a satellite is within the threshold distance to both, record its closest approach time and distances.
+        # Stop searching once the required number of unique satellite crossings is found.'''
     for t in time_range:
         for sat in satellites:
             uplink_dist = (sat - tx_pos).at(t).distance().km
@@ -146,13 +155,20 @@ def Cesium_page():
                         'downlink_dist': downlink_dist,
                         'min_dist': min_dist
                     }
-        if len(crossings) >= 5:
+        if len(crossings) >= count:
             break
+    ui.label('Closest Satellite Crossings(1 minute increments for 2 days)')
     # Print the first 5 unique satellite crossings with their minimum distances
-    for i, (sat_name, data) in enumerate(list(crossings.items())[:5], 1):
+
+    #description of for loop you count while you go through the crossing list where sat_name is the key in the dictionary and data is 'time', 'uplink_dist', ...
+    #[:count],1 
+    for i, (sat_name, data) in enumerate(list(crossings.items())[:count], 1):
         print(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
+        ui.label(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
         print(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
+        ui.label(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
         print(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
+        ui.label(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
 
 
 
