@@ -134,9 +134,8 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     mag_input = 20 * np.log10(np.abs(fft_input))
                     mag_shifted = 20 * np.log10(np.abs(fft_shifted))
 
-                    plt.figure(figsize=(20, 6))
-
                     # --- Time-domain plot: Original QPSK ---
+                    plt.figure(figsize=(20, 6))
                     plt.subplot(1, 2, 1)
                     plt.plot(t, np.real(rep_incoming_signal))
                     plt.title("Real Part of the Incoming Signal")
@@ -165,6 +164,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     plt.clf()
 
                     # --- Time-domain plot: Shifted QPSK ---
+                    plt.figure(figsize=(20, 6))
                     plt.subplot(1, 2, 1)
                     plt.plot(t, np.real(rep_mixed_signal))
                     plt.title("Real Part of the Signal after Mixing")

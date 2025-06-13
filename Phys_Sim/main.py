@@ -277,8 +277,9 @@ def repeater_page():
         with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
             ui.label(f'Input Frequency: {f_in/1e6:.1f} MHz      Output Frequency: {f_out/1e6:.1f} MHz').style('font-size: 2em; font-weight: bold;')
 
-    ui.image('repeater_plots/original_qpsk_rp.png').force_reload()
-    ui.image('repeater_plots/shifted_qpsk_rp.png').force_reload()
+    with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+        ui.image('repeater_plots/original_qpsk_rp.png').force_reload()
+        ui.image('repeater_plots/shifted_qpsk_rp.png').force_reload()
 
 
 #simulation receiver page
