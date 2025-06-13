@@ -220,13 +220,13 @@ def cross_correlation(baseband_sig, sample_rate, symbol_rate):
     end_index = len(baseband_sig)
     
     # Define start and end sequences
-    # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
+    # 11111001101001000010101110110001
     start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
                       1, 0, 1, 0, 0, 1, 0, 0,
                       0, 0, 1, 0, 1, 0, 1, 1,
                       1, 0, 1, 1, 0, 0, 0, 1]
     
-    # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
+    # 00100110100000100011110100010010
     end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
                     1, 0, 0, 0, 0, 0, 1, 0, 
                     0, 0, 1, 1, 1, 1, 0, 1, 
@@ -292,9 +292,9 @@ def demodulator(qpsk_waveform, sample_rate, symbol_rate, t, fc):
     baseband_sig = qpsk_waveform * np.exp(-1j * 2 * np.pi * fc * t)
 
     # root raised cosine matched filter
-    beta = 0.3
+    beta = 0.35
     #_, pulse_shape = filters.rrcosfilter(300, beta, 1/symbol_rate, sample_rate)
-    _, pulse_shape = rrc_filter(beta, 300, 1/symbol_rate, sample_rate)
+    _, pulse_shape = rrc_filter(beta, 8, 1/symbol_rate, sample_rate)
     pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
     signal = np.convolve(pulse_shape, baseband_sig, 'same')
 

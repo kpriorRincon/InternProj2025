@@ -11,11 +11,14 @@ sdr.gain = 49.6
 print(sdr.gain)
 
 x = sdr.read_samples(4096)
-
+plt.figure()
 plt.plot(x.real)
 plt.plot(x.imag)
 plt.legend(["I", "Q"])
-plt.show()
+
+plt.figure()
+plt.plot(np.arange(0,len(x)), x)
+plt.title("The Signal")
 
 fft_size = 512
 num_rows = 500
@@ -27,6 +30,7 @@ for i in range(num_rows):
 extent = [(sdr.center_freq + sdr.sample_rate/-2)/1e6,
             (sdr.center_freq + sdr.sample_rate/2)/1e6,
             len(x)/sdr.sample_rate, 0]
+plt.figure()
 plt.imshow(spectrogram, aspect='auto', extent=extent)
 plt.xlabel("Frequency [MHz]")
 plt.ylabel("Time [s]")
