@@ -8,6 +8,7 @@
 from nicegui import ui, app
 import os
 import time
+import numpy as np
 from datetime import datetime, timezone, timedelta
 # function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
@@ -112,7 +113,7 @@ ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 
 @ui.page('/Cesium_page')
 def Cesium_page():
-    global count
+    global count, tx_pos, rx_pos
     # start of Cesium page
 
     def back_and_clear():
@@ -213,12 +214,22 @@ def Cesium_page():
         dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
         time_crossing_skyfield = ts.from_datetime(dt_crossing)
         geocentric = sat_for_sim.at(time_crossing_skyfield)
-        position_vector = geocentric.position.km
-        velocity_vector = geocentric.velocity.km_per_s
+        position_vector = geocentric.position.m
+        velocity_vector = geocentric.velocity.m_per_s
 
+        #these are placeholders for the moment
         ui.label(f'Satellite Position Vector: {position_vector}').style('font-size: 1.5em; font-weight: bold;')
-        ui.label(f'Satellite Velocity Vector: {velocity_vector}')
-        ui.image('../Phys_Sim/media/doppler_eqn.png')
+        ui.label(f'Satellite Velocity Vector: {velocity_vector}').style('font-size: 1.5em; font-weight: bold;')
+        ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
+        ui.label('For now assume tx frequency is 905 MHz')
+        #uplink doppler
+        #get the position vector of the tx tower
+        
+        # Convert tx_pos (wgs84.latlon) to ECEF meters at the crossing time
+        tx_ecef = tx_pos.at(time_crossing_skyfield).position.m
+        # Unit vector from transmitter to satellite
+        k_tr = (position_vector - tx_ecef) / np.linalg.norm(position_vector - tx_ecef)#unit vector from transmitter to receiver 
 
+        #downlink doppler 
 
 ui.run()
