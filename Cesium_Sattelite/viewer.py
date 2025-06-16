@@ -123,6 +123,8 @@ def Cesium_page():
         selected.clear()
         ui.navigate.back()
     ui.button('Back', on_click=back_and_clear)
+
+
     # TODO find the time when the first satellite crosses the line of site of both ground stations e.g. tx_pos and rx_pos
     # create the satellites
     # note that the tles list is a list of lists so we can get each list one by one and take the corresponding data to build EarthSatellite objects
@@ -207,12 +209,14 @@ def Cesium_page():
     )
     @ui.page('/simulation_page')
     def simulation_page(): 
-        # we will navigate to here whenever a row is clicked
+        # we will navigate to here whenever a row is clicked of a specific satellite
         global time_crossing, sat_for_sim
         #for now just create a label that prints out the parameters that will be used in the simulation
         dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
         time_crossing_skyfield = ts.from_datetime(dt_crossing)
+        #the object sat_for_sim: 
         geocentric = sat_for_sim.at(time_crossing_skyfield)
+
         position_vector = geocentric.position.m
         velocity_vector = geocentric.velocity.m_per_s
 
@@ -227,9 +231,13 @@ def Cesium_page():
         # Convert tx_pos (wgs84.latlon) to ECEF meters at the crossing time
         tx_ecef = tx_pos.at(time_crossing_skyfield).position.m
         rx_ecef = rx_pos.at(time_crossing_skyfield).position.m
+
+        #TODO re examine the correctness here: currently treating the ground stations to have zero velocity but they might
+
+        
         # Unit vector from transmitter to satellite
         k_ts = (position_vector - tx_ecef) / np.linalg.norm(position_vector - tx_ecef)#unit vector from transmitter to satellite
-        k_sr = (position_vector - rx_ecef) / np.linalg.norm(rx_ecef - position_vector)#unit vector from satellite to receiver
+        k_sr = (rx_ecef - position_vector) / np.linalg.norm(rx_ecef - position_vector)#unit vector from satellite to receiver
         f_c = 905e6
         f_doppler_shifted = (f_c-np.dot(velocity_vector, k_ts)) # since stationary transmitter 
         ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted} Hz')
