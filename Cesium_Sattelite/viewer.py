@@ -216,8 +216,9 @@ def Cesium_page():
         position_vector = geocentric.position.km
         velocity_vector = geocentric.velocity.km_per_s
 
-        ui.label(f'Position Vector: {position_vector}').style('font-size: 1.5em; font-weight: bold;')
-        ui.label(f'Velocity Vector: {velocity_vector}')
+        ui.label(f'Satellite Position Vector: {position_vector}').style('font-size: 1.5em; font-weight: bold;')
+        ui.label(f'Satellite Velocity Vector: {velocity_vector}')
+        ui.image('../Phys_Sim/media/doppler_eqn.png')
 
 
 ui.run()
