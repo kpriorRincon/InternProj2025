@@ -209,6 +209,9 @@ def Cesium_page():
     )
     @ui.page('/simulation_page')
     def simulation_page(): 
+        #add a back button 
+        ui.button('Back', on_click = ui.navigate.back)
+        
         # we will navigate to here whenever a row is clicked of a specific satellite
         global time_crossing, sat_for_sim
         #for now just create a label that prints out the parameters that will be used in the simulation
@@ -275,13 +278,24 @@ def Cesium_page():
 
         time_delay_down = np.linalg.norm(tx_r - sat_r) / c 
         ui.label(f'time delay down {time_delay_down} s')
+        
+
+        #channel model:
         lambda_up = c/f_c_up
         lambda_down = c/f_c_down
 
-        alpha_up = (lambda_up/4*np.pi*np.linalg.nomr(sat_r-tx_r))**2
+        alpha_up = (lambda_up/(4*np.pi*np.linalg.norm(sat_r-tx_r)))**2 # path loss attenuation
         #pick theta uniformly at random from 0 to 180 degrees 
-        THETA = np.random.uniform(0, np.pi) # pick 
+        THETA = np.random.uniform(0, np.pi)
         h_up = alpha_up * np.exp(1j * THETA) # single tap block channel model
+        print(alpha_up)
         print(h_up)
+
+        alpha_down = (lambda_down/(4*np.pi*np.linalg.norm(rx_r-sat_r)))**2 # path loss attenuation
+        #pick theta uniformly at random from 0 to 180 degrees
+        THETA = np.random.uniform(0, np.pi)
+        h_down = alpha_down * np.exp(1j * THETA) # single tap block channel model
+        
+        print(h_down)
 
 ui.run()
