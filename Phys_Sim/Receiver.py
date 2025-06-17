@@ -140,7 +140,7 @@ class Receiver:
         end_cor_signal = fftconvolve(baseband_sig, np.conj(np.flip(end_waveform)), mode='full')
         
         # Find maximum correlation
-        start_index = np.argmax(np.abs(correlated_signal)) - 16*int(sample_rate/symbol_rate)
+        start_index = np.argmax(np.abs(correlated_signal)) - 16*int(sample_rate/symbol_rate) # go back 16 symbols e.g. 32 bits
         end_index = np.argmax(np.abs(end_cor_signal))
         
         return start_index, end_index

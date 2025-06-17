@@ -161,8 +161,6 @@ def Cesium_page():
                         'downlink_dist': downlink_dist,
                         'min_dist': min_dist
                     }
-        if len(crossings) >= count:
-            break
     with ui.column().style('width: 25%'):
         ui.label('Closest Satellite Crossings (1 minute increments for 1 day)').style(
             'font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; white-space: normal; word-break: break-word;')
@@ -211,7 +209,7 @@ def Cesium_page():
     def simulation_page(): 
         #add a back button 
         ui.button('Back', on_click = ui.navigate.back)
-        
+
         # we will navigate to here whenever a row is clicked of a specific satellite
         global time_crossing, sat_for_sim
         #for now just create a label that prints out the parameters that will be used in the simulation
@@ -224,11 +222,10 @@ def Cesium_page():
         sat_v = geocentric.velocity.m_per_s
 
         #these are placeholders for the moment
-        ui.label(f'Satellite Position Vector: {sat_r}').style('font-size: 1.5em; font-weight: bold;')
-        ui.label(f'Satellite Velocity Vector: {sat_v}').style('font-size: 1.5em; font-weight: bold;')
+        # ui.label(f'Satellite Position Vector: {sat_r}').style('font-size: 1.5em; font-weight: bold;')
+        # ui.label(f'Satellite Velocity Vector: {sat_v}').style('font-size: 1.5em; font-weight: bold;')
         ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
         ui.label('For now assume tx frequency is 905 MHz')
-        #uplink doppler
         #get the position vector of the tx tower
         
         #get the position and velocity of the ground stations 
@@ -251,6 +248,7 @@ def Cesium_page():
         #unit vector from satellite to receiver
         k_sr = (rx_r - sat_r) / np.linalg.norm(rx_r - sat_r)
 
+        #uplink doppler:
         #transmit frequency
         f_c_up = 905e6
         #equation used ((kc - vr dot khat)/(kc - vt dot khat))fc
@@ -283,19 +281,23 @@ def Cesium_page():
         #channel model:
         lambda_up = c/f_c_up
         lambda_down = c/f_c_down
-
-        alpha_up = (lambda_up/(4*np.pi*np.linalg.norm(sat_r-tx_r)))**2 # path loss attenuation
+        #assuming all antennas have 10dB gain.
+        gain_tx = 10 # 10 dB is 10 in linear from 10^10/10 = 10^1 = 10
+        gain_rx = 10
+        gain_sat = 10
+        alpha_up = gain_tx * gain_sat * (lambda_up/(4*np.pi*np.linalg.norm(sat_r-tx_r)))**2 # path loss attenuation
         #pick theta uniformly at random from 0 to 180 degrees 
         THETA = np.random.uniform(0, np.pi)
         h_up = alpha_up * np.exp(1j * THETA) # single tap block channel model
         print(alpha_up)
         print(h_up)
 
-        alpha_down = (lambda_down/(4*np.pi*np.linalg.norm(rx_r-sat_r)))**2 # path loss attenuation
+        alpha_down = gain_rx * gain_sat *(lambda_down/(4*np.pi*np.linalg.norm(rx_r-sat_r)))**2 # path loss attenuation
         #pick theta uniformly at random from 0 to 180 degrees
         THETA = np.random.uniform(0, np.pi)
         h_down = alpha_down * np.exp(1j * THETA) # single tap block channel model
         
         print(h_down)
+        #everything is ready to perform simulations
 
 ui.run()
