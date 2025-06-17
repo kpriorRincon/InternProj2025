@@ -203,7 +203,7 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
                     plt.subplot(1, 2, 1)
                     #time domain
                     plt.plot(t, np.real(rx_incoming_signal))
-                    plt.title("Real Part of the Incoming Singal")
+                    plt.title("Real Part of the Incoming Signal")
                     plt.xlabel("Time (s)")
                     plt.ylabel("Amplitude")
 
