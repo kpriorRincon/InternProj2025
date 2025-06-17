@@ -15,3 +15,5 @@ def bits_to_bytes(bits):
         for byte in bytes_int:
             outfile.write(f"{byte}\n")
        
+bits = "00111001100111000011100101100011"
+bits_to_bytes(bits)
