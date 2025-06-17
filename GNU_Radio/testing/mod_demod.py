@@ -5,7 +5,8 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: Text Input to Output
+# Title: Modulate Demodulate
+# Author: trevorwiseman
 # GNU Radio version: 3.10.1.1
 
 from packaging.version import Version as StrictVersion
@@ -22,6 +23,7 @@ if __name__ == '__main__':
 
 from gnuradio import blocks
 import pmt
+from gnuradio import digital
 from gnuradio import gr
 from gnuradio.filter import firdes
 from gnuradio.fft import window
@@ -36,12 +38,12 @@ from gnuradio import eng_notation
 
 from gnuradio import qtgui
 
-class text_input_to_output(gr.top_block, Qt.QWidget):
+class mod_demod(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Text Input to Output", catch_exceptions=True)
+        gr.top_block.__init__(self, "Modulate Demodulate", catch_exceptions=True)
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("Text Input to Output")
+        self.setWindowTitle("Modulate Demodulate")
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
@@ -59,7 +61,7 @@ class text_input_to_output(gr.top_block, Qt.QWidget):
         self.top_grid_layout = Qt.QGridLayout()
         self.top_layout.addLayout(self.top_grid_layout)
 
-        self.settings = Qt.QSettings("GNU Radio", "text_input_to_output")
+        self.settings = Qt.QSettings("GNU Radio", "mod_demod")
 
         try:
             if StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
@@ -73,10 +75,25 @@ class text_input_to_output(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 32000
+        self.qpsk = qpsk = digital.constellation_rect([-1-1j, -1+1j, 1+1j, 1-1j], [0, 1, 3, 2],
+        4, 2, 2, 1, 1).base()
 
         ##################################################
         # Blocks
         ##################################################
+        self.digital_map_bb_0 = digital.map_bb([0, 1, 3, 2])
+        self.digital_constellation_modulator_0 = digital.generic_mod(
+            constellation=qpsk,
+            differential=False,
+            samples_per_symbol=2,
+            pre_diff_code=True,
+            excess_bw=0.35,
+            verbose=False,
+            log=False,
+            truncate=False)
+        self.digital_constellation_decoder_cb_0 = digital.constellation_decoder_cb(qpsk)
+        self.blocks_unpack_k_bits_bb_0 = blocks.unpack_k_bits_bb(2)
+        self.blocks_pack_k_bits_bb_0 = blocks.pack_k_bits_bb(2)
         self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.bin', False, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_read_in.bin', False)
@@ -86,11 +103,16 @@ class text_input_to_output(gr.top_block, Qt.QWidget):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_file_source_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.blocks_file_source_0, 0), (self.blocks_pack_k_bits_bb_0, 0))
+        self.connect((self.blocks_pack_k_bits_bb_0, 0), (self.digital_constellation_modulator_0, 0))
+        self.connect((self.blocks_unpack_k_bits_bb_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.digital_constellation_decoder_cb_0, 0), (self.digital_map_bb_0, 0))
+        self.connect((self.digital_constellation_modulator_0, 0), (self.digital_constellation_decoder_cb_0, 0))
+        self.connect((self.digital_map_bb_0, 0), (self.blocks_unpack_k_bits_bb_0, 0))
 
 
     def closeEvent(self, event):
-        self.settings = Qt.QSettings("GNU Radio", "text_input_to_output")
+        self.settings = Qt.QSettings("GNU Radio", "mod_demod")
         self.settings.setValue("geometry", self.saveGeometry())
         self.stop()
         self.wait()
@@ -103,10 +125,16 @@ class text_input_to_output(gr.top_block, Qt.QWidget):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
 
+    def get_qpsk(self):
+        return self.qpsk
+
+    def set_qpsk(self, qpsk):
+        self.qpsk = qpsk
 
 
 
-def main(top_block_cls=text_input_to_output, options=None):
+
+def main(top_block_cls=mod_demod, options=None):
 
     if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
         style = gr.prefs().get_string('qtgui', 'style', 'raster')
@@ -131,16 +159,6 @@ def main(top_block_cls=text_input_to_output, options=None):
     timer = Qt.QTimer()
     timer.start(500)
     timer.timeout.connect(lambda: None)
-
-    from PyQt5.QtCore import QTimer
-
-    # Automatically stop flowgraph after short delay
-    def quit_app():
-        tb.stop()
-        tb.wait()
-        qapp.quit()
-
-    QTimer.singleShot(1000, quit_app)  # Stop after 1 second
 
     qapp.exec_()
 
