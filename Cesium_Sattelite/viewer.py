@@ -214,45 +214,74 @@ def Cesium_page():
         #for now just create a label that prints out the parameters that will be used in the simulation
         dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
         time_crossing_skyfield = ts.from_datetime(dt_crossing)
-        #the object sat_for_sim: 
+        #the object sat_for_sim: GCRS coords
         geocentric = sat_for_sim.at(time_crossing_skyfield)
 
-        position_vector = geocentric.position.m
-        velocity_vector = geocentric.velocity.m_per_s
+        sat_r = geocentric.position.m
+        sat_v = geocentric.velocity.m_per_s
 
         #these are placeholders for the moment
-        ui.label(f'Satellite Position Vector: {position_vector}').style('font-size: 1.5em; font-weight: bold;')
-        ui.label(f'Satellite Velocity Vector: {velocity_vector}').style('font-size: 1.5em; font-weight: bold;')
+        ui.label(f'Satellite Position Vector: {sat_r}').style('font-size: 1.5em; font-weight: bold;')
+        ui.label(f'Satellite Velocity Vector: {sat_v}').style('font-size: 1.5em; font-weight: bold;')
         ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
         ui.label('For now assume tx frequency is 905 MHz')
         #uplink doppler
         #get the position vector of the tx tower
         
-        # Convert tx_pos (wgs84.latlon) to ECEF meters at the crossing time
-        tx_ecef = tx_pos.at(time_crossing_skyfield).position.m
-        rx_ecef = rx_pos.at(time_crossing_skyfield).position.m
+        #get the position and velocity of the ground stations 
+        tx_geocentric = tx_pos.at(time_crossing_skyfield)
+        tx_r = tx_geocentric.position.m
+        tx_v = tx_geocentric.velocity.m_per_s
 
-        #TODO re examine the correctness here: currently treating the ground stations to have zero velocity but they might
+        rx_geocentric = rx_pos.at(time_crossing_skyfield)
+        rx_r = rx_geocentric.position.m
+        rx_v = rx_geocentric.velocity.m_per_s
+        print(f'tx position: {tx_r}')
+        print(f'rx position: {rx_r}')
+        print(f'tx velocity: {tx_v}')
+        print(f'rx velocity: {rx_v}')
 
         
-        # Unit vector from transmitter to satellite
-        k_ts = (position_vector - tx_ecef) / np.linalg.norm(position_vector - tx_ecef)#unit vector from transmitter to satellite
-        k_sr = (rx_ecef - position_vector) / np.linalg.norm(rx_ecef - position_vector)#unit vector from satellite to receiver
-        f_c = 905e6
-        f_doppler_shifted = (f_c-np.dot(velocity_vector, k_ts)) # since stationary transmitter 
+        #unit vector from transmitter to satellite
+        k_ts = (sat_r - tx_r) / np.linalg.norm(sat_r - tx_r)
+
+        #unit vector from satellite to receiver
+        k_sr = (rx_r - sat_r) / np.linalg.norm(rx_r - sat_r)
+
+        #transmit frequency
+        f_c_up = 905e6
+        #equation used ((kc - vr dot khat)/(kc - vt dot khat))fc
+        f_doppler_shifted = ((f_c_up - np.dot(sat_v, k_ts))/(f_c_up - np.dot(tx_v, k_ts))) * f_c_up
+        f_delta = f_doppler_shifted-f_c_up
         ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted} Hz')
+        ui.label(f'Delta f: {f_delta}')
+
         
         #downlink doppler 
-        ui.label("we assume that the repeater transmits at 915 MHz")
-        f_c = 915e6
-        f_doppler_shifted = (f_c*f_c)/(f_c-np.dot(velocity_vector, k_sr))
+        ui.label("The repeater simply adds 10MHz and retransmits")
+        f_c_down = f_doppler_shifted + 10e6 # the transponder will repeat at a higher frequency everything it receives
+        f_doppler_shifted = ((f_c_down - np.dot(rx_v, k_sr))/(f_c_down - np.dot(sat_v, k_sr))) * f_c_down
+        f_delta = f_doppler_shifted - f_c_down
         ui.label(f'The doppler shifted frequency for downlink: {f_doppler_shifted} Hz')
+        ui.label(f'Delta f: {f_delta} Hz')
 
 
         #time delay up and down:
+
         c = 2.99792458e8
-        time_delay_up = np.linalg.norm(position_vector-tx_ecef) / c # m/m/s = s
+        # print(f'distance uplink debug:  {np.linalg.norm(sat_r-tx_r)/1000} km')
+        time_delay_up = np.linalg.norm(sat_r-tx_r) / c # m/m/s = s
         ui.label(f'time delay up {time_delay_up} s')
-        time_delay_down = np.linalg.norm(rx_ecef - position_vector) / c 
+
+        time_delay_down = np.linalg.norm(tx_r - sat_r) / c 
         ui.label(f'time delay down {time_delay_down} s')
+        lambda_up = c/f_c_up
+        lambda_down = c/f_c_down
+
+        alpha_up = (lambda_up/4*np.pi*np.linalg.nomr(sat_r-tx_r))**2
+        #pick theta uniformly at random from 0 to 180 degrees 
+        THETA = np.random.uniform(0, np.pi) # pick 
+        h_up = alpha_up * np.exp(1j * THETA) # single tap block channel model
+        print(h_up)
+
 ui.run()
