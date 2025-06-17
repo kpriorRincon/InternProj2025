@@ -306,7 +306,7 @@ blocks:
     alias: ''
     append: 'False'
     comment: ''
-    file: ''
+    file: /home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_read_in.txt
     type: float
     unbuffered: 'False'
     vlen: '1'
@@ -324,7 +324,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: ''
+    file: /home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.txt
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'

@@ -40,7 +40,7 @@ def get_string(bits):
     return ''.join(ascii_chars)
 
 # Read complex symbols from file
-f = np.fromfile("bits_read_in.char", dtype=np.complex64)
+f = np.fromfile("bits_read_in.txt", dtype=np.float64)
 print(f"Symbols: {f}")
 
 # Optional: plot constellation
