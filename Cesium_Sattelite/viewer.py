@@ -8,6 +8,7 @@
 from nicegui import ui, app
 import os
 import time
+import numpy as np
 from datetime import datetime, timezone, timedelta
 # function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
@@ -92,7 +93,7 @@ def submit():
     # convert tle_list to czml
 
     # Convert to CZML
-    czml_obj = satellite_czml(tles)  # this should create a new object
+    czml_obj = satellite_czml(tles)  # this should create a new object and with the modifications at the top of the program they each instance will have it's own dictionary. 
     czml_string = czml_obj.get_czml()
     # testing if the string is gettin appended to or not
     print(len(czml_string))
@@ -112,7 +113,7 @@ ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 
 @ui.page('/Cesium_page')
 def Cesium_page():
-    global count
+    global count, tx_pos, rx_pos
     # start of Cesium page
 
     def back_and_clear():
@@ -122,6 +123,8 @@ def Cesium_page():
         selected.clear()
         ui.navigate.back()
     ui.button('Back', on_click=back_and_clear)
+
+
     # TODO find the time when the first satellite crosses the line of site of both ground stations e.g. tx_pos and rx_pos
     # create the satellites
     # note that the tles list is a list of lists so we can get each list one by one and take the corresponding data to build EarthSatellite objects
@@ -132,11 +135,10 @@ def Cesium_page():
     ts = load.timescale()
     now_utc = datetime.now(timezone.utc)
     start_time = ts.utc(now_utc)  # convert to skyfield time
-    # do in 3 hour steps
-    # Increase frequency: check every 5 minutes (0.0833 hours)
-    # Check every minute for 2 days: 2 days * 24 hours * 60 minutes = 2880 steps
-    time_range = [start_time + timedelta(minutes=i)
-                  for i in range(2 * 24 * 60)]
+
+    # Check every minute for 1 day: 1 day * 24 hours * 60 minutes = 1440 steps
+    time_range = [start_time + timedelta(minutes=i) for i in range(1 * 24 * 60)]
+
     # Track unique satellite crossings, only keep minimum distance per satellite we can do the number of satellites the user selected as the cap
     crossings = {}
 
@@ -162,7 +164,7 @@ def Cesium_page():
         if len(crossings) >= count:
             break
     with ui.column().style('width: 25%'):
-        ui.label('Closest Satellite Crossings (1 minute increments for 2 days)').style(
+        ui.label('Closest Satellite Crossings (1 minute increments for 1 day)').style(
             'font-size: 1.5em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; white-space: normal; word-break: break-word;')
 
 
@@ -207,17 +209,50 @@ def Cesium_page():
     )
     @ui.page('/simulation_page')
     def simulation_page(): 
-        # we will navigate to here whenever a row is clicked
+        # we will navigate to here whenever a row is clicked of a specific satellite
         global time_crossing, sat_for_sim
         #for now just create a label that prints out the parameters that will be used in the simulation
         dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
         time_crossing_skyfield = ts.from_datetime(dt_crossing)
+        #the object sat_for_sim: 
         geocentric = sat_for_sim.at(time_crossing_skyfield)
-        position_vector = geocentric.position.km
-        velocity_vector = geocentric.velocity.km_per_s
 
-        ui.label(f'Position Vector: {position_vector}').style('font-size: 1.5em; font-weight: bold;')
-        ui.label(f'Velocity Vector: {velocity_vector}')
+        position_vector = geocentric.position.m
+        velocity_vector = geocentric.velocity.m_per_s
+
+        #these are placeholders for the moment
+        ui.label(f'Satellite Position Vector: {position_vector}').style('font-size: 1.5em; font-weight: bold;')
+        ui.label(f'Satellite Velocity Vector: {velocity_vector}').style('font-size: 1.5em; font-weight: bold;')
+        ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
+        ui.label('For now assume tx frequency is 905 MHz')
+        #uplink doppler
+        #get the position vector of the tx tower
+        
+        # Convert tx_pos (wgs84.latlon) to ECEF meters at the crossing time
+        tx_ecef = tx_pos.at(time_crossing_skyfield).position.m
+        rx_ecef = rx_pos.at(time_crossing_skyfield).position.m
+
+        #TODO re examine the correctness here: currently treating the ground stations to have zero velocity but they might
+
+        
+        # Unit vector from transmitter to satellite
+        k_ts = (position_vector - tx_ecef) / np.linalg.norm(position_vector - tx_ecef)#unit vector from transmitter to satellite
+        k_sr = (rx_ecef - position_vector) / np.linalg.norm(rx_ecef - position_vector)#unit vector from satellite to receiver
+        f_c = 905e6
+        f_doppler_shifted = (f_c-np.dot(velocity_vector, k_ts)) # since stationary transmitter 
+        ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted} Hz')
+        
+        #downlink doppler 
+        ui.label("we assume that the repeater transmits at 915 MHz")
+        f_c = 915e6
+        f_doppler_shifted = (f_c*f_c)/(f_c-np.dot(velocity_vector, k_sr))
+        ui.label(f'The doppler shifted frequency for downlink: {f_doppler_shifted} Hz')
 
 
+        #time delay up and down:
+        c = 2.99792458e8
+        time_delay_up = np.linalg.norm(position_vector-tx_ecef) / c # m/m/s = s
+        ui.label(f'time delay up {time_delay_up} s')
+        time_delay_down = np.linalg.norm(rx_ecef - position_vector) / c 
+        ui.label(f'time delay down {time_delay_down} s')
 ui.run()
