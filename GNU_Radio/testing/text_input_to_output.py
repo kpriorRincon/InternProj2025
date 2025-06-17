@@ -77,7 +77,7 @@ class text_input_to_output(gr.top_block, Qt.QWidget):
         ##################################################
         # Blocks
         ##################################################
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.txt', False, 0, 0)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bytes.txt', False, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_read_in.txt', False)
         self.blocks_file_sink_0.set_unbuffered(False)

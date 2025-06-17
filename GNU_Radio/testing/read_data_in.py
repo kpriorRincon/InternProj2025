@@ -1,60 +1,105 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
-def bit_reader(symbols):
-    bits = np.zeros((len(symbols), 2), dtype=int)
-    for i in range(len(symbols)):
-        angle = np.angle(symbols[i], deg=True) % 360
+def decimal_to_bits(decimal_values):
+    """Convert array of decimal values to binary bits"""
+    all_bits = []
+    for decimal in decimal_values:
+        # Convert decimal to 8-bit binary string
+        bit_str = format(int(decimal), '08b')
+        # Convert string to list of integers
+        bits = [int(b) for b in bit_str]
+        all_bits.extend(bits)
+    return all_bits
 
-        # grey coding codex
-        if 0 <= angle < 90:
-            bits[i] = [1, 1]
-        elif 90 <= angle < 180:
-            bits[i] = [0, 1]
-        elif 180 <= angle < 270:
-            bits[i] = [0, 0]
-        else:  # 270 <= angle < 360
-            bits[i] = [1, 0]
-    return bits
+def bits_already_binary(bit_values):
+    """For when the file already contains binary bits (0s and 1s)"""
+    return [int(bit) for bit in bit_values]
 
 def get_string(bits):
+    """Convert binary bits to ASCII string"""
     ascii_chars = []
     
-    # process 8 bits at a time
+    # Process 8 bits at a time
     for i in range(0, len(bits), 8):
-        # get 8 bits
+        # Get 8 bits
         byte_bits = bits[i:i+8]
         
-        # ensure we have exactly 8 bits
+        # Ensure we have exactly 8 bits
         if len(byte_bits) < 8:
-            break  # skip incomplete bytes
+            break  # Skip incomplete bytes
             
-        # convert to binary string
+        # Convert to binary string
         byte_str = ''.join(map(str, byte_bits))
         byte_value = int(byte_str, 2)
 
-        # make ascii characters
+        # Make ASCII characters
         ascii_chars.append(chr(byte_value))
 
-    # return string of ascii
+    # Return string of ASCII
     return ''.join(ascii_chars)
 
-# Read complex symbols from file
-f = np.fromfile("bits_read_in.txt", dtype=np.float64)
-print(f"Symbols: {f}")
+# For GNU Radio binary files
+try:
+    # Read as unsigned 8-bit integers
+    raw_data = np.fromfile("bits_read_in.txt", dtype=np.uint8)
+    print(f"File size: {len(raw_data)} bytes")
+    print(f"First 20 values: {raw_data[:20]}")
+    
+    # Check if data is already binary (only 0s and 1s)
+    unique_values = np.unique(raw_data)
+    print(f"Unique values in file: {unique_values}")
+    
+    if len(unique_values) <= 2 and all(val in [0, 1] for val in unique_values):
+        print("Data appears to be binary bits (0s and 1s)")
+        # Use the data directly as bits
+        bits = bits_already_binary(raw_data)
+        print(f"Total bits: {len(bits)}")
+        print(f"First 40 bits: {bits[:40]}")
+        
+        # Convert bits to ASCII string
+        output = get_string(bits)
+        print(f"Decoded message: '{output}'")
+        
+    else:
+        print("Data appears to be decimal values, converting to binary")
+        # Convert decimals to bits (original method)
+        bits = decimal_to_bits(raw_data)
+        print(f"Total bits: {len(bits)}")
+        print(f"First 40 bits: {bits[:40]}")
+        
+        # Convert bits to ASCII string
+        output = get_string(bits)
+        print(f"Decoded message: '{output}'")
 
-# Optional: plot constellation
-# plt.scatter(np.real(f), np.imag(f))
-# plt.show()
+except FileNotFoundError:
+    print("File 'bits_read_in.txt' not found.")
 
-# Decode symbols to bits
-bits = bit_reader(f)
-print(f"Bits: {bits}")
+except Exception as e:
+    print(f"Error: {e}")
+    
+# Additional debugging - let's examine the bit pattern more closely
+print("\n" + "="*50)
+print("Detailed bit analysis:")
 
-# Flatten bits to 1D array
-flat_bits = bits.flatten()
-print(f"Flat bits: {flat_bits}")
+try:
+    raw_data = np.fromfile("bits_read_in.txt", dtype=np.uint8)
+    bits = bits_already_binary(raw_data)
+    
+    print(f"Total bits: {len(bits)}")
+    print(f"First 8 bytes of bits: {bits[:64]}")  # Show first 8 bytes worth
+    
+    # Try different starting positions in case there's a header or offset
+    for offset in [0, 1, 2, 3, 4, 5]:
+        print(f"\nTrying offset {offset}:")
+        offset_bits = bits[offset:]
+        if len(offset_bits) >= 8:
+            output = get_string(offset_bits)
+            print(f"  First few characters: '{output[:10]}'")
+            
+            # Look for common ASCII patterns
+            if any(32 <= ord(c) <= 126 for c in output[:20] if c):  # printable ASCII
+                print(f"  Full message from offset {offset}: '{output}'")
+                break
 
-# Convert to string
-output = get_string(flat_bits)
-print(f"Decoded message: '{output}'")
+except Exception as e:
+    print(f"Error in detailed analysis: {e}")

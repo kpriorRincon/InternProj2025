@@ -246,23 +246,6 @@ blocks:
     coordinate: [8, 292.0]
     rotation: 0
     state: disabled
-- name: blocks_char_to_float_0_0
-  id: blocks_char_to_float
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    scale: '1'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [376, 608.0]
-    rotation: 0
-    state: enabled
 - name: blocks_char_to_float_0_0_0
   id: blocks_char_to_float
   parameters:
@@ -307,7 +290,7 @@ blocks:
     append: 'False'
     comment: ''
     file: /home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_read_in.txt
-    type: float
+    type: byte
     unbuffered: 'False'
     vlen: '1'
   states:
@@ -324,12 +307,12 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: /home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.txt
+    file: /home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bytes.txt
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'
     offset: '0'
-    repeat: 'True'
+    repeat: 'False'
     type: byte
     vlen: '1'
   states:
@@ -819,13 +802,11 @@ blocks:
 connections:
 - [analog_random_source_x_0, '0', digital_constellation_modulator_0, '0']
 - [analog_random_source_x_0, '0', virtual_sink_2, '0']
-- [blocks_char_to_float_0_0, '0', blocks_file_sink_0, '0']
-- [blocks_char_to_float_0_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_char_to_float_0_0_0, '0', blocks_delay_0, '0']
 - [blocks_delay_0, '0', qtgui_time_sink_x_0, '1']
 - [blocks_file_source_0, '0', digital_constellation_modulator_0, '0']
 - [blocks_throttle_0, '0', channels_channel_model_0, '0']
-- [blocks_unpack_k_bits_bb_0, '0', blocks_char_to_float_0_0, '0']
+- [blocks_unpack_k_bits_bb_0, '0', blocks_file_sink_0, '0']
 - [blocks_unpack_k_bits_bb_0_0, '0', blocks_char_to_float_0_0_0, '0']
 - [channels_channel_model_0, '0', digital_symbol_sync_xx_0, '0']
 - [digital_constellation_decoder_cb_0, '0', digital_diff_decoder_bb_0, '0']
