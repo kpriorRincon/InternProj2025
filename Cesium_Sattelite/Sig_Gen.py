@@ -15,24 +15,6 @@ class SigGen:
             (1, 0): (1 - 1j) / np.sqrt(2)
         }
 
-    # Add noise to symbols
-    def noise_adder(self, sinusoid, noise_power):
-        import numpy as np
-        # Noise parameters
-        # Mean of the noise distribution
-        mean_noise = 0
-        # Standard deviation of the noise distribution
-        std_noise = noise_power
-
-        # Generate noise
-        noise_real = np.random.normal(
-            mean_noise, std_noise/np.sqrt(2), len(sinusoid))
-        noise_imag = np.random.normal(
-            mean_noise, std_noise/np.sqrt(2), len(sinusoid))
-        noise = noise_real + 1j*noise_imag
-        # returns the sinusoid with added noise
-        return sinusoid + noise
-
     def rrc_filter(self, beta, N, Ts, fs):
         """
         Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response

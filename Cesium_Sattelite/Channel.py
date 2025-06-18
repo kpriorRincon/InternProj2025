@@ -1,16 +1,29 @@
 class Channel: 
-    def __init__(self, incoming_signal, h, noise_power, freq_shift):
+    def __init__(self, incoming_signal, h, noise_power, freq_shift, up = True):
+        def __init__(self, incoming_signal, h, noise_power, freq_shift, up=True):
+            """
+            Initialize a Channel object representing either an uplink or downlink channel.
+            Parameters:
+                incoming_signal: The input signal to the channel.
+                h: Channel coefficient representing attenuation and random phase rotation (single tap).
+                noise_power: The power of the noise to be added to the signal.
+                freq_shift: The frequency shift applied to the signal.
+                up (bool, optional): Boolean flag indicating the channel direction.
+                    If True, represents an uplink channel; if False, represents a downlink channel.
+            """
         
         self.incoming_signal = incoming_signal
         self.outgoing_signal = None # none until it gets computed
         self.h = h #single tap channel basically attenuation and a random phase rotation
         self.noise_power = noise_power
         self.freq_shift = freq_shift
+        self.up = up
+
 
     def apply_channel(self, t):
         import numpy as np
         #generate AWGN based on noise power
-        noise_standard_deviation = np.sqrt(self.noise_power/2)
+        noise_standard_deviation = np.sqrt(self.noise_power / 2)
         noise_real = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
         noise_imag = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
         #apply single tap channel to incomiong signal
@@ -23,9 +36,74 @@ class Channel:
         self.outgoing_signal = outgoing_signal
         return outgoing_signal
     
-    def handler(self, t):
+    def handler(self, t, Fs):
+        """
+        Handles plotting and frequency analysis of the incoming signal.
+        This method generates and saves plots of the real and imaginary parts of the incoming signal
+        in the time domain, as well as its magnitude spectrum in the frequency domain.
+
+        Parameters:
+            t (numpy.ndarray): Time vector corresponding to the samples of the signal.
+            Fs (float): Sampling rate of the signal in Hz.
+        """
+        
         #here we would like to plot
         import matplotlib.pyplot as plt
-        #show a small section of the incoming and outgoing signals
+        import numpy as np 
         
-        pass # for now
+        direction = 'up' if self.up else 'down'#specifier so that the user files can be differentiated 
+
+        #plot incoming signal in time and frequency
+        #plot them side by side
+        plt.figure(figsize=(10, 6))
+        plt.plot(t, np.real(self.incoming_signal))
+        plt.title('Incoming Signal')
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        plt.savefig(f'media/channel_{direction}_incoming_time', dpi=300)
+
+
+        #plot outgoing signal in time and frequency
+        #plot them side by side
+        plt.figure(figsize= (10, 6))
+        plt.subplot(1,2,1)
+        plt.plot(t, np.real(self.incoming_signal))
+        plt.subplot(1,2,2) 
+        plt.plot(t, np.imag(self.incoming_signal))
+        plt.savefig(f'media/channel_{direction}_outgoing_time', dpi=300)
+
+        # get the fft incoming
+        plt.figure(figsize = (10, 6))
+        S = np.fft.fft(self.incoming_signal)
+        S = np.fft.fftshift(S)
+        S_mag_db = 20 * np.log10(np.abs(S))
+        N = len(t)
+        f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
+        plt.plot(f, S_mag_db)
+        plt.savefig(f'media/channel_{direction}_incoming_fft', dpi = 300)
+        
+        # getfft outgoing
+        plt.figure(figsize = (10, 6))
+        S = np.fft.fft(self.outgoing_signal)
+        S = np.fft.fftshift(S)
+        S_mag_db = 20 * np.log10(np.abs(S))
+        f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
+        plt.plot(f, S_mag_db)
+        plt.savefig(f'media/channel_{direction}_outgoing_fft', dpi = 300)
+
+        #plot the phase rotation h causes 
+        # Normalize h to unit magnitude
+        h_normalized = self.h / np.abs(self.h)
+        phase = np.angle(h_normalized)
+
+        #plotting the phase 
+        plt.figure(figsize=(5, 5))
+        plt.plot([0, np.real(h_normalized)], [0, np.imag(h_normalized)], marker='o')
+        plt.xlim(-1.1, 1.1)
+        plt.ylim(-1.1, 1.1)
+        plt.xlabel('Real')
+        plt.ylabel('Imaginary')
+        plt.title(f'Phase of h: {np.degrees(phase):.2f}°')
+        plt.grid(True)
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.savefig(f'media/channel_{direction}_h_phase', dpi=300)

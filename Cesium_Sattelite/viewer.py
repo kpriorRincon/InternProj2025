@@ -13,7 +13,7 @@ from datetime import datetime, timezone, timedelta
 # function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
 # importing classes
-import Sig_Gen_Noise as SigGen
+import Sig_Gen as SigGen
 
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
