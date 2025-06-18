@@ -365,6 +365,7 @@ def Cesium_page():
                 ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
 
                 print(h_down)
+                
             #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
             
             
