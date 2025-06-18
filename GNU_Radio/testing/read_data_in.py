@@ -1,5 +1,6 @@
 import numpy as np
 import demodulator as dm
+from scipy.signal import fftconvolve
 
 def bits_to_text(bits):
     chars = []
@@ -15,8 +16,25 @@ def bits_to_text(bits):
 raw_data = np.fromfile("bits_read_in.bin", dtype=np.complex64)
 print("Raw data loaded from file:\n", raw_data)
 
+# pulse shaping
+# beta = 0.35
+# N = 64
+# Ts = 1.0
+# fs = 32000
+# h = dm.rrc_filter(beta, N, Ts, fs)
+
+# # Convolve symbols with the filter
+# symbols = fftconvolve(raw_data, h, mode='same')
+
+# # normalize symbols
+# symbols /= np.max(np.abs(symbols))
+
+# downsample symbols
+# sps = 2
+# symbols = symbols[::sps]
+
+#bits = dm.read_qpsk(symbols)
 bits = dm.read_qpsk(raw_data)
-#bits = raw_data.tolist()
 print("First 32 bits received:", np.flip(bits[:32]))
 print("Total bits received: ", len(bits))
 

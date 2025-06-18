@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.fft import fft, ifft
 
 def read_qpsk(symbols):
         # print("Reading bits from symbols")
@@ -19,3 +20,36 @@ def read_qpsk(symbols):
         # put into a single list
         best_bits = ''.join(str(b) for pair in bits for b in pair)
         return best_bits
+
+def rrc_filter(beta, N, Ts, fs):
+        # The number of samples in each symbol
+        samples_per_symbol = int(fs * Ts)
+
+        # The filter span in symbols
+        total_symbols = N / samples_per_symbol
+
+        # The total amount of time that the filter spans
+        total_time = total_symbols * Ts
+
+        # The time vector to compute the impulse response
+        time = np.linspace(-total_time / 2, total_time / 2, N, endpoint=False)
+
+        # ---------------------------- Generating the RRC impulse respose ----------------------------
+
+        # The root raised-cosine impulse response is generated from taking the square root of the raised-cosine impulse response in the frequency domain
+
+        # Raised-cosine filter impulse response in the time domain
+        num = np.cos( (np.pi * beta * time) / (Ts) )
+        denom = 1 - ( (2 * beta * time) / (Ts) ) ** 2
+        g = np.sinc(time / Ts) * (num / denom)
+
+        # Raised-cosine filter impulse response in the frequency domain
+        fg = fft(g)
+
+        # Root raised-cosine filter impulse response in the frequency domain
+        fh = np.sqrt(fg)
+
+        # Root raised-cosine filter impulse respone in the time domain
+        h = ifft(fh)
+
+        return h 
