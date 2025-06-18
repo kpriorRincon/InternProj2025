@@ -283,7 +283,7 @@ def Cesium_page():
 
                 
                 #downlink doppler 
-                ui.label("The repeater simply adds 10MHz and retransmits")
+                ui.label("The repeater simply upconverts by 10MHz and retransmits").style(label_style)
                 f_c_down = f_doppler_shifted + 10e6 # the transponder will repeat at a higher frequency everything it receives
                 lambda_down = c/f_c_down
                 f_doppler_shifted = ((f_c_down - np.dot(rx_v, k_sr)/lambda_down)/(f_c_down - np.dot(sat_v, k_sr)/lambda_down)) * f_c_down
