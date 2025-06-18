@@ -188,12 +188,25 @@ def Cesium_page():
             print(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
             print(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
             with ui.row().classes(
-                'bg-gray-400 rounded-lg mb-2 px-4 py-2 cursor-pointer transition hover:bg-green-400'
+                'bg-gray-400 rounded-lg mb-2 px-6 py-2 cursor-pointer transition hover:bg-green-400'
                 ).on('click', lambda e, n=sat_name, d=data:(store_sat(n,d), ui.navigate.to('/simulation_page'))):
                 
-                ui.label(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
-                ui.label(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
-                ui.label(f"   Distance to Rx: {data['downlink_dist']:.1f} km")
+                ui.html(f"""
+                    <div style='margin-bottom: 1em;'>
+                        <div style='font-size: 1.1em; font-weight: bold; color: #1a237e;'>
+                            {i}. Satellite '{sat_name}' closest approach at
+                        </div>
+                        <div style='font-size: 1.3em; font-weight: bold;'>
+                            {data['time']} UTC
+                        </div>
+                        <div style='font-size: 1.1em; font-weight: bold; color: #1a237e;'>
+                            Distance to Tx: {data['uplink_dist']:.1f} km
+                        </div>
+                        <div style='font-size: 1.1em; font-weight: bold; color: #1a237e;'>
+                            Distance to Rx: {data['downlink_dist']:.1f} km
+                        </div>
+                    </div>
+                """)
         
         # get this files working directory
         html_directory = os.path.dirname(__file__)
@@ -209,11 +222,10 @@ def Cesium_page():
     )
     @ui.page('/simulation_page')
     def simulation_page(): 
-        #add a back button 
-        ui.button('Back', on_click = ui.navigate.back)
-
-        # we will navigate to here whenever a row is clicked of a specific satellite
         global time_crossing, sat_for_sim
+        #back button
+        ui.button('Back', on_click = ui.navigate.back)
+        # we will navigate to here whenever a row is clicked of a specific satellite
         #for now just create a label that prints out the parameters that will be used in the simulation
         dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
         time_crossing_skyfield = ts.from_datetime(dt_crossing)
@@ -255,21 +267,47 @@ def Cesium_page():
         ui.label('Desired transmit frequency (MHz)').style(
             'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
         )
-        desired_transmit_freq = ui.slider(min=902,max = 918, step=1,).props('label-always').style('width: 10%')
+        desired_transmit_freq = ui.slider(min=902,max = 918, step=1).props('label-always').style('width: 10%')
+        
+        ui.label('Noise Floor (dBm)').style(
+            'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
+        )
+        noise_power = ui.slider(min=-120,max = -60, step=1).props('label-always').style('width: 10%')
+        
+        ui.label('Desired SNR set to 20(dB)').style(
+            'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
+        )
         doppler_container =  ui.column() # store labels in this doppler container so we can easily clear them when the start_simulation button is pressed again
         def start_simulation():
+            '''This function runs when the start simulation button is clicked 
+            and runs handlers to produce plots for each page as necessary'''
             doppler_container.clear()
             # pass all the arguments from inputs
             mes = message.value
             if message.value == '':
                 mes = 'hello world' #default value
+                ui.notify('defaulting message to \'hello world\'')
             # print(mes)
             # note that the transmit freq will be in MHz
             txFreq = desired_transmit_freq.value
             if txFreq is not None:
-                txFreq = desired_transmit_freq.value*1e6
+                txFreq = desired_transmit_freq.value*1e6 # input in MHz to Hz
             else:  
                 txFreq = 905e6 #default value is 905MHz
+                ui.notify('defaulting transmit freq to 905 MHz')
+            noise = noise_power.value
+            if noise is not None:
+                #convert to linear
+                noise = 10 ** ( noise / 10 ) # units will be in mW because dBm definition
+            else:
+                #set default noise to -60dB
+                noise = 10 ** (-120 / 10) # units will be in mW because dBm definition
+                ui.notify('defaulting noise power to -120 dBm')
+
+            snr = 10 ** (20/10) # default desired snr to 20 dB 
+            
+            #From noise: we will compute the required transmit power for transmitter and repeater so that the SNR at the receiver is at least 20dB
+
             #uplink doppler:            
             c = 2.99792458e8
             lambda_up = c / txFreq
@@ -296,30 +334,37 @@ def Cesium_page():
 
                 # print(f'distance uplink debug:  {np.linalg.norm(sat_r-tx_r)/1000} km')
                 time_delay_up = np.linalg.norm(sat_r-tx_r) / c # m/m/s = s
-                ui.label(f'time delay up {time_delay_up} s').style(label_style)
+                ui.label(f'Time delay up: {time_delay_up} s').style(label_style)
 
-                time_delay_down = np.linalg.norm(tx_r - sat_r) / c 
-                ui.label(f'time delay down {time_delay_down} s').style(label_style)
+                time_delay_down = np.linalg.norm(rx_r - sat_r) / c 
+                ui.label(f'Time delay down: {time_delay_down} s').style(label_style)
                 
 
-            #channel model:
-            #assuming all antennas have 10dB gain.
-            gain_tx = 10 # 10 dB is 10 in linear from 10^10/10 = 10^1 = 10
-            gain_rx = 10
-            gain_sat = 10
-            alpha_up = gain_tx * gain_sat * (lambda_up/(4*np.pi*np.linalg.norm(sat_r-tx_r)))**2 # path loss attenuation
-            #pick theta uniformly at random from 0 to 180 degrees 
-            THETA = np.random.uniform(0, np.pi)
-            h_up = alpha_up * np.exp(1j * THETA) # single tap block channel model
-            print(alpha_up)
-            print(h_up)
+                #channel model:
 
-            alpha_down = gain_rx * gain_sat *(lambda_down/(4*np.pi*np.linalg.norm(rx_r-sat_r)))**2 # path loss attenuation
-            #pick theta uniformly at random from 0 to 180 degrees
-            THETA = np.random.uniform(0, np.pi)
-            h_down = alpha_down * np.exp(1j * THETA) # single tap block channel model
-            
-            print(h_down)
+                gain_tx = 10**(15/10) # 15 dB # Yagi or helical
+                gain_rx = 10**(15/10) # 15 dB # Yagi or helical
+                gain_sat = 10**(10/10) # 10 dB # helical
+                alpha_up = gain_tx * gain_sat * (lambda_up/(4*np.pi*np.linalg.norm(sat_r-tx_r)))**2 # path loss attenuation
+                #pick theta uniformly at random from 0 to 360 degrees 
+                THETA = np.random.uniform(0, 2*np.pi)
+                h_up = alpha_up * np.exp(1j * THETA) # single tap block channel model
+                print(alpha_up)
+                print(h_up)
+
+                alpha_down = gain_rx * gain_sat *(lambda_down/(4*np.pi*np.linalg.norm(rx_r-sat_r)))**2 # path loss attenuation
+                #pick theta uniformly at random from 0 to 180 degrees
+                THETA = np.random.uniform(0, np.pi)
+                h_down = alpha_down * np.exp(1j * THETA) # single tap block channel model
+                
+                #since Pr/Pt = alpha and Pr/noise = snr then Pt = N*SNR/alpha
+                noise = noise/1000 # get noise into watts
+                required_tx_power = snr*noise/alpha_up # power in watts
+                required_rep_power = snr*noise/alpha_down #power in watts
+                ui.label(f'Required power (transmitter -> repeater) to satisfy desired SNR: {required_tx_power} W').style(label_style)
+                ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power} W').style(label_style)
+
+                print(h_down)
             #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
             
             
@@ -331,7 +376,7 @@ def Cesium_page():
         with ui.link(target='/transmitter').style('width: 10vw; position: fixed; bottom: 2vh; left: 36vw; z-index: 1000; cursor: pointer;'):
             ui.image('../Phys_Sim/media/antenna_graphic.png').style('width: 100%;')
         ui.label('Transmitter').style('position: fixed; bottom: 12vh; left: 38vw; z-index: 1005; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
-
+        ui.label('15dBi').style('position: fixed; bottom: 12vh; left: 45vw; z-index: 1008; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
         # Channel 1 cloud (clickable)
         with ui.link(target='/channel1').style('width: 10vw; position: fixed; bottom: 42vh; left: 43vw; z-index: 1001; cursor: pointer;'):
             ui.image('../Phys_Sim/media/cloud.png').style('width: 100%;')
@@ -340,7 +385,7 @@ def Cesium_page():
         with ui.link(target='/repeater').style('width: 12vw; position: fixed; bottom: 64vh; left: 54vw; z-index: 1002; cursor: pointer;'):
             ui.image('../Phys_Sim/media/sattelite.png').style('width: 100%;')
         ui.label('Repeater').style('position: fixed; bottom: 76vh; left: 57vw; z-index: 1006; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
-
+        ui.label('10dBi').style('position: fixed; bottom: 76vh; left: 65vw; z-index: 1009; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
         # Channel 2 cloud (clickable)
         with ui.link(target='/channel2').style('width: 10vw; position: fixed; bottom: 42vh; left: 67vw; z-index: 1003; cursor: pointer;'):
             ui.image('../Phys_Sim/media/cloud.png').style('width: 100%;')
@@ -349,35 +394,51 @@ def Cesium_page():
         with ui.link(target='/receiver').style('width: 10vw; position: fixed; bottom: 2vh; left: 80vw; z-index: 1004; cursor: pointer;'):
             ui.image('../Phys_Sim/media/antenna_graphic_flipped.png').style('width: 100%;')
         ui.label('Receiver').style('position: fixed; bottom: 12vh; left: 84vw; z-index: 1007; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')        
-        
+        ui.label('15dBi').style('position: fixed; bottom: 12vh; left: 90vw; z-index: 1008; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
+
         # Placeholder pages for each simulation step
         @ui.page('/transmitter')
         def transmitter_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the transmitter simulation step.')
+            #bit sequence with pilots labeled
+            #show upsampled bits sub plot one on top of the other real and imaginary
+            #show the pulse shaping Re/Im
+            #show it modulated with the carrier over a short time frame
 
         @ui.page('/channel1')
         def channel1_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
-
+            #show information about h
+            #show information about the signal in vs the receive signal e.g. attenuation/phase shift
+            #  
         @ui.page('/repeater')
         def repeater_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the repeater simulation step.')
-
+            #show signal in signal out in time and frequency > upconversion 10 MHz
         @ui.page('/channel2')
         def channel2_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
-
+            #information about h 
+            #who information about the signal in vs signal out e.g. attenuation / phase shfit
         @ui.page('/receiver')
         def receiver_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the receiver simulation step.')
+            #Could show steps of the demodulation
+            #other half of the rrc applice
+            #applying matched filter
+            #applying course freqeuncy correction
+            #applying time synch
+            #applying fine frequency detection: something with constellation plots
+            #demodulation
+            #bits hopefully
 ui.run()
