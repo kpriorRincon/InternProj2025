@@ -2,6 +2,7 @@ class Channel:
     def __init__(self, incoming_signal, h, noise_power, freq_shift):
         
         self.incoming_signal = incoming_signal
+        self.outgoing_signal = None # none until it gets computed
         self.h = h #single tap channel basically attenuation and a random phase rotation
         self.noise_power = noise_power
         self.freq_shift = freq_shift
@@ -19,9 +20,12 @@ class Channel:
         doppler_effect = np.exp(1j * 2 * np.pi * self.freq_shift * t)
         signal_with_doppler = doppler_effect * self.incoming_signal #apply the freq shift 
         outgoing_signal = self.h * signal_with_doppler + AWGN # element wise addition with AWGN 
+        self.outgoing_signal = outgoing_signal
         return outgoing_signal
     
     def handler(self, t):
         #here we would like to plot
         import matplotlib.pyplot as plt
+        #show a small section of the incoming and outgoing signals
+        
         pass # for now
