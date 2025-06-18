@@ -75,15 +75,16 @@ class mod_demod(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 32000
+        self.qpsk_grey = qpsk_grey = digital.constellation_calcdist([-1-1j, -1+1j, 1+1j, 1-1j], [0, 1, 3, 2],
+        4, 1, digital.constellation.AMPLITUDE_NORMALIZATION).base()
         self.qpsk = qpsk = digital.constellation_rect([-1-1j, -1+1j, 1+1j, 1-1j], [0, 1, 3, 2],
         4, 2, 2, 1, 1).base()
 
         ##################################################
         # Blocks
         ##################################################
-        self.digital_map_bb_0 = digital.map_bb([0, 1, 3, 2])
         self.digital_constellation_modulator_0 = digital.generic_mod(
-            constellation=qpsk,
+            constellation=qpsk_grey,
             differential=False,
             samples_per_symbol=2,
             pre_diff_code=True,
@@ -91,7 +92,7 @@ class mod_demod(gr.top_block, Qt.QWidget):
             verbose=False,
             log=False,
             truncate=False)
-        self.digital_constellation_decoder_cb_0 = digital.constellation_decoder_cb(qpsk)
+        self.digital_constellation_decoder_cb_0 = digital.constellation_decoder_cb(qpsk_grey)
         self.blocks_unpack_k_bits_bb_0 = blocks.unpack_k_bits_bb(2)
         self.blocks_pack_k_bits_bb_0 = blocks.pack_k_bits_bb(2)
         self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.bin', False, 0, 0)
@@ -106,9 +107,8 @@ class mod_demod(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_file_source_0, 0), (self.blocks_pack_k_bits_bb_0, 0))
         self.connect((self.blocks_pack_k_bits_bb_0, 0), (self.digital_constellation_modulator_0, 0))
         self.connect((self.blocks_unpack_k_bits_bb_0, 0), (self.blocks_file_sink_0, 0))
-        self.connect((self.digital_constellation_decoder_cb_0, 0), (self.digital_map_bb_0, 0))
+        self.connect((self.digital_constellation_decoder_cb_0, 0), (self.blocks_unpack_k_bits_bb_0, 0))
         self.connect((self.digital_constellation_modulator_0, 0), (self.digital_constellation_decoder_cb_0, 0))
-        self.connect((self.digital_map_bb_0, 0), (self.blocks_unpack_k_bits_bb_0, 0))
 
 
     def closeEvent(self, event):
@@ -124,6 +124,12 @@ class mod_demod(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
+
+    def get_qpsk_grey(self):
+        return self.qpsk_grey
+
+    def set_qpsk_grey(self, qpsk_grey):
+        self.qpsk_grey = qpsk_grey
 
     def get_qpsk(self):
         return self.qpsk

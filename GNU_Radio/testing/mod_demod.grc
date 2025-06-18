@@ -50,7 +50,26 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1344, 8.0]
+    coordinate: [304, 8.0]
+    rotation: 0
+    state: true
+- name: qpsk_grey
+  id: variable_constellation
+  parameters:
+    comment: ''
+    const_points: '[-1-1j, -1+1j, 1+1j, 1-1j]'
+    dims: '1'
+    normalization: digital.constellation.AMPLITUDE_NORMALIZATION
+    precision: '8'
+    rot_sym: '4'
+    soft_dec_lut: None
+    sym_map: '[0, 1, 3, 2]'
+    type: calcdist
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [512, 8.0]
     rotation: 0
     state: true
 - name: samp_rate
@@ -80,7 +99,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [416, 512.0]
+    coordinate: [1216, 304.0]
     rotation: 0
     state: true
 - name: blocks_file_source_0
@@ -102,7 +121,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [32, 284.0]
+    coordinate: [8, 284.0]
     rotation: 0
     state: true
 - name: blocks_pack_k_bits_bb_0
@@ -118,9 +137,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [280, 320.0]
+    coordinate: [256, 320.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: blocks_unpack_k_bits_bb_0
   id: blocks_unpack_k_bits_bb
   parameters:
@@ -134,32 +153,32 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [232, 528.0]
+    coordinate: [1016, 320.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: digital_constellation_decoder_cb_0
   id: digital_constellation_decoder_cb
   parameters:
     affinity: ''
     alias: ''
     comment: ''
-    constellation: qpsk
+    constellation: qpsk_grey
     maxoutbuf: '0'
     minoutbuf: '0'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [760, 320.0]
+    coordinate: [736, 320.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: digital_constellation_modulator_0
   id: digital_constellation_modulator
   parameters:
     affinity: ''
     alias: ''
     comment: ''
-    constellation: qpsk
+    constellation: qpsk_grey
     differential: 'False'
     excess_bw: '0.35'
     log: 'False'
@@ -172,78 +191,16 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [456, 292.0]
-    rotation: 0
-    state: true
-- name: digital_diff_decoder_bb_0
-  id: digital_diff_decoder_bb
-  parameters:
-    affinity: ''
-    alias: ''
-    coding: digital.DIFF_DIFFERENTIAL
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    modulus: '4'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1032, 312.0]
-    rotation: 0
-    state: bypassed
-- name: digital_map_bb_0
-  id: digital_map_bb
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    map: '[0, 1, 3, 2]'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1264, 320.0]
+    coordinate: [432, 292.0]
     rotation: 0
     state: enabled
-- name: virtual_sink_0
-  id: virtual_sink
-  parameters:
-    alias: ''
-    comment: ''
-    stream_id: r1
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1480, 320.0]
-    rotation: 0
-    state: true
-- name: virtual_source_0
-  id: virtual_source
-  parameters:
-    alias: ''
-    comment: ''
-    stream_id: r1
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [32, 528.0]
-    rotation: 0
-    state: true
 
 connections:
 - [blocks_file_source_0, '0', blocks_pack_k_bits_bb_0, '0']
 - [blocks_pack_k_bits_bb_0, '0', digital_constellation_modulator_0, '0']
 - [blocks_unpack_k_bits_bb_0, '0', blocks_file_sink_0, '0']
-- [digital_constellation_decoder_cb_0, '0', digital_diff_decoder_bb_0, '0']
+- [digital_constellation_decoder_cb_0, '0', blocks_unpack_k_bits_bb_0, '0']
 - [digital_constellation_modulator_0, '0', digital_constellation_decoder_cb_0, '0']
-- [digital_diff_decoder_bb_0, '0', digital_map_bb_0, '0']
-- [digital_map_bb_0, '0', virtual_sink_0, '0']
-- [virtual_source_0, '0', blocks_unpack_k_bits_bb_0, '0']
 
 metadata:
   file_format: 1
