@@ -75,40 +75,23 @@ class mod_demod(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 32000
-        self.qpsk_grey = qpsk_grey = digital.constellation_calcdist([-1-1j, -1+1j, 1+1j, 1-1j], [0, 1, 3, 2],
-        4, 1, digital.constellation.AMPLITUDE_NORMALIZATION).base()
+        self.qpsk_grey = qpsk_grey = digital.constellation_qpsk().base()
         self.qpsk = qpsk = digital.constellation_rect([-1-1j, -1+1j, 1+1j, 1-1j], [0, 1, 3, 2],
         4, 2, 2, 1, 1).base()
 
         ##################################################
         # Blocks
         ##################################################
-        self.digital_constellation_modulator_0 = digital.generic_mod(
-            constellation=qpsk_grey,
-            differential=False,
-            samples_per_symbol=2,
-            pre_diff_code=True,
-            excess_bw=0.35,
-            verbose=False,
-            log=False,
-            truncate=False)
-        self.digital_constellation_decoder_cb_0 = digital.constellation_decoder_cb(qpsk_grey)
-        self.blocks_unpack_k_bits_bb_0 = blocks.unpack_k_bits_bb(2)
-        self.blocks_pack_k_bits_bb_0 = blocks.pack_k_bits_bb(2)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.bin', False, 0, 0)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.bin', False, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_read_in.bin', False)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_read_in.bin', False)
         self.blocks_file_sink_0.set_unbuffered(False)
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_file_source_0, 0), (self.blocks_pack_k_bits_bb_0, 0))
-        self.connect((self.blocks_pack_k_bits_bb_0, 0), (self.digital_constellation_modulator_0, 0))
-        self.connect((self.blocks_unpack_k_bits_bb_0, 0), (self.blocks_file_sink_0, 0))
-        self.connect((self.digital_constellation_decoder_cb_0, 0), (self.blocks_unpack_k_bits_bb_0, 0))
-        self.connect((self.digital_constellation_modulator_0, 0), (self.digital_constellation_decoder_cb_0, 0))
+        self.connect((self.blocks_file_source_0, 0), (self.blocks_file_sink_0, 0))
 
 
     def closeEvent(self, event):

@@ -2,9 +2,9 @@ import numpy as np
 
 def generate_qpsk(bits):
         mapping = {
-            (0, 0): (1 + 1j) / np.sqrt(2),
+            (1, 1): (1 + 1j) / np.sqrt(2),
             (0, 1): (-1 + 1j) / np.sqrt(2),
-            (1, 1): (-1 - 1j) / np.sqrt(2),
+            (0, 0): (-1 - 1j) / np.sqrt(2),
             (1, 0): (1 - 1j) / np.sqrt(2)
         }
         
