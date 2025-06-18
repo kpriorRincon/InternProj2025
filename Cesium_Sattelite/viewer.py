@@ -334,10 +334,10 @@ def Cesium_page():
 
                 # print(f'distance uplink debug:  {np.linalg.norm(sat_r-tx_r)/1000} km')
                 time_delay_up = np.linalg.norm(sat_r-tx_r) / c # m/m/s = s
-                ui.label(f'Time delay up: {time_delay_up} s').style(label_style)
+                ui.label(f'Time delay up: {time_delay_up:.7f} s').style(label_style)
 
                 time_delay_down = np.linalg.norm(rx_r - sat_r) / c 
-                ui.label(f'Time delay down: {time_delay_down} s').style(label_style)
+                ui.label(f'Time delay down: {time_delay_down:.7f} s').style(label_style)
                 
 
                 #channel model:
@@ -361,8 +361,8 @@ def Cesium_page():
                 noise = noise/1000 # get noise into watts
                 required_tx_power = snr*noise/alpha_up # power in watts
                 required_rep_power = snr*noise/alpha_down #power in watts
-                ui.label(f'Required power (transmitter -> repeater) to satisfy desired SNR: {required_tx_power} W').style(label_style)
-                ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power} W').style(label_style)
+                ui.label(f'Required power (transmitter -> repeater) to satisfy desired SNR: {required_tx_power:.2f} W').style(label_style)
+                ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
 
                 print(h_down)
             #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
