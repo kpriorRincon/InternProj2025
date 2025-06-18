@@ -12,6 +12,8 @@ import numpy as np
 from datetime import datetime, timezone, timedelta
 # function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
+# importing classes
+import Sig_Gen_Noise as SigGen
 
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
@@ -300,5 +302,65 @@ def Cesium_page():
         print(h_down)
         #everything is ready to perform simulations
         
+        #similar to base sim we would like to allow the user to see the signal through different steps
+        #WE NEED ALL THE IMAGES as in the basic sim
 
+        # Images with labels for transmitter, repeater, and receiver
+        #TODO have the user enter a message and transmit frequency
+        
+        # Transmitter image (clickable)
+        with ui.link(target='/transmitter').style('width: 10vw; position: fixed; bottom: 2vh; left: 36vw; z-index: 1000; cursor: pointer;'):
+            ui.image('../Phys_Sim/media/antenna_graphic.png').style('width: 100%;')
+        ui.label('Transmitter').style('position: fixed; bottom: 12vh; left: 38vw; z-index: 1005; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
+
+        # Channel 1 cloud (clickable)
+        with ui.link(target='/channel1').style('width: 10vw; position: fixed; bottom: 42vh; left: 43vw; z-index: 1001; cursor: pointer;'):
+            ui.image('../Phys_Sim/media/cloud.png').style('width: 100%;')
+
+        # Repeater satellite (clickable)
+        with ui.link(target='/repeater').style('width: 12vw; position: fixed; bottom: 64vh; left: 54vw; z-index: 1002; cursor: pointer;'):
+            ui.image('../Phys_Sim/media/sattelite.png').style('width: 100%;')
+        ui.label('Repeater').style('position: fixed; bottom: 76vh; left: 57vw; z-index: 1006; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
+
+        # Channel 2 cloud (clickable)
+        with ui.link(target='/channel2').style('width: 10vw; position: fixed; bottom: 42vh; left: 67vw; z-index: 1003; cursor: pointer;'):
+            ui.image('../Phys_Sim/media/cloud.png').style('width: 100%;')
+
+        # Receiver image (clickable)
+        with ui.link(target='/receiver').style('width: 10vw; position: fixed; bottom: 2vh; left: 80vw; z-index: 1004; cursor: pointer;'):
+            ui.image('../Phys_Sim/media/antenna_graphic_flipped.png').style('width: 100%;')
+        ui.label('Receiver').style('position: fixed; bottom: 12vh; left: 84vw; z-index: 1007; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
+        sig_gen = SigGen.SigGen(freq = 905e6, amp = 1.0, sample_rate = 30e6, symbol_rate=100)
+        
+        
+        # Placeholder pages for each simulation step
+        @ui.page('/transmitter')
+        def transmitter_page():
+            ui.button('Back', on_click=ui.navigate.back)
+            ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
+            ui.label('This is a placeholder for the transmitter simulation step.')
+
+        @ui.page('/channel1')
+        def channel1_page():
+            ui.button('Back', on_click=ui.navigate.back)
+            ui.label('Channel 1 Page').style('font-size: 2em; font-weight: bold;')
+            ui.label('This is a placeholder for the first channel simulation step.')
+
+        @ui.page('/repeater')
+        def repeater_page():
+            ui.button('Back', on_click=ui.navigate.back)
+            ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
+            ui.label('This is a placeholder for the repeater simulation step.')
+
+        @ui.page('/channel2')
+        def channel2_page():
+            ui.button('Back', on_click=ui.navigate.back)
+            ui.label('Channel 2 Page').style('font-size: 2em; font-weight: bold;')
+            ui.label('This is a placeholder for the second channel simulation step.')
+
+        @ui.page('/receiver')
+        def receiver_page():
+            ui.button('Back', on_click=ui.navigate.back)
+            ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
+            ui.label('This is a placeholder for the receiver simulation step.')
 ui.run()

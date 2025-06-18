@@ -82,8 +82,8 @@ def Plotter(sample_rate, t, tx_signal, tx_vert_lines, symbol_rate, tx_symbols, t
 
                     #start plot for upsampled symbols
                     plt.figure(figsize=(15, 5))
-                    plt.plot(t, np.real(tx_upsampled_symbols), 'b-', label='I (real part)')
-                    plt.plot(t, np.imag(tx_upsampled_symbols), 'r--', label='Q (imag part)')
+                    plt.plot(t, np.real(tx_upsampled_symbols), 'b.-', label='I (real part)')
+                    plt.plot(t, np.imag(tx_upsampled_symbols), 'r.--', label='Q (imag part)')
                     #create a horizontal line 
                     # plt.axhline(y=0, color='b', linestyle='-', linewidth=1)
                     # plt.axhline(y=0, color='r', linestyle='--', linewidth=1)
