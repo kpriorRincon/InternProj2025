@@ -223,12 +223,11 @@ def Cesium_page():
         sat_r = geocentric.position.m
         sat_v = geocentric.velocity.m_per_s
 
-        #these are placeholders for the moment
+        #these are for debug for the moment
         # ui.label(f'Satellite Position Vector: {sat_r}').style('font-size: 1.5em; font-weight: bold;')
         # ui.label(f'Satellite Velocity Vector: {sat_v}').style('font-size: 1.5em; font-weight: bold;')
+        ui.label("Doppler Shift Equation used from Randy L. Haupt's\nWireless Communications Systems: An Introduction").style('font-size: 1.5em; font-weight: bold; max-width: 440x; white-space: pre-line; word-break: break-word;')
         ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
-        ui.label('For now assume tx frequency is 905 MHz')
-        #get the position vector of the tx tower
         
         #get the position and velocity of the ground stations 
         tx_geocentric = tx_pos.at(time_crossing_skyfield)
@@ -246,67 +245,87 @@ def Cesium_page():
         
         #unit vector from transmitter to satellite
         k_ts = (sat_r - tx_r) / np.linalg.norm(sat_r - tx_r)
-
         #unit vector from satellite to receiver
         k_sr = (rx_r - sat_r) / np.linalg.norm(rx_r - sat_r)
 
-        #uplink doppler:
-        #transmit frequency
-        f_c_up = 905e6
-        #equation used ((kc - vr dot khat)/(kc - vt dot khat))fc
-        f_doppler_shifted = ((f_c_up - np.dot(sat_v, k_ts))/(f_c_up - np.dot(tx_v, k_ts))) * f_c_up
-        f_delta = f_doppler_shifted-f_c_up
-        ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted} Hz')
-        ui.label(f'Delta f: {f_delta}')
-
-        
-        #downlink doppler 
-        ui.label("The repeater simply adds 10MHz and retransmits")
-        f_c_down = f_doppler_shifted + 10e6 # the transponder will repeat at a higher frequency everything it receives
-        f_doppler_shifted = ((f_c_down - np.dot(rx_v, k_sr))/(f_c_down - np.dot(sat_v, k_sr))) * f_c_down
-        f_delta = f_doppler_shifted - f_c_down
-        ui.label(f'The doppler shifted frequency for downlink: {f_doppler_shifted} Hz')
-        ui.label(f'Delta f: {f_delta} Hz')
-
-
-        #time delay up and down:
-
-        c = 2.99792458e8
-        # print(f'distance uplink debug:  {np.linalg.norm(sat_r-tx_r)/1000} km')
-        time_delay_up = np.linalg.norm(sat_r-tx_r) / c # m/m/s = s
-        ui.label(f'time delay up {time_delay_up} s')
-
-        time_delay_down = np.linalg.norm(tx_r - sat_r) / c 
-        ui.label(f'time delay down {time_delay_down} s')
-        
-
-        #channel model:
-        lambda_up = c/f_c_up
-        lambda_down = c/f_c_down
-        #assuming all antennas have 10dB gain.
-        gain_tx = 10 # 10 dB is 10 in linear from 10^10/10 = 10^1 = 10
-        gain_rx = 10
-        gain_sat = 10
-        alpha_up = gain_tx * gain_sat * (lambda_up/(4*np.pi*np.linalg.norm(sat_r-tx_r)))**2 # path loss attenuation
-        #pick theta uniformly at random from 0 to 180 degrees 
-        THETA = np.random.uniform(0, np.pi)
-        h_up = alpha_up * np.exp(1j * THETA) # single tap block channel model
-        print(alpha_up)
-        print(h_up)
-
-        alpha_down = gain_rx * gain_sat *(lambda_down/(4*np.pi*np.linalg.norm(rx_r-sat_r)))**2 # path loss attenuation
-        #pick theta uniformly at random from 0 to 180 degrees
-        THETA = np.random.uniform(0, np.pi)
-        h_down = alpha_down * np.exp(1j * THETA) # single tap block channel model
-        
-        print(h_down)
-        #everything is ready to perform simulations
-        
-        #similar to base sim we would like to allow the user to see the signal through different steps
-        #WE NEED ALL THE IMAGES as in the basic sim
-
         # Images with labels for transmitter, repeater, and receiver
-        #TODO have the user enter a message and transmit frequency
+        message = ui.input(label='Enter Message', placeholder='hello world').style(
+            'width: 10%; margin-bottom: 1em; font-size: 1.1em;'
+        )
+        ui.label('Desired transmit frequency (MHz)').style(
+            'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
+        )
+        desired_transmit_freq = ui.slider(min=902,max = 918, step=1,).props('label-always').style('width: 10%')
+        doppler_container =  ui.column() # store labels in this doppler container so we can easily clear them when the start_simulation button is pressed again
+        def start_simulation():
+            doppler_container.clear()
+            # pass all the arguments from inputs
+            mes = message.value
+            if message.value == '':
+                mes = 'hello world' #default value
+            # print(mes)
+            # note that the transmit freq will be in MHz
+            txFreq = desired_transmit_freq.value
+            if txFreq is not None:
+                txFreq = desired_transmit_freq.value*1e6
+            else:  
+                txFreq = 905e6 #default value is 905MHz
+            #uplink doppler:            
+            c = 2.99792458e8
+            lambda_up = c / txFreq
+            with doppler_container:
+                label_style = 'font-size: 1.2em; font-weight: bold; margin-bottom: 0.5em; color: #2d3748;'
+                #equation used ((kc - (vr dot khat)/lambda)/(kc - (vt dot khat)/lambda))fc kc = 1/lambda* speed of light
+                f_doppler_shifted = ((txFreq - np.dot(sat_v, k_ts)/lambda_up)/(txFreq - np.dot(tx_v, k_ts)/lambda_up)) * txFreq
+                f_delta = f_doppler_shifted-txFreq
+                ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted} Hz').style(label_style)
+                ui.label(f'Delta f: {f_delta} Hz').style(label_style)
+
+                
+                #downlink doppler 
+                ui.label("The repeater simply upconverts by 10MHz and retransmits").style(label_style)
+                f_c_down = f_doppler_shifted + 10e6 # the transponder will repeat at a higher frequency everything it receives
+                lambda_down = c/f_c_down
+                f_doppler_shifted = ((f_c_down - np.dot(rx_v, k_sr)/lambda_down)/(f_c_down - np.dot(sat_v, k_sr)/lambda_down)) * f_c_down
+                f_delta = f_doppler_shifted - f_c_down
+                ui.label(f'The doppler shifted frequency for downlink: {f_doppler_shifted} Hz').style(label_style)
+                ui.label(f'Delta f: {f_delta} Hz').style(label_style)
+
+
+                #time delay up and down:
+
+                # print(f'distance uplink debug:  {np.linalg.norm(sat_r-tx_r)/1000} km')
+                time_delay_up = np.linalg.norm(sat_r-tx_r) / c # m/m/s = s
+                ui.label(f'time delay up {time_delay_up} s').style(label_style)
+
+                time_delay_down = np.linalg.norm(tx_r - sat_r) / c 
+                ui.label(f'time delay down {time_delay_down} s').style(label_style)
+                
+
+            #channel model:
+            #assuming all antennas have 10dB gain.
+            gain_tx = 10 # 10 dB is 10 in linear from 10^10/10 = 10^1 = 10
+            gain_rx = 10
+            gain_sat = 10
+            alpha_up = gain_tx * gain_sat * (lambda_up/(4*np.pi*np.linalg.norm(sat_r-tx_r)))**2 # path loss attenuation
+            #pick theta uniformly at random from 0 to 180 degrees 
+            THETA = np.random.uniform(0, np.pi)
+            h_up = alpha_up * np.exp(1j * THETA) # single tap block channel model
+            print(alpha_up)
+            print(h_up)
+
+            alpha_down = gain_rx * gain_sat *(lambda_down/(4*np.pi*np.linalg.norm(rx_r-sat_r)))**2 # path loss attenuation
+            #pick theta uniformly at random from 0 to 180 degrees
+            THETA = np.random.uniform(0, np.pi)
+            h_down = alpha_down * np.exp(1j * THETA) # single tap block channel model
+            
+            print(h_down)
+            #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
+            
+            
+            ui.notify('Simulation Ready')
+            return
+        ui.button('start simulation', on_click=start_simulation)
         
         # Transmitter image (clickable)
         with ui.link(target='/transmitter').style('width: 10vw; position: fixed; bottom: 2vh; left: 36vw; z-index: 1000; cursor: pointer;'):
@@ -329,9 +348,7 @@ def Cesium_page():
         # Receiver image (clickable)
         with ui.link(target='/receiver').style('width: 10vw; position: fixed; bottom: 2vh; left: 80vw; z-index: 1004; cursor: pointer;'):
             ui.image('../Phys_Sim/media/antenna_graphic_flipped.png').style('width: 100%;')
-        ui.label('Receiver').style('position: fixed; bottom: 12vh; left: 84vw; z-index: 1007; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
-        sig_gen = SigGen.SigGen(freq = 905e6, amp = 1.0, sample_rate = 30e6, symbol_rate=100)
-        
+        ui.label('Receiver').style('position: fixed; bottom: 12vh; left: 84vw; z-index: 1007; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')        
         
         # Placeholder pages for each simulation step
         @ui.page('/transmitter')
@@ -343,7 +360,7 @@ def Cesium_page():
         @ui.page('/channel1')
         def channel1_page():
             ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Channel 1 Page').style('font-size: 2em; font-weight: bold;')
+            ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
 
         @ui.page('/repeater')
@@ -355,7 +372,7 @@ def Cesium_page():
         @ui.page('/channel2')
         def channel2_page():
             ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Channel 2 Page').style('font-size: 2em; font-weight: bold;')
+            ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
 
         @ui.page('/receiver')
