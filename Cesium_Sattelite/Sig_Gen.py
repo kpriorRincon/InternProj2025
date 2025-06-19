@@ -16,6 +16,7 @@ class SigGen:
         }
 
     def rrc_filter(self, beta, N, Ts, fs):
+        
         """
         Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response
 
@@ -64,7 +65,7 @@ class SigGen:
 
         # Root raised-cosine filter impulse respone in the time domain
         h = ifft(fh)
-
+        h = h
         return time, h
 
     def generate_qpsk(self, bits):
@@ -101,7 +102,7 @@ class SigGen:
         t = np.arange(total_samples) / self.sample_rate
 
         # Upsample symbols to match sampling rate
-        #this will make an array like [(1+1j), 0, 0, 0, 0, 0, 0, 0,..., (1-1j), ]
+        #this will make an array like [(1+1j)/root2, 0, 0, 0, 0, 0, 0, 0,..., (1-1j)/root2, ]
         upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1, dtype=complex))for x in symbols])
 
         # Root raised cosine filter implementation
@@ -110,12 +111,11 @@ class SigGen:
         
         # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
-
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
-
         # Modulate: multiply pulse shaped upsampled symbols with the complex carrier
-        qpsk_waveform = signal * phasor
+        qpsk_waveform = signal * phasor * self.amp
+
         return t, qpsk_waveform
 
     def message_to_bits(self, message):

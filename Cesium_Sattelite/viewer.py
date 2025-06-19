@@ -378,23 +378,39 @@ def Cesium_page():
                 print(h_down)
 
             #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
+            
             #the required transmit power from tx to rep and rep to rec will be used to determine the amplitude of the outgoing waves 
-            sig_gen_amplitude = np.sqrt(required_tx_power) # since P = A^2 for the signal
-            Fs = 40e6#sample rate 40 mega samples per second
-            symbol_rate = 4e6#10 times less than the sample rate
-            sig_gen = SigGen.SigGen(txFreq, sig_gen_amplitude, Fs, symbol_rate)
+            Fs = 40e6 #sample rate 40 mega samples per second
+            symbol_rate = 4e6 #10 times less than the sample rate
+            
+            sig_gen = SigGen.SigGen(txFreq, amp = 1, symbol_rate= Fs, symbol_rate = symbol_rate)
             bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
             t, qpsk_signal = sig_gen.generate_qpsk(bits)
+            print(f'does: {np.mean(np.sum(np.abs(qpsk_signal)**2))} = {required_tx_power}')
+            #scale the power of the signal 
+            Pcurr = np.mean(np.sum(np.abs(qpsk_signal)**2))
+            gain = np.sqrt(required_tx_power/Pcurr)
+            qpsk_signal *= gain
 
             #define channel up
-            channel_up = Channel.Channel(qpsk_signal, h_up, noise_power, f_delta_up, up = True)
+            channel_up = Channel.Channel(qpsk_signal, h_up, noise, f_delta_up, up = True)
             #apply the channel: 
             qpsk_signal_after_channel = channel_up.apply_channel(t)
+            
+            #we want the outgoing power to reach the required power
+            Pcurr = np.mean(np.sum(np.abs(qpsk_signal_after_channel)**2))
+            gain = np.sqrt(required_rep_power/Pcurr)#this gain is used to get the power of the signal to desired power
+            repeated_qpsk_signal_after_channel = gain * np.exp(1j*2 * np.pi * 10e6 * t) * qpsk_signal_after_channel
+            
+            #now we want to see if we actually got to the desired power
+            #debug:
+            print(f'does: {np.mean(np.sum(np.abs(repeated_qpsk_signal_after_channel)**2))} = {required_rep_power}')
+
             #run the channel_up_handler:
-            channel_up.handler(t, Fs) #generate all the plots we want to display
+            channel_up.handler(t, 4e9) #generate all the plots we want to display
             #now the repeater will take in the qpsk_signal_after_channel and upconvert by 10MHz
 
-            channel_down = Channel.Channel()
+            # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
             return
         ui.button('start simulation', on_click=start_simulation)
@@ -429,9 +445,12 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the transmitter simulation step.')
-            #bit sequence with pilots labeled
+            #bit sequence with prefix/postifx labeled
+
             #show upsampled bits sub plot one on top of the other real and imaginary
+
             #show the pulse shaping Re/Im
+            
             #show it modulated with the carrier over a short time frame
 
         @ui.page('/channel1')
@@ -439,6 +458,12 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
+
+            ui.image('media/channel_up_h_phase.png').force_reload()
+            ui.image('media/channel_up_incoming_time.png').force_reload()
+            ui.image('media/channel_up_incoming_fft.png').force_reload()
+            ui.image('media/channel_up_outgoing_time.png').force_reload()
+            ui.image('media/channel_up_outgoing_fft.png').force_reload()
             #show information about h
             #show information about the signal in vs the receive signal e.g. attenuation/phase shift
             #  

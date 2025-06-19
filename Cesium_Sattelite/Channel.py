@@ -1,16 +1,15 @@
 class Channel: 
     def __init__(self, incoming_signal, h, noise_power, freq_shift, up = True):
-        def __init__(self, incoming_signal, h, noise_power, freq_shift, up=True):
-            """
-            Initialize a Channel object representing either an uplink or downlink channel.
-            Parameters:
-                incoming_signal: The input signal to the channel.
-                h: Channel coefficient representing attenuation and random phase rotation (single tap).
-                noise_power: The power of the noise to be added to the signal.
-                freq_shift: The frequency shift applied to the signal.
-                up (bool, optional): Boolean flag indicating the channel direction.
-                    If True, represents an uplink channel; if False, represents a downlink channel.
-            """
+        """
+        Initialize a Channel object representing either an uplink or downlink channel.
+        Parameters:
+            incoming_signal: The input signal to the channel.
+            h: Channel coefficient representing attenuation and random phase rotation (single tap).
+            noise_power: The power of the noise to be added to the signal.
+            freq_shift: The frequency shift applied to the signal.
+            up (bool, optional): Boolean flag indicating the channel direction.
+                If True, represents an uplink channel; if False, represents a downlink channel.
+        """
         
         self.incoming_signal = incoming_signal
         self.outgoing_signal = None # none until it gets computed
