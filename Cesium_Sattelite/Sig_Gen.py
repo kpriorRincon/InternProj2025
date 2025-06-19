@@ -1,12 +1,14 @@
 class SigGen:
 
-    def __init__(self, freq=1.0, amp=1.0, sample_rate=100000, symbol_rate=1000):
+    def __init__(self, freq=1.0, amp=1.0, sample_rate=40e6, symbol_rate=4e6):
         import numpy as np
         self.freq = freq  # Frequency in Hz
         self.sample_rate = sample_rate  # sample rate in samples per second
         self.symbol_rate = symbol_rate  # Symbol rate in symbols per second
         self.amp = amp    # Amplitude
-
+        self.upsampled_symbols = None
+        self.pulse_shaped_symbols = None
+        self.qpsk_signal = None
         # Map bit pairs to complex symbols
         self.mapping = {
             (0, 0): (1 + 1j) / np.sqrt(2),
@@ -15,25 +17,8 @@ class SigGen:
             (1, 0): (1 - 1j) / np.sqrt(2)
         }
 
-    # Add noise to symbols
-    def noise_adder(self, sinusoid, noise_power):
-        import numpy as np
-        # Noise parameters
-        # Mean of the noise distribution
-        mean_noise = 0
-        # Standard deviation of the noise distribution
-        std_noise = noise_power
-
-        # Generate noise
-        noise_real = np.random.normal(
-            mean_noise, std_noise/np.sqrt(2), len(sinusoid))
-        noise_imag = np.random.normal(
-            mean_noise, std_noise/np.sqrt(2), len(sinusoid))
-        noise = noise_real + 1j*noise_imag
-        # returns the sinusoid with added noise
-        return sinusoid + noise
-
     def rrc_filter(self, beta, N, Ts, fs):
+        
         """
         Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response
 
@@ -82,10 +67,10 @@ class SigGen:
 
         # Root raised-cosine filter impulse respone in the time domain
         h = ifft(fh)
-
+        h /= np.sum(h) # normalize to get unity gain, we dpon't want to change the amplitude/power
         return time, h
 
-    def generate_qpsk(self, bits, bool_noise, noise_power=0.01):
+    def generate_qpsk(self, bits):
         """
         Generate a QPSK signal from a sequence of bits.
 
@@ -117,41 +102,23 @@ class SigGen:
         total_samples = len(symbols) * samples_per_symbol
         # create a time vector that is total symbols long
         t = np.arange(total_samples) / self.sample_rate
-
         # Upsample symbols to match sampling rate
-        # Each symbol is held constant for samples_per_symbol duration
-        upsampled_symbols = np.concatenate(
-            [np.append(x, np.zeros(samples_per_symbol-1, dtype=complex))for x in symbols])
-
+        #this will make an array like [(1+1j)/root2, 0, 0, 0, 0, 0, 0, 0,..., (1-1j)/root2, ]
+        upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1, dtype=complex))for x in symbols])
+        self.upsampled_symbols
         # Root raised cosine filter implementation
-        from commpy import filters
         beta = 0.3
-        _, pulse_shape = self.rrc_filter(
-            beta, 300, 1/self.symbol_rate, self.sample_rate)
+        _, pulse_shape = self.rrc_filter(beta, 300, 1/self.symbol_rate, self.sample_rate)
+        
         # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
-
+        self.pulse_shaped_symbols = signal
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
-
-        # Modulate: multiply upsampled symbols by phasor
-        qpsk_waveform = signal * phasor
-
-        # get vertical lines
-        t_vertical_lines = []  # Initialize vertical lines for debugging
-        for i, symbol in enumerate(symbols):
-            # compute the phase offset for the symbol
-            phase_offset = np.angle(symbol)
-            # debugging print statement to show the symbol and phase offset
-            # print(f"Symbol {i}: {symbol}, Phase Offset: {phase_offset}");
-            idx_start = i * samples_per_symbol
-            t_vertical_lines.append(idx_start/self.sample_rate)
-
-        if bool_noise:
-            # add noise to the QPSK wavefrorm
-            qpsk_waveform = self.noise_adder(qpsk_waveform, noise_power)
-
-        return t, qpsk_waveform, symbols, t_vertical_lines, upsampled_symbols
+        # Modulate: multiply pulse shaped upsampled symbols with the complex carrier
+        qpsk_waveform = signal * phasor * self.amp
+        self.qpsk_signal = qpsk_waveform
+        return t, qpsk_waveform
 
     def message_to_bits(self, message):
         """
@@ -185,3 +152,48 @@ class SigGen:
         # Convert string input to list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
         return bit_sequence
+
+    def handler(self, t):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        #we would like to plot
+
+        #upsampled_bits real and imaginary
+        plt.figure(figsize = (10,6))
+        plt.subplot(2, 1, 1)
+        plt.plot(t, np.real(self.upsampled_symbols), 'b.-', label = 'Real')
+        plt.legend()
+        plt.title('Upsampled Bits I (Real Part)')
+        plt.subplot(2,1,2)
+        plt.plot(t, np.imag(self.upsampled_symbols), 'r.-', label = 'Imaginary')
+        plt.legend()
+        plt.title('Upsampled Bits Q (Imaginary Part)')
+        plt.tight_layout()
+        plt.savefig('/media/tx_upsampled_bits.png', dpi=300)
+        
+        #Pulse Shaped bits
+        plt.figure(figsize = (10,6))
+        plt.subplot(2, 1, 1)
+        plt.plot(t, np.real(self.pulse_shaped_symbols), 'b.-', label = 'Real')
+        plt.legend()
+        plt.title('Pulse Shaped I (Real Part)')
+        plt.subplot(2,1,2)
+        plt.plot(t, np.imag(self.pulse_shaped_symbols), 'r.-', label = 'Imaginary')
+        plt.legend()
+        plt.title('Pulse Shaped Q (Imaginary Part)')
+        plt.tight_layout()
+        plt.savefig('/media/tx_pulse_shaped_bits.png', dpi=300)
+        #plot the modulated signal 
+        plt.figure(figsize=(10, 6))
+        plt.plot(t, self.qpsk_signal)
+        plt.xlabel("Time")
+        plt.ylabel("Amplitude")
+        plt.xlim(0, len(self.qpsk_signal) // 10)
+        plt.title("Snippet of Modulated Signal")
+        plt.tight_layout()
+        plt.savefig('/media/tx_waveform_snippet.png', dpi=300)
+
+        #
+
+
+        #

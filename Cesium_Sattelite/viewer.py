@@ -13,7 +13,8 @@ from datetime import datetime, timezone, timedelta
 # function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
 # importing classes
-import Sig_Gen_Noise as SigGen
+import Sig_Gen as SigGen
+import Channel as Channel
 
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
@@ -127,12 +128,12 @@ def Cesium_page():
     ui.button('Back', on_click=back_and_clear)
 
 
-    # TODO find the time when the first satellite crosses the line of site of both ground stations e.g. tx_pos and rx_pos
-    # create the satellites
+    #for each of the tles create a list satellite and store it in an array
     # note that the tles list is a list of lists so we can get each list one by one and take the corresponding data to build EarthSatellite objects
     satellites = [EarthSatellite(tle[1], tle[2], tle[0]) for tle in tles]
     # set the distance that the satellite must be from both ground stations
     thresh_km = 2000
+
     # define start time and range
     ts = load.timescale()
     now_utc = datetime.now(timezone.utc)
@@ -145,9 +146,9 @@ def Cesium_page():
     crossings = {}
 
     '''For loops explanation:
-        # For each time step in the 2-day range (1-minute increments), check every satellite's distance to both ground stations.
+        # For each time step in the 1-day range (1-minute increments), check every satellite's distance to both ground stations.
         # If a satellite is within the threshold distance to both, record its closest approach time and distances.
-        # Stop searching once the required number of unique satellite crossings is found.'''
+        # Stop searching when you've finished the 1 day time range'''
     for t in time_range:
         for sat in satellites:
             uplink_dist = (sat - tx_pos).at(t).distance().km
@@ -169,20 +170,21 @@ def Cesium_page():
 
 
         def store_sat(name, data):
-            #when the user clicks on one of the rows get information needed for the simulation and store them in 
+            #when the user clicks on one of the rows get information needed for the simulation and store them in global variables 
             global time_crossing, sat_for_sim 
             # get the satellite we want
             for sat in satellites: 
                 if sat.name == name:
                     sat_for_sim = sat
                     break
-            time_crossing = data['time']#extracted from data
+            time_crossing = data['time'] #get the time of closest approach
             ui.navigate.to('/simulation_page')
             return
         
-        # Print the first 5 unique satellite crossings with their minimum distances
-
-        # description of for loop you count while you go through the crossing list where sat_name is the key in the dictionary and data is 'time', 'uplink_dist', ...
+        '''description of for loop:
+        count while you go through the crossing list 
+        where sat_name is the key in the dictionary and data is 'time', 'uplink_dist', ...
+        ''' 
         for i, (sat_name, data) in enumerate(list(crossings.items())[:count], 1):
             print(f"{i}. Satellite '{sat_name}' closest approach at {data['time']} UTC")
             print(f"   Distance to Tx: {data['uplink_dist']:.1f} km")
@@ -190,7 +192,7 @@ def Cesium_page():
             with ui.row().classes(
                 'bg-gray-400 rounded-lg mb-2 px-6 py-2 cursor-pointer transition hover:bg-green-400'
                 ).on('click', lambda e, n=sat_name, d=data:(store_sat(n,d), ui.navigate.to('/simulation_page'))):
-                
+                #the row consists of information about the satellite name the time of crossin gand the distance to uplink and downlink
                 ui.html(f"""
                     <div style='margin-bottom: 1em;'>
                         <div style='font-size: 1.1em; font-weight: bold; color: #1a237e;'>
@@ -209,10 +211,10 @@ def Cesium_page():
                 """)
         
         # get this files working directory
-        html_directory = os.path.dirname(__file__)
+        html_directory = os.path.dirname(__file__) #get the directory you're in
         # add the files available
         app.add_static_files('/static', html_directory)
-
+    #cesium page take up the right 70 percent of the page
     ui.html(
         f'''
         <div style="position: fixed; top: 0; right: 0; width: 70vw; height: 95vh; border: none; margin: 1vh 1vw 0 0; padding: 0; overflow: hidden; z-index: 999999; box-shadow: 0 0 10px rgba(0,0,0,0.2); background: #fff; border-radius: 12px;">
@@ -220,28 +222,33 @@ def Cesium_page():
         </div>
         '''
     )
+
     @ui.page('/simulation_page')
     def simulation_page(): 
+        #When the user clicks the start simulation button run the following
+
         global time_crossing, sat_for_sim
         #back button
         ui.button('Back', on_click = ui.navigate.back)
         # we will navigate to here whenever a row is clicked of a specific satellite
-        #for now just create a label that prints out the parameters that will be used in the simulation
-        dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+
+        dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo = timezone.utc) # convert the string to a readable time object 
+
         time_crossing_skyfield = ts.from_datetime(dt_crossing)
+        
         #the object sat_for_sim: GCRS coords
         geocentric = sat_for_sim.at(time_crossing_skyfield)
 
         sat_r = geocentric.position.m
         sat_v = geocentric.velocity.m_per_s
 
-        #these are for debug for the moment
+        #these are for debug
         # ui.label(f'Satellite Position Vector: {sat_r}').style('font-size: 1.5em; font-weight: bold;')
         # ui.label(f'Satellite Velocity Vector: {sat_v}').style('font-size: 1.5em; font-weight: bold;')
         ui.label("Doppler Shift Equation used from Randy L. Haupt's\nWireless Communications Systems: An Introduction").style('font-size: 1.5em; font-weight: bold; max-width: 440x; white-space: pre-line; word-break: break-word;')
         ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
         
-        #get the position and velocity of the ground stations 
+        #get the position and velocity of the ground stations in inertial reference frame 
         tx_geocentric = tx_pos.at(time_crossing_skyfield)
         tx_r = tx_geocentric.position.m
         tx_v = tx_geocentric.velocity.m_per_s
@@ -249,6 +256,8 @@ def Cesium_page():
         rx_geocentric = rx_pos.at(time_crossing_skyfield)
         rx_r = rx_geocentric.position.m
         rx_v = rx_geocentric.velocity.m_per_s
+
+        #debug prints
         print(f'tx position: {tx_r}')
         print(f'rx position: {rx_r}')
         print(f'tx velocity: {tx_v}')
@@ -260,7 +269,7 @@ def Cesium_page():
         #unit vector from satellite to receiver
         k_sr = (rx_r - sat_r) / np.linalg.norm(rx_r - sat_r)
 
-        # Images with labels for transmitter, repeater, and receiver
+        #user defined simulation parameters
         message = ui.input(label='Enter Message', placeholder='hello world').style(
             'width: 10%; margin-bottom: 1em; font-size: 1.1em;'
         )
@@ -277,7 +286,9 @@ def Cesium_page():
         ui.label('Desired SNR set to 20(dB)').style(
             'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
         )
+        
         doppler_container =  ui.column() # store labels in this doppler container so we can easily clear them when the start_simulation button is pressed again
+        
         def start_simulation():
             '''This function runs when the start simulation button is clicked 
             and runs handlers to produce plots for each page as necessary'''
@@ -315,9 +326,9 @@ def Cesium_page():
                 label_style = 'font-size: 1.2em; font-weight: bold; margin-bottom: 0.5em; color: #2d3748;'
                 #equation used ((kc - (vr dot khat)/lambda)/(kc - (vt dot khat)/lambda))fc kc = 1/lambda* speed of light
                 f_doppler_shifted = ((txFreq - np.dot(sat_v, k_ts)/lambda_up)/(txFreq - np.dot(tx_v, k_ts)/lambda_up)) * txFreq
-                f_delta = f_doppler_shifted-txFreq
-                ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted} Hz').style(label_style)
-                ui.label(f'Delta f: {f_delta} Hz').style(label_style)
+                f_delta_up = f_doppler_shifted-txFreq
+                ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted:.7f} Hz').style(label_style)
+                ui.label(f'Delta f: {f_delta_up:.7f} Hz').style(label_style)
 
                 
                 #downlink doppler 
@@ -325,9 +336,9 @@ def Cesium_page():
                 f_c_down = f_doppler_shifted + 10e6 # the transponder will repeat at a higher frequency everything it receives
                 lambda_down = c/f_c_down
                 f_doppler_shifted = ((f_c_down - np.dot(rx_v, k_sr)/lambda_down)/(f_c_down - np.dot(sat_v, k_sr)/lambda_down)) * f_c_down
-                f_delta = f_doppler_shifted - f_c_down
-                ui.label(f'The doppler shifted frequency for downlink: {f_doppler_shifted} Hz').style(label_style)
-                ui.label(f'Delta f: {f_delta} Hz').style(label_style)
+                f_delta_down = f_doppler_shifted - f_c_down
+                ui.label(f'The doppler shifted frequency for downlink: {f_doppler_shifted:.7f} Hz').style(label_style)
+                ui.label(f'Delta f: {f_delta_down:.7f} Hz').style(label_style)
 
 
                 #time delay up and down:
@@ -337,6 +348,7 @@ def Cesium_page():
                 ui.label(f'Time delay up: {time_delay_up:.7f} s').style(label_style)
 
                 time_delay_down = np.linalg.norm(rx_r - sat_r) / c 
+                total_time_delay = time_delay_up + time_delay_down
                 ui.label(f'Time delay down: {time_delay_down:.7f} s').style(label_style)
                 
 
@@ -365,10 +377,45 @@ def Cesium_page():
                 ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
 
                 print(h_down)
-                
+
             #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
             
+            #the required transmit power from tx to rep and rep to rec will be used to determine the amplitude of the outgoing waves 
+            Fs = 40e6 #sample rate 40 mega samples per second
+            symb_rate = 4e6 #10 times less than the sample rate
             
+            sig_gen = SigGen.SigGen(txFreq, amp = 1, sample_rate = Fs, symbol_rate = symb_rate)
+            bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
+            t, qpsk_signal = sig_gen.generate_qpsk(bits)
+            #scale the power of the signal 
+            Pcurr = np.mean(np.sum(np.abs(qpsk_signal)**2))
+            gain = np.sqrt(required_tx_power/Pcurr)
+            qpsk_signal *= gain
+            print(f'does: {np.mean(np.sum(np.abs(qpsk_signal)**2))} = {required_tx_power}')
+
+            #define channel up
+            channel_up = Channel.Channel(qpsk_signal, h_up, noise, f_delta_up, up = True)
+            #apply the channel: 
+            qpsk_signal_after_channel = channel_up.apply_channel(t)
+            #run the channel_up_handler:
+            channel_up.handler(t, 4e9) #generate all the plots we want to display, note we pass in a higher sample rate just so we can actually get FFT data for the incoming signal
+            
+            #upconvert:
+            #we want the outgoing power to reach the required power
+            Pcurr = np.mean(np.sum(np.abs(qpsk_signal_after_channel)**2))
+            gain = np.sqrt(required_rep_power/Pcurr)#this gain is used to get the power of the signal to desired power
+            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * t) * qpsk_signal_after_channel
+            #now we want to see if we actually got to the desired power
+            #debug:
+            print(f'does: {np.mean(np.sum(np.abs(repeated_qpsk_signal)**2))} = {required_rep_power}')
+            #run the signal through channel down
+            channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
+            channel_down.handler(t, 4e9)
+            
+            #This signal is what gets fed into the repeater
+            repeated_siganl_after_channel = channel_down.apply_channel(t)
+
+            # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
             return
         ui.button('start simulation', on_click=start_simulation)
@@ -403,16 +450,26 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the transmitter simulation step.')
-            #bit sequence with pilots labeled
+            #bit sequence with prefix/postifx labeled
+
             #show upsampled bits sub plot one on top of the other real and imaginary
+            ui.image('Upsampled Bits Q (Imaginary Part)').style('width: 70%').force_reload()
             #show the pulse shaping Re/Im
+            ui.image('/media/tx_pulse_shaped_bits.png').style('width: 70%').force_reload()
             #show it modulated with the carrier over a short time frame
+            ui.image('/media/tx_waveform_snippet.png').style('width: 70%').force_reload()
 
         @ui.page('/channel1')
         def channel1_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
+
+            ui.image('media/channel_up_h_phase.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_up_incoming_time.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_up_incoming_fft.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_up_outgoing_time.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_up_outgoing_fft.png').style('width: 70%;').force_reload()
             #show information about h
             #show information about the signal in vs the receive signal e.g. attenuation/phase shift
             #  
@@ -427,8 +484,12 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
-            #information about h 
-            #who information about the signal in vs signal out e.g. attenuation / phase shfit
+            ui.image('media/channel_down_h_phase.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_incoming_time.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_incoming_fft.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_outgoing_time.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_outgoing_fft.png').style('width: 70%;').force_reload()
+
         @ui.page('/receiver')
         def receiver_page():
             ui.button('Back', on_click=ui.navigate.back)
