@@ -410,7 +410,7 @@ def Cesium_page():
             print(f'does: {np.mean(np.sum(np.abs(repeated_qpsk_signal)**2))} = {required_rep_power}')
             #run the signal through channel down
             channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
-            channel_down.handler(t)
+            channel_down.handler(t, 4e9)
             
             #This signal is what gets fed into the repeater
             repeated_siganl_after_channel = channel_down.apply_channel(t)
@@ -453,16 +453,18 @@ def Cesium_page():
             #bit sequence with prefix/postifx labeled
 
             #show upsampled bits sub plot one on top of the other real and imaginary
-
+            ui.image('Upsampled Bits Q (Imaginary Part)').style('width: 70%').force_reload()
             #show the pulse shaping Re/Im
-
+            ui.image('/media/tx_pulse_shaped_bits.png').style('width: 70%').force_reload()
             #show it modulated with the carrier over a short time frame
+            ui.image('/media/tx_waveform_snippet.png').style('width: 70%').force_reload()
 
         @ui.page('/channel1')
         def channel1_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
+
             ui.image('media/channel_up_h_phase.png').style('width: 70%;').force_reload()
             ui.image('media/channel_up_incoming_time.png').style('width: 70%;').force_reload()
             ui.image('media/channel_up_incoming_fft.png').style('width: 70%;').force_reload()

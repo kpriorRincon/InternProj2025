@@ -6,7 +6,9 @@ class SigGen:
         self.sample_rate = sample_rate  # sample rate in samples per second
         self.symbol_rate = symbol_rate  # Symbol rate in symbols per second
         self.amp = amp    # Amplitude
-
+        self.upsampled_symbols = None
+        self.pulse_shaped_symbols = None
+        self.qpsk_signal = None
         # Map bit pairs to complex symbols
         self.mapping = {
             (0, 0): (1 + 1j) / np.sqrt(2),
@@ -100,22 +102,22 @@ class SigGen:
         total_samples = len(symbols) * samples_per_symbol
         # create a time vector that is total symbols long
         t = np.arange(total_samples) / self.sample_rate
-
         # Upsample symbols to match sampling rate
         #this will make an array like [(1+1j)/root2, 0, 0, 0, 0, 0, 0, 0,..., (1-1j)/root2, ]
         upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1, dtype=complex))for x in symbols])
-
+        self.upsampled_symbols
         # Root raised cosine filter implementation
         beta = 0.3
         _, pulse_shape = self.rrc_filter(beta, 300, 1/self.symbol_rate, self.sample_rate)
         
         # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
         signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
+        self.pulse_shaped_symbols = signal
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
         # Modulate: multiply pulse shaped upsampled symbols with the complex carrier
         qpsk_waveform = signal * phasor * self.amp
-
+        self.qpsk_signal = qpsk_waveform
         return t, qpsk_waveform
 
     def message_to_bits(self, message):
@@ -150,3 +152,48 @@ class SigGen:
         # Convert string input to list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
         return bit_sequence
+
+    def handler(self, t):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        #we would like to plot
+
+        #upsampled_bits real and imaginary
+        plt.figure(figsize = (10,6))
+        plt.subplot(2, 1, 1)
+        plt.plot(t, np.real(self.upsampled_symbols), 'b.-', label = 'Real')
+        plt.legend()
+        plt.title('Upsampled Bits I (Real Part)')
+        plt.subplot(2,1,2)
+        plt.plot(t, np.imag(self.upsampled_symbols), 'r.-', label = 'Imaginary')
+        plt.legend()
+        plt.title('Upsampled Bits Q (Imaginary Part)')
+        plt.tight_layout()
+        plt.savefig('/media/tx_upsampled_bits.png', dpi=300)
+        
+        #Pulse Shaped bits
+        plt.figure(figsize = (10,6))
+        plt.subplot(2, 1, 1)
+        plt.plot(t, np.real(self.pulse_shaped_symbols), 'b.-', label = 'Real')
+        plt.legend()
+        plt.title('Pulse Shaped I (Real Part)')
+        plt.subplot(2,1,2)
+        plt.plot(t, np.imag(self.pulse_shaped_symbols), 'r.-', label = 'Imaginary')
+        plt.legend()
+        plt.title('Pulse Shaped Q (Imaginary Part)')
+        plt.tight_layout()
+        plt.savefig('/media/tx_pulse_shaped_bits.png', dpi=300)
+        #plot the modulated signal 
+        plt.figure(figsize=(10, 6))
+        plt.plot(t, self.qpsk_signal)
+        plt.xlabel("Time")
+        plt.ylabel("Amplitude")
+        plt.xlim(0, len(self.qpsk_signal) // 10)
+        plt.title("Snippet of Modulated Signal")
+        plt.tight_layout()
+        plt.savefig('/media/tx_waveform_snippet.png', dpi=300)
+
+        #
+
+
+        #
