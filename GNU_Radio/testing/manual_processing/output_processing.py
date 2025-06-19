@@ -1,8 +1,11 @@
 import numpy as np
 import demodulator as dm
 from scipy.signal import fftconvolve
+from commpy.filters import rrcosfilter
 
+#################################### Helper Functions #############################
 def bits_to_text(bits):
+    """ Convert bitstream to ASCII text """
     chars = []
     for i in range(0, len(bits), 8):
         byte = bits[i:i+8]
@@ -11,36 +14,43 @@ def bits_to_text(bits):
         chars.append(chr(int(''.join(map(str, byte)), 2)))
     return ''.join(chars)
 
-# Load file
-#raw_data = np.fromfile("bits_read_in.bin", dtype=np.uint8)
+#################################### Load Received Data ###########################
 raw_data = np.fromfile("bits_read_in.bin", dtype=np.complex64)
-print("Raw data loaded from file:\n", raw_data)
+print("Raw data shape:", raw_data.shape)
 
-# # pulse shaping
-# beta = 0.35
-# N = 64
-# Ts = 1.0
-# fs = 32000
-# h = dm.rrc_filter(beta, N, Ts, fs)
+#################################### Signal Processing ############################
+# Filter parameters
+sps = 2                     # samples per symbol
+beta = 0.35                 # roll off 
+taps = 11 * sps             # must match Tx
+samp_rate = 32000           # sampling rate
 
-# # Convolve symbols with the filter
-# symbols = fftconvolve(h, raw_data, mode='same')
+# RRC matched filter
+h, _ = rrcosfilter(taps, beta, 1.0, sps)
+print(f"RRC Filter length: {len(h)}")
 
-# # normalize symbols
-# symbols /= np.max(np.abs(symbols))
+# Matched filtering
+filtered_symbols = fftconvolve(raw_data, h, mode='full')
 
-# # downsample symbols
-# sps = 2
-# symbols = symbols[::sps]
+# Remove group delay and downsample
+delay = len(h) // 2
+symbols = filtered_symbols[delay::sps]
 
-# swap between the two lines for testing
-# bits = dm.read_qpsk(symbols)
-bits = dm.read_qpsk(raw_data)
+# Normalize
+max_val = np.max(np.abs(symbols))
+if max_val > 0:
+    symbols /= max_val
 
-print("First 32 bits received:", np.flip(bits[:32]))
-print("Total bits received: ", len(bits))
+##################################### Demodulation ##########################
+if len(raw_data) > 0:
+    bits = dm.phase_rotation_handler(raw_data)
 
-# print the received message
-text = bits_to_text(bits)
-print(f"Decoded message: '{text}'")
-print("Received message length: ", len(text))
+    print("First 32 bits received:", bits)
+    print("Total bits received: ", len(bits))
+
+    # Convert to text
+    text = bits_to_text(bits)
+    print(f"Decoded message: '{text}'")
+    print("Received message length: ", len(text))
+else:
+    print("No symbols recovered!")

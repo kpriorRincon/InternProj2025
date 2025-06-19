@@ -1,47 +1,48 @@
 import numpy as np
 import modulator as md
 from scipy.signal import fftconvolve
+from commpy.filters import rrcosfilter
 
-def bits_to_symbols(bits):
-    return [int(''.join(map(str, bits[i:i+2])), 2) for i in range(0, len(bits), 2)]
-
+####################### User input to symbols ###########################
 # Clear files
-open('bits_to_send.txt', 'w').close()
-open('bits_read_in.txt', 'w').close()
+open('bits_to_send.bin', 'w').close()
+open('bits_read_in.bin', 'w').close()
 
-# Get input
+# User input
 msg = input("Enter your message: ")
-print("Message length: ", len(msg))
 
 # Convert to bits
 bits = [int(b) for c in msg for b in format(ord(c), '08b')]
-print("Total bits to send: ", len(bits))
+print("Bits to send\n", bits)
 
-# create qpsk symbols
+# Create QPSK symbols
 symbols = md.generate_qpsk(bits)
+print(f"Number of QPSK symbols: {len(symbols)}")
 
-# # upsample symbols
-# sps = 2
-# upsampled_symbols = np.concatenate([np.append(x, np.zeros(sps-1))for x in symbols])
+####################### Signal Processing ##########################
+# Filter parameters
+sps = 2                     # samples per symbol
+beta = 0.35                 # roll off 
+taps = 11 * sps             # span = 11 symbols
+samp_rate = 32000           # sampling rate
 
-# # pulse shaping
-# beta = 0.35
-# N = 64
-# Ts = 1.0
-# fs = 32000
-# h = md.rrc_filter(beta, N, Ts, fs)
+# Create RRC filter
+h, _ = rrcosfilter(taps, beta, 1.0, sps)
+print(f"RRC Filter length: {len(h)}")
 
-# # Convolve symbols with the filter
-# shaped_symbols = fftconvolve(h,upsampled_symbols, mode='same')
+# Zero-insertion upsampling
+upsampled_symbols = np.zeros(len(symbols) * sps, dtype=complex)
+upsampled_symbols[::sps] = symbols
 
-# # normalize symbols
-# shaped_symbols /= np.max(np.abs(shaped_symbols))
+# Pulse shaping
+shaped_symbols = fftconvolve(upsampled_symbols, h, mode='full')
 
-# error check
-print("First 32 bits sent:", bits[:32])
+# Normalize symbols
+max_val = np.max(np.abs(shaped_symbols))
+if max_val > 0:
+    shaped_symbols /= max_val
 
-# Save to file
-#np.array(symbols, dtype=np.uint8).tofile("bits_to_send.bin")
-np.array(shaped_symbols, dtype=np.complex64).tofile("bits_to_send.bin")
+######################## Save to Transmit File ######################
+np.array(symbols, dtype=np.complex64).tofile("bits_to_send.bin")
 read_input = np.fromfile("bits_to_send.bin", dtype=np.complex64)
-print("What was written to file:\n", read_input)
+print("Shape of what was written to file:", read_input.shape)
