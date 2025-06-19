@@ -21,3 +21,10 @@ print("Total bits received: ", len(bits))
 text = bits_to_text(bits)
 print(f"Decoded message: '{text}'")
 print("Received message length: ", len(text))
+
+bit_string = ''.join(map(str, bits))
+# Write bits and text to .txt file
+with open('bits_read_in.txt', 'w') as txt_file:
+    txt_file.write(bit_string)
+    txt_file.write('\n')
+    txt_file.write(text)

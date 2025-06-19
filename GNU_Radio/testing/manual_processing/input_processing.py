@@ -20,22 +20,22 @@ print("Total bits to send: ", len(bits))
 # create qpsk symbols
 symbols = md.generate_qpsk(bits)
 
-# upsample symbols
-sps = 2
-upsampled_symbols = np.concatenate([np.append(x, np.zeros(sps-1))for x in symbols])
+# # upsample symbols
+# sps = 2
+# upsampled_symbols = np.concatenate([np.append(x, np.zeros(sps-1))for x in symbols])
 
-# pulse shaping
-beta = 0.35
-N = 64
-Ts = 1.0
-fs = 32000
-h = md.rrc_filter(beta, N, Ts, fs)
+# # pulse shaping
+# beta = 0.35
+# N = 64
+# Ts = 1.0
+# fs = 32000
+# h = md.rrc_filter(beta, N, Ts, fs)
 
-# Convolve symbols with the filter
-shaped_symbols = fftconvolve(h,upsampled_symbols, mode='same')
+# # Convolve symbols with the filter
+# shaped_symbols = fftconvolve(h,upsampled_symbols, mode='same')
 
-# normalize symbols
-shaped_symbols /= np.max(np.abs(shaped_symbols))
+# # normalize symbols
+# shaped_symbols /= np.max(np.abs(shaped_symbols))
 
 # error check
 print("First 32 bits sent:", bits[:32])
