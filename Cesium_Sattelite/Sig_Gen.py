@@ -65,7 +65,7 @@ class SigGen:
 
         # Root raised-cosine filter impulse respone in the time domain
         h = ifft(fh)
-        h = h
+        h /= np.sum(h) # normalize to get unity gain, we dpon't want to change the amplitude/power
         return time, h
 
     def generate_qpsk(self, bits):

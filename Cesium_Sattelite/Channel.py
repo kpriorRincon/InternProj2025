@@ -52,23 +52,26 @@ class Channel:
         
         direction = 'up' if self.up else 'down'#specifier so that the user files can be differentiated 
 
-        #plot incoming signal in time and frequency
+        #plot incoming signal in time 
         #plot them side by side
+
         plt.figure(figsize=(10, 6))
         plt.plot(t, np.real(self.incoming_signal))
-        plt.title('Incoming Signal')
+        plt.title('Incoming Signal Time Domain')
         plt.xlabel('Time')
         plt.ylabel('Amplitude')
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_incoming_time', dpi=300)
 
 
-        #plot outgoing signal in time and frequency
-        #plot them side by side
+        #plot outgoing signal in time
+
         plt.figure(figsize= (10, 6))
-        plt.subplot(1,2,1)
-        plt.plot(t, np.real(self.incoming_signal))
-        plt.subplot(1,2,2) 
-        plt.plot(t, np.imag(self.incoming_signal))
+        plt.plot(t, np.real(self.outgoing_signal))
+        plt.title('Incoming Signal Time Domain')
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_time', dpi=300)
 
         # get the fft incoming
@@ -79,25 +82,40 @@ class Channel:
         N = len(t)
         f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
         plt.plot(f, S_mag_db)
+        plt.title('Frequency Domain of Incoming Signal')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude (dB)')
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_incoming_fft', dpi = 300)
         
-        # getfft outgoing
+        # get fft outgoing
         plt.figure(figsize = (10, 6))
         S = np.fft.fft(self.outgoing_signal)
         S = np.fft.fftshift(S)
         S_mag_db = 20 * np.log10(np.abs(S))
         f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
         plt.plot(f, S_mag_db)
+        plt.title('Frequency Domain of Outgoing Signal')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude (dB)')
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_fft', dpi = 300)
+
 
         #plot the phase rotation h causes 
         # Normalize h to unit magnitude
         h_normalized = self.h / np.abs(self.h)
         phase = np.angle(h_normalized)
-
         #plotting the phase 
         plt.figure(figsize=(5, 5))
-        plt.plot([0, np.real(h_normalized)], [0, np.imag(h_normalized)], marker='o')
+        # Plot the unit circle
+        circle = plt.Circle((0, 0), 1, color='lightgray', fill=False, linestyle='--')
+        plt.gca().add_artist(circle)
+        # Plot the arc from 0 to phase
+        arc_theta = np.linspace(0, phase, 100)
+        plt.plot(np.cos(arc_theta), np.sin(arc_theta), color='orange', linewidth=2, label='Phase Arc')
+        # Plot the vector for h
+        plt.plot([0, np.real(h_normalized)], [0, np.imag(h_normalized)], marker='o', color='b', label='h')
         plt.xlim(-1.1, 1.1)
         plt.ylim(-1.1, 1.1)
         plt.xlabel('Real')
@@ -105,4 +123,6 @@ class Channel:
         plt.title(f'Phase of h: {np.degrees(phase):.2f}°')
         plt.grid(True)
         plt.gca().set_aspect('equal', adjustable='box')
+        plt.legend()
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_h_phase', dpi=300)

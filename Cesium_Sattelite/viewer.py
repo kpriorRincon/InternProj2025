@@ -327,8 +327,8 @@ def Cesium_page():
                 #equation used ((kc - (vr dot khat)/lambda)/(kc - (vt dot khat)/lambda))fc kc = 1/lambda* speed of light
                 f_doppler_shifted = ((txFreq - np.dot(sat_v, k_ts)/lambda_up)/(txFreq - np.dot(tx_v, k_ts)/lambda_up)) * txFreq
                 f_delta_up = f_doppler_shifted-txFreq
-                ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted} Hz').style(label_style)
-                ui.label(f'Delta f: {f_delta_up} Hz').style(label_style)
+                ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted:.7f} Hz').style(label_style)
+                ui.label(f'Delta f: {f_delta_up:.7f} Hz').style(label_style)
 
                 
                 #downlink doppler 
@@ -337,8 +337,8 @@ def Cesium_page():
                 lambda_down = c/f_c_down
                 f_doppler_shifted = ((f_c_down - np.dot(rx_v, k_sr)/lambda_down)/(f_c_down - np.dot(sat_v, k_sr)/lambda_down)) * f_c_down
                 f_delta_down = f_doppler_shifted - f_c_down
-                ui.label(f'The doppler shifted frequency for downlink: {f_doppler_shifted} Hz').style(label_style)
-                ui.label(f'Delta f: {f_delta_down} Hz').style(label_style)
+                ui.label(f'The doppler shifted frequency for downlink: {f_doppler_shifted:.7f} Hz').style(label_style)
+                ui.label(f'Delta f: {f_delta_down:.7f} Hz').style(label_style)
 
 
                 #time delay up and down:
@@ -348,6 +348,7 @@ def Cesium_page():
                 ui.label(f'Time delay up: {time_delay_up:.7f} s').style(label_style)
 
                 time_delay_down = np.linalg.norm(rx_r - sat_r) / c 
+                total_time_delay = time_delay_up + time_delay_down
                 ui.label(f'Time delay down: {time_delay_down:.7f} s').style(label_style)
                 
 
@@ -381,34 +382,38 @@ def Cesium_page():
             
             #the required transmit power from tx to rep and rep to rec will be used to determine the amplitude of the outgoing waves 
             Fs = 40e6 #sample rate 40 mega samples per second
-            symbol_rate = 4e6 #10 times less than the sample rate
+            symb_rate = 4e6 #10 times less than the sample rate
             
-            sig_gen = SigGen.SigGen(txFreq, amp = 1, symbol_rate= Fs, symbol_rate = symbol_rate)
+            sig_gen = SigGen.SigGen(txFreq, amp = 1, sample_rate = Fs, symbol_rate = symb_rate)
             bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
             t, qpsk_signal = sig_gen.generate_qpsk(bits)
-            print(f'does: {np.mean(np.sum(np.abs(qpsk_signal)**2))} = {required_tx_power}')
             #scale the power of the signal 
             Pcurr = np.mean(np.sum(np.abs(qpsk_signal)**2))
             gain = np.sqrt(required_tx_power/Pcurr)
             qpsk_signal *= gain
+            print(f'does: {np.mean(np.sum(np.abs(qpsk_signal)**2))} = {required_tx_power}')
 
             #define channel up
             channel_up = Channel.Channel(qpsk_signal, h_up, noise, f_delta_up, up = True)
             #apply the channel: 
             qpsk_signal_after_channel = channel_up.apply_channel(t)
+            #run the channel_up_handler:
+            channel_up.handler(t, 4e9) #generate all the plots we want to display, note we pass in a higher sample rate just so we can actually get FFT data for the incoming signal
             
+            #upconvert:
             #we want the outgoing power to reach the required power
             Pcurr = np.mean(np.sum(np.abs(qpsk_signal_after_channel)**2))
             gain = np.sqrt(required_rep_power/Pcurr)#this gain is used to get the power of the signal to desired power
-            repeated_qpsk_signal_after_channel = gain * np.exp(1j*2 * np.pi * 10e6 * t) * qpsk_signal_after_channel
-            
+            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * t) * qpsk_signal_after_channel
             #now we want to see if we actually got to the desired power
             #debug:
-            print(f'does: {np.mean(np.sum(np.abs(repeated_qpsk_signal_after_channel)**2))} = {required_rep_power}')
-
-            #run the channel_up_handler:
-            channel_up.handler(t, 4e9) #generate all the plots we want to display
-            #now the repeater will take in the qpsk_signal_after_channel and upconvert by 10MHz
+            print(f'does: {np.mean(np.sum(np.abs(repeated_qpsk_signal)**2))} = {required_rep_power}')
+            #run the signal through channel down
+            channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
+            channel_down.handler(t)
+            
+            #This signal is what gets fed into the repeater
+            repeated_siganl_after_channel = channel_down.apply_channel(t)
 
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
@@ -450,7 +455,7 @@ def Cesium_page():
             #show upsampled bits sub plot one on top of the other real and imaginary
 
             #show the pulse shaping Re/Im
-            
+
             #show it modulated with the carrier over a short time frame
 
         @ui.page('/channel1')
@@ -458,12 +463,11 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
-
-            ui.image('media/channel_up_h_phase.png').force_reload()
-            ui.image('media/channel_up_incoming_time.png').force_reload()
-            ui.image('media/channel_up_incoming_fft.png').force_reload()
-            ui.image('media/channel_up_outgoing_time.png').force_reload()
-            ui.image('media/channel_up_outgoing_fft.png').force_reload()
+            ui.image('media/channel_up_h_phase.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_up_incoming_time.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_up_incoming_fft.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_up_outgoing_time.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_up_outgoing_fft.png').style('width: 70%;').force_reload()
             #show information about h
             #show information about the signal in vs the receive signal e.g. attenuation/phase shift
             #  
@@ -478,8 +482,12 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
-            #information about h 
-            #who information about the signal in vs signal out e.g. attenuation / phase shfit
+            ui.image('media/channel_down_h_phase.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_incoming_time.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_incoming_fft.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_outgoing_time.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_outgoing_fft.png').style('width: 70%;').force_reload()
+
         @ui.page('/receiver')
         def receiver_page():
             ui.button('Back', on_click=ui.navigate.back)
