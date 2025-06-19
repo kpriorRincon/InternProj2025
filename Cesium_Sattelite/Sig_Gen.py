@@ -170,6 +170,7 @@ class SigGen:
         plt.title('Upsampled Bits Q (Imaginary Part)')
         plt.tight_layout()
         plt.savefig('media/tx_upsampled_bits.png', dpi=300)
+        plt.close()
         
         #Pulse Shaped bits
         plt.figure(figsize = (10,6))
@@ -183,6 +184,7 @@ class SigGen:
         plt.title('Pulse Shaped Q (Imaginary Part)')
         plt.tight_layout()
         plt.savefig('media/tx_pulse_shaped_bits.png', dpi=300)
+        plt.close()
         #plot the modulated signal 
         plt.figure(figsize=(10, 6))
         plt.plot(t, np.real(self.qpsk_signal))
@@ -191,6 +193,7 @@ class SigGen:
         plt.title("Snippet of Modulated Signal")
         plt.tight_layout()
         plt.savefig('media/tx_waveform_snippet.png', dpi=300)
+        plt.close()
 
         #
 

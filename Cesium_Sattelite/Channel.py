@@ -21,10 +21,12 @@ class Channel:
 
     def apply_channel(self, t):
         import numpy as np
+        
         #generate AWGN based on noise power
         noise_standard_deviation = np.sqrt(self.noise_power / 2)
         noise_real = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
         noise_imag = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
+        
         #apply single tap channel to incomiong signal
         AWGN = noise_real + 1j * noise_imag#we need real and imaginary noise
         
@@ -62,24 +64,25 @@ class Channel:
         plt.ylabel('Amplitude')
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_incoming_time', dpi=300)
-
+        plt.close()
 
         #plot outgoing signal in time
 
         plt.figure(figsize= (10, 6))
         plt.plot(t, np.real(self.outgoing_signal))
-        plt.title('Incoming Signal Time Domain')
+        plt.title('Outgoing Signal Time Domain')
         plt.xlabel('Time')
         plt.ylabel('Amplitude')
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_time', dpi=300)
-
+        plt.close()
         # get the fft incoming
+
         plt.figure(figsize = (10, 6))
         S = np.fft.fft(self.incoming_signal)
-        S = np.fft.fftshift(S)
         S_mag_db = 20 * np.log10(np.abs(S))
         N = len(t)
+
         f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
         plt.plot(f, S_mag_db)
         plt.title('Frequency Domain of Incoming Signal')
@@ -87,11 +90,11 @@ class Channel:
         plt.ylabel('Magnitude (dB)')
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_incoming_fft', dpi = 300)
-        
+        plt.close()
+
         # get fft outgoing
         plt.figure(figsize = (10, 6))
         S = np.fft.fft(self.outgoing_signal)
-        S = np.fft.fftshift(S)
         S_mag_db = 20 * np.log10(np.abs(S))
         f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
         plt.plot(f, S_mag_db)
@@ -100,7 +103,7 @@ class Channel:
         plt.ylabel('Magnitude (dB)')
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_fft', dpi = 300)
-
+        plt.close()
 
         #plot the phase rotation h causes 
         # Normalize h to unit magnitude
@@ -115,7 +118,7 @@ class Channel:
         arc_theta = np.linspace(0, phase, 100)
         plt.plot(np.cos(arc_theta), np.sin(arc_theta), color='orange', linewidth=2, label='Phase Arc')
         # Plot the vector for h
-        plt.plot([0, np.real(h_normalized)], [0, np.imag(h_normalized)], marker='o', color='b', label='h')
+        plt.plot([0, np.real(h_normalized)], [0, np.imag(h_normalized)], marker='o', color='b', label='h normalized')
         plt.xlim(-1.1, 1.1)
         plt.ylim(-1.1, 1.1)
         plt.xlabel('Real')
@@ -126,3 +129,4 @@ class Channel:
         plt.legend()
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_h_phase', dpi=300)
+        plt.close()
