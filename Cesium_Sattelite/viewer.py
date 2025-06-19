@@ -327,8 +327,9 @@ def Cesium_page():
             with doppler_container:
                 label_style = 'font-size: 1.2em; font-weight: bold; margin-bottom: 0.5em; color: #2d3748;'
                 #equation used ((kc - (vr dot khat)/lambda)/(kc - (vt dot khat)/lambda))fc kc = 1/lambda* speed of light
-                f_doppler_shifted = ((txFreq - np.dot(sat_v, k_ts)/lambda_up)/(txFreq - np.dot(tx_v, k_ts)/lambda_up)) * txFreq
-                f_delta_up = f_doppler_shifted-txFreq
+                f_doppler_shifted = ((txFreq - np.dot(sat_v, k_ts) / lambda_up) / (txFreq - np.dot(tx_v, k_ts) / lambda_up)) * txFreq
+                f_delta_up = f_doppler_shifted - txFreq
+
                 ui.label(f'The doppler shifted frequency for uplink: {f_doppler_shifted:.7f} Hz').style(label_style)
                 ui.label(f'Delta f: {f_delta_up:.7f} Hz').style(label_style)
 
@@ -365,7 +366,13 @@ def Cesium_page():
                 
                 #pick theta uniformly at random from 0 to 360 degrees 
                 THETA = np.random.uniform(0, 2*np.pi)
-                h_up = alpha_up * np.exp(1j * THETA) # single tap block channel model
+
+                '''notes about alpha:
+                    since alpha is an attenuation in power e.g. Pr/Pt = alpha
+                    for amplitude we would square root alpha since in general
+                    p = |x(t)|^2
+                '''
+                h_up = np.sqrt(alpha_up) * np.exp(1j * THETA) # single tap block channel model
                 
                 print(f'alpha down: {alpha_up}')
                 print(f'h_up: {h_up}')
@@ -375,26 +382,36 @@ def Cesium_page():
                 print(f'alpha down: {alpha_down}')
                 #pick theta uniformly at random from 0 to 180 degrees
                 THETA = np.random.uniform(0, np.pi)
-                h_down = alpha_down * np.exp(1j * THETA) # single tap block channel model
+                h_down = np.sqrt(alpha_down) * np.exp(1j * THETA) # single tap block channel model
+                print(f'hdown: {h_down}')
                 
                 #since Pr/Pt = alpha and Pr/noise = snr then Pt = N*SNR/alpha
-                noise = noise/1000 # get noise into watts
+                noise = noise / 1000 # get noise into watts
                 #noise is going to be small 
-                required_tx_power = (snr*noise)/alpha_up # power in watts
-                required_rep_power = snr*noise/alpha_down #power in watts
+                required_tx_power = (snr * noise) / alpha_up # power in watts
+                required_rep_power = (snr * noise) / alpha_down #power in watts
+
                 ui.label(f'Required power (transmitter -> repeater) to satisfy desired SNR: {required_tx_power:.2f} W').style(label_style)
                 ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
 
-                print(f'hdown: {h_down}')
 
             #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
             
             #the required transmit power from tx to rep and rep to rec will be used to determine the amplitude of the outgoing waves 
-            Fs = 40e6 #sample rate 40 mega samples per second
+            Fs = 40e6 #sample rate 40 MHz
             symb_rate = 4e6 #10 times less than the sample rate
+
+            #decide the amplitude of the signal so that by the time it gets to the repeater it's very
+            # Calculate amplitude scaling so that the QPSK signal has required_tx_power at the repeater
+            # QPSK average power is proportional to amp^2 (assuming unit average symbol energy)
+            # We'll set amp so that after channel attenuation, received power = required_tx_power
+            # So: amp^2 * alpha_up = required_tx_power  =>  amp = sqrt(required_tx_power / alpha_up)
             
-            sig_gen = SigGen.SigGen(txFreq, amp = 10000000000, sample_rate = Fs, symbol_rate = symb_rate)
+            tx_amp = np.sqrt(required_tx_power) #we want the amplitude
+            sig_gen = SigGen.SigGen(txFreq, amp=1, sample_rate=Fs, symbol_rate=symb_rate)
+
             bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
+
             t, qpsk_signal = sig_gen.generate_qpsk(bits)
 
             sig_gen.handler(t) # run the sig gen handler

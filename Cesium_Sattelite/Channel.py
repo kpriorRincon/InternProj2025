@@ -23,17 +23,22 @@ class Channel:
         import numpy as np
         
         #generate AWGN based on noise power
+        print(f'noise_power = {self.noise_power}')
+        
         noise_standard_deviation = np.sqrt(self.noise_power / 2)
         noise_real = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
         noise_imag = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
         
         #apply single tap channel to incomiong signal
-        AWGN = noise_real + 1j * noise_imag#we need real and imaginary noise
+        AWGN = noise_real + 1j * noise_imag #we need real and imaginary noise
         
         #define doppler
         doppler_effect = np.exp(1j * 2 * np.pi * self.freq_shift * t)
         signal_with_doppler = doppler_effect * self.incoming_signal #apply the freq shift 
-        outgoing_signal = self.h * signal_with_doppler + AWGN # element wise addition with AWGN 
+
+        outgoing_signal = self.h * signal_with_doppler #apply single tap channel 
+        outgoing_signal +=  AWGN # element wise addition with AWGN 
+        
         self.outgoing_signal = outgoing_signal
         return outgoing_signal
     

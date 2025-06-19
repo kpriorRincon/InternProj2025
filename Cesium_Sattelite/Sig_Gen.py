@@ -18,7 +18,6 @@ class SigGen:
         }
 
     def rrc_filter(self, beta, N, Ts, fs):
-        
         """
         Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response
 
@@ -29,46 +28,33 @@ class SigGen:
         - fs : Sampling frequency/rate (Hz)
 
         Returns:
-        - h : The impulse response of the RRC filter in the time domain
         - time : The time vector of the impulse response
-
+        - h : The impulse response of the RRC filter in the time domain
         """
 
-        # Importing necessary libraries
-        import numpy as np
-        from scipy.fft import fft, ifft
+        import numpy as np 
 
-        # The number of samples in each symbol
-        samples_per_symbol = int(fs * Ts)
+        # Time vector centered at zero
+        t = np.arange(-N // 2, N // 2) / fs
 
-        # The filter span in symbols
-        total_symbols = N / samples_per_symbol
+        h = np.zeros_like(t) # start with zeros for the length of the time vector
 
-        # The total amount of time that the filter spans
-        total_time = total_symbols * Ts
-
-        # The time vector to compute the impulse response
-        time = np.linspace(-total_time / 2, total_time / 2, N, endpoint=False)
-
-        # ---------------------------- Generating the RRC impulse respose ----------------------------
-
-        # The root raised-cosine impulse response is generated from taking the square root of the raised-cosine impulse response in the frequency domain
-
-        # Raised-cosine filter impulse response in the time domain
-        num = np.cos((np.pi * beta * time) / (Ts))
-        denom = 1 - ((2 * beta * time) / (Ts)) ** 2
-        g = np.sinc(time / Ts) * (num / denom)
-
-        # Raised-cosine filter impulse response in the frequency domain
-        fg = fft(g)
-
-        # Root raised-cosine filter impulse response in the frequency domain
-        fh = np.sqrt(fg)
-
-        # Root raised-cosine filter impulse respone in the time domain
-        h = ifft(fh)
-        h /= np.sum(h) # normalize to get unity gain, we dpon't want to change the amplitude/power
-        return time, h
+        for i in range(len(t)):
+            #populate h based on the impusle response
+            if t[i] == 0.0:
+                h[i] = (1/Ts)*(1.0 + beta * (4/np.pi - 1))
+            elif abs(t[i]) == Ts / (4 * beta):
+                h[i] = (1/Ts)*(beta / np.sqrt(2)) * (
+                    ((1 + 2/np.pi) * np.sin(np.pi / (4 * beta))) +
+                    ((1 - 2/np.pi) * np.cos(np.pi / (4 * beta)))
+                )
+            else:
+                numerator = (1/Ts)*np.sin(np.pi * t[i] * (1 - beta) / Ts) + 4 * beta * t[i] / Ts * np.cos(np.pi * t[i] * (1 + beta) / Ts)
+                denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
+                h[i] = numerator / denominator
+        # Normalize the filter to unit energy
+        h = h / np.sqrt(np.sum(np.abs(h)**2)) # we want this filter to have unit energy so convolving with it wont change the energy of a signal
+        return t, h 
 
     def generate_qpsk(self, bits):
         """
@@ -82,8 +68,6 @@ class SigGen:
         Returns:
             np.ndarray: Time vector.
             np.ndarray: QPSK waveform.
-            list: Vertical lines to show phase transition.
-            symbols (list): List of complex symbols corresponding to the bit pairs.
         """
         import numpy as np
 
@@ -106,12 +90,13 @@ class SigGen:
         #this will make an array like [(1+1j)/root2, 0, 0, 0, 0, 0, 0, 0,..., (1-1j)/root2, ]
         upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1, dtype=complex))for x in symbols])
         self.upsampled_symbols = upsampled_symbols
+        
         # Root raised cosine filter implementation
         beta = 0.3
         _, pulse_shape = self.rrc_filter(beta, 300, 1/self.symbol_rate, self.sample_rate)
         
         # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
-        signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
+        signal = np.convolve(upsampled_symbols, pulse_shape, mode='same')
         self.pulse_shaped_symbols = signal
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
