@@ -105,7 +105,7 @@ class SigGen:
         # Upsample symbols to match sampling rate
         #this will make an array like [(1+1j)/root2, 0, 0, 0, 0, 0, 0, 0,..., (1-1j)/root2, ]
         upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1, dtype=complex))for x in symbols])
-        self.upsampled_symbols
+        self.upsampled_symbols = upsampled_symbols
         # Root raised cosine filter implementation
         beta = 0.3
         _, pulse_shape = self.rrc_filter(beta, 300, 1/self.symbol_rate, self.sample_rate)
@@ -169,7 +169,7 @@ class SigGen:
         plt.legend()
         plt.title('Upsampled Bits Q (Imaginary Part)')
         plt.tight_layout()
-        plt.savefig('/media/tx_upsampled_bits.png', dpi=300)
+        plt.savefig('media/tx_upsampled_bits.png', dpi=300)
         
         #Pulse Shaped bits
         plt.figure(figsize = (10,6))
@@ -182,16 +182,15 @@ class SigGen:
         plt.legend()
         plt.title('Pulse Shaped Q (Imaginary Part)')
         plt.tight_layout()
-        plt.savefig('/media/tx_pulse_shaped_bits.png', dpi=300)
+        plt.savefig('media/tx_pulse_shaped_bits.png', dpi=300)
         #plot the modulated signal 
         plt.figure(figsize=(10, 6))
-        plt.plot(t, self.qpsk_signal)
+        plt.plot(t, np.real(self.qpsk_signal))
         plt.xlabel("Time")
         plt.ylabel("Amplitude")
-        plt.xlim(0, len(self.qpsk_signal) // 10)
         plt.title("Snippet of Modulated Signal")
         plt.tight_layout()
-        plt.savefig('/media/tx_waveform_snippet.png', dpi=300)
+        plt.savefig('media/tx_waveform_snippet.png', dpi=300)
 
         #
 

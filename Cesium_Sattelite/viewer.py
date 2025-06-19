@@ -387,6 +387,9 @@ def Cesium_page():
             sig_gen = SigGen.SigGen(txFreq, amp = 1, sample_rate = Fs, symbol_rate = symb_rate)
             bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
             t, qpsk_signal = sig_gen.generate_qpsk(bits)
+
+            sig_gen.handler(t) # run the sig gen handler
+            
             #scale the power of the signal 
             Pcurr = np.mean(np.sum(np.abs(qpsk_signal)**2))
             gain = np.sqrt(required_tx_power/Pcurr)
@@ -410,10 +413,9 @@ def Cesium_page():
             print(f'does: {np.mean(np.sum(np.abs(repeated_qpsk_signal)**2))} = {required_rep_power}')
             #run the signal through channel down
             channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
-            channel_down.handler(t, 4e9)
-            
             #This signal is what gets fed into the repeater
             repeated_siganl_after_channel = channel_down.apply_channel(t)
+            channel_down.handler(t, 4e9)
 
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
@@ -453,11 +455,11 @@ def Cesium_page():
             #bit sequence with prefix/postifx labeled
 
             #show upsampled bits sub plot one on top of the other real and imaginary
-            ui.image('Upsampled Bits Q (Imaginary Part)').style('width: 70%').force_reload()
+            ui.image('media/tx_upsampled_bits.png').style('width: 70%').force_reload()
             #show the pulse shaping Re/Im
-            ui.image('/media/tx_pulse_shaped_bits.png').style('width: 70%').force_reload()
+            ui.image('media/tx_pulse_shaped_bits.png').style('width: 70%').force_reload()
             #show it modulated with the carrier over a short time frame
-            ui.image('/media/tx_waveform_snippet.png').style('width: 70%').force_reload()
+            ui.image('media/tx_waveform_snippet.png').style('width: 70%').force_reload()
 
         @ui.page('/channel1')
         def channel1_page():
