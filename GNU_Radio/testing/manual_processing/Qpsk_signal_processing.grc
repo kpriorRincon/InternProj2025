@@ -45,6 +45,48 @@ blocks:
     coordinate: [448, 24.0]
     rotation: 0
     state: enabled
+- name: freq_offset
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: 'Channel: frequency offset'
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '-0.100'
+    step: '0.001'
+    stop: '0.100'
+    value: '0.025'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1360, 4.0]
+    rotation: 0
+    state: true
+- name: noise_volt
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: 'Channel: Noise Voltage'
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0'
+    step: '0.01'
+    stop: '1'
+    value: '.1'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [960, 4.0]
+    rotation: 0
+    state: true
 - name: samp_rate
   id: variable
   parameters:
@@ -69,6 +111,27 @@ blocks:
     coordinate: [368, 24.0]
     rotation: 0
     state: enabled
+- name: time_offset
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: 'Channel: Timing Offset'
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0.999'
+    step: '0.0001'
+    stop: '1.001'
+    value: '1.0005'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1160, 4.0]
+    rotation: 0
+    state: true
 - name: analog_sig_source_x_0_0
   id: analog_sig_source_x
   parameters:
@@ -88,7 +151,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [296, 492.0]
+    coordinate: [832, 508.0]
     rotation: 0
     state: enabled
 - name: analog_sig_source_x_0_0_0
@@ -110,7 +173,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [296, 332.0]
+    coordinate: [304, 324.0]
     rotation: 0
     state: enabled
 - name: blocks_file_sink_0
@@ -128,7 +191,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1000, 248.0]
+    coordinate: [1304, 248.0]
     rotation: 0
     state: true
 - name: blocks_file_source_0
@@ -143,7 +206,7 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     offset: '0'
-    repeat: 'True'
+    repeat: 'False'
     type: complex
     vlen: '1'
   states:
@@ -186,7 +249,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [776, 256.0]
+    coordinate: [1136, 256.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle_0
@@ -208,6 +271,27 @@ blocks:
     coordinate: [288, 232.0]
     rotation: 0
     state: enabled
+- name: channels_channel_model_0
+  id: channels_channel_model
+  parameters:
+    affinity: ''
+    alias: ''
+    block_tags: 'False'
+    comment: ''
+    epsilon: time_offset
+    freq_offset: freq_offset
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    noise_voltage: noise_volt
+    seed: '0'
+    taps: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [800, 204.0]
+    rotation: 0
+    state: bypassed
 - name: qtgui_time_sink_x_0
   id: qtgui_time_sink_x
   parameters:
@@ -302,7 +386,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [752, 432.0]
+    coordinate: [768, 48.0]
     rotation: 0
     state: true
 
@@ -310,10 +394,11 @@ connections:
 - [analog_sig_source_x_0_0, '0', blocks_multiply_xx_0_0, '1']
 - [analog_sig_source_x_0_0_0, '0', blocks_multiply_xx_0, '1']
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
-- [blocks_multiply_xx_0, '0', blocks_multiply_xx_0_0, '0']
+- [blocks_multiply_xx_0, '0', channels_channel_model_0, '0']
 - [blocks_multiply_xx_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_multiply_xx_0_0, '0', blocks_file_sink_0, '0']
 - [blocks_throttle_0, '0', blocks_multiply_xx_0, '0']
+- [channels_channel_model_0, '0', blocks_multiply_xx_0_0, '0']
 
 metadata:
   file_format: 1

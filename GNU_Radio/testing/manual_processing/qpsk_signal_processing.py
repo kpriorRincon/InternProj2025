@@ -28,6 +28,7 @@ import sip
 from gnuradio import analog
 from gnuradio import blocks
 import pmt
+from gnuradio import channels
 from gnuradio import gr
 from gnuradio.fft import window
 import sys
@@ -35,6 +36,8 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+from gnuradio.qtgui import Range, RangeWidget
+from PyQt5 import QtCore
 
 
 
@@ -76,13 +79,19 @@ class qpsk_signal_processing(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
+        self.time_offset = time_offset = 1.0005
         self.sps = sps = 2
         self.samp_rate = samp_rate = 32e3
+        self.noise_volt = noise_volt = .1
+        self.freq_offset = freq_offset = 0.025
         self.excess_bw = excess_bw = 0.35
 
         ##################################################
         # Blocks
         ##################################################
+        self._time_offset_range = Range(0.999, 1.001, 0.0001, 1.0005, 200)
+        self._time_offset_win = RangeWidget(self._time_offset_range, self.set_time_offset, "Channel: Timing Offset", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._time_offset_win)
         self.qtgui_time_sink_x_0 = qtgui.time_sink_c(
             1024, #size
             samp_rate, #samp_rate
@@ -134,10 +143,16 @@ class qpsk_signal_processing(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
+        self._noise_volt_range = Range(0, 1, 0.01, .1, 200)
+        self._noise_volt_win = RangeWidget(self._noise_volt_range, self.set_noise_volt, "Channel: Noise Voltage", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._noise_volt_win)
+        self._freq_offset_range = Range(-0.100, 0.100, 0.001, 0.025, 200)
+        self._freq_offset_win = RangeWidget(self._freq_offset_range, self.set_freq_offset, "Channel: frequency offset", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._freq_offset_win)
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
         self.blocks_multiply_xx_0_0 = blocks.multiply_vcc(1)
         self.blocks_multiply_xx_0 = blocks.multiply_vcc(1)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.bin', True, 0, 0)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.bin', False, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, '/home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_read_in.bin', False)
         self.blocks_file_sink_0.set_unbuffered(False)
@@ -165,6 +180,13 @@ class qpsk_signal_processing(gr.top_block, Qt.QWidget):
 
         event.accept()
 
+    def get_time_offset(self):
+        return self.time_offset
+
+    def set_time_offset(self, time_offset):
+        self.time_offset = time_offset
+        self.channels_channel_model_0.set_timing_offset(self.time_offset)
+
     def get_sps(self):
         return self.sps
 
@@ -180,6 +202,20 @@ class qpsk_signal_processing(gr.top_block, Qt.QWidget):
         self.analog_sig_source_x_0_0_0.set_sampling_freq(self.samp_rate)
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
         self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
+
+    def get_noise_volt(self):
+        return self.noise_volt
+
+    def set_noise_volt(self, noise_volt):
+        self.noise_volt = noise_volt
+        self.channels_channel_model_0.set_noise_voltage(self.noise_volt)
+
+    def get_freq_offset(self):
+        return self.freq_offset
+
+    def set_freq_offset(self, freq_offset):
+        self.freq_offset = freq_offset
+        self.channels_channel_model_0.set_frequency_offset(self.freq_offset)
 
     def get_excess_bw(self):
         return self.excess_bw

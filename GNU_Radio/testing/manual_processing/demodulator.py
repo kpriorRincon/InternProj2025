@@ -22,6 +22,21 @@ def read_qpsk(symbols):
         return best_bits
 
 def rrc_filter(beta, N, Ts, fs):
+        
+        """
+        Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response
+
+        Parameters:
+        - beta : Roll-off factor (0 < beta <= 1)
+        - N : Total number of taps in the filter (the filter span)
+        - Ts : Symbol period 
+        - fs : Sampling frequency/rate (Hz)
+
+        Returns:
+        - h : The impulse response of the RRC filter in the time domain
+        - time : The time vector of the impulse response
+
+        """
         # The number of samples in each symbol
         samples_per_symbol = int(fs * Ts)
 
