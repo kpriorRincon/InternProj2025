@@ -176,6 +176,24 @@ class SigGen:
         plt.tight_layout()
         plt.savefig('media/tx_pulse_shaped_bits.png', dpi=300)
         plt.close()
+        # Compute FFT of the baseband pulseshaped signal
+        # Compute FFT of the baseband pulse-shaped signal
+        pulse_shaped = self.pulse_shaped_symbols
+        N = len(pulse_shaped)
+        fft_vals = np.fft.fftshift(np.fft.fft(pulse_shaped))
+        freqs = np.fft.fftshift(np.fft.fftfreq(N, d=1/self.sample_rate))
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(freqs / 1e6, 20 * np.log10(np.abs(fft_vals) / np.max(np.abs(fft_vals))))
+        plt.xlabel("Frequency (MHz)")
+        plt.ylabel("Normalized Magnitude (dB)")
+        plt.title("FFT of Pulse Shaped Baseband Signal")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('media/tx_pulse_shaped_fft.png', dpi=300)
+        plt.close()
+        
+        
         #plot the modulated signal 
         plt.figure(figsize=(10, 6))
         plt.plot(t, np.real(self.qpsk_signal))
@@ -186,24 +204,7 @@ class SigGen:
         plt.savefig('media/tx_waveform_snippet.png', dpi=300)
         plt.close()
 
-        # get the fft of qpsk signal
-        # Compute FFT of the QPSK signal
-        fft_signal = np.fft.fft(self.qpsk_signal)
-        fft_freq = np.fft.fftfreq(len(fft_signal), d=1/4e9)#since the carrier frequency is over 900 MHz I am doing roughly 4 times that for the samplin rate
-
-        # Shift FFT for plotting
-        fft_signal_shifted = np.fft.fftshift(fft_signal)
-        fft_freq_shifted = np.fft.fftshift(fft_freq)
-
-        plt.figure(figsize=(10, 6))
-        plt.plot(fft_freq_shifted / 1e9, 20 * np.log10(np.abs(fft_signal_shifted) + 1e-12))
-        plt.xlabel("Frequency (GHz)")
-        plt.ylabel("Magnitude (dB)")
-        plt.title("QPSK Signal Spectrum (Carrier at ~{:.1f} GHz)".format(self.freq / 1e9))
-        plt.tight_layout()
-        plt.savefig('media/tx_qpsk_fft.png', dpi=300)
-        plt.close()
-
+        
         #
 
 

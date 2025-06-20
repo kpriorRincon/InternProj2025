@@ -486,9 +486,10 @@ def Cesium_page():
                 ui.image('media/tx_upsampled_bits.png').style('width: 70%').force_reload()
                 #show the pulse shaping Re/Im
                 ui.image('media/tx_pulse_shaped_bits.png').style('width: 70%').force_reload()
+                #show the baseband FFT
+                ui.image('media/tx_pulse_shaped_fft.png').style('width: 50%').force_reload()
                 #show it modulated with the carrier over a short time frame
                 ui.image('media/tx_waveform_snippet.png').style('width: 70%').force_reload()
-                ui.image('media/tx_qpsk_fft.png').style('width: 50%').force_reload()
 
         @ui.page('/channel1')
         def channel1_page():
