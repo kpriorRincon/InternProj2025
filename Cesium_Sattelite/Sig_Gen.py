@@ -186,6 +186,24 @@ class SigGen:
         plt.savefig('media/tx_waveform_snippet.png', dpi=300)
         plt.close()
 
+        # get the fft of qpsk signal
+        # Compute FFT of the QPSK signal
+        fft_signal = np.fft.fft(self.qpsk_signal)
+        fft_freq = np.fft.fftfreq(len(fft_signal), d=1/self.sample_rate)
+
+        # Shift FFT for plotting
+        fft_signal_shifted = np.fft.fftshift(fft_signal)
+        fft_freq_shifted = np.fft.fftshift(fft_freq)
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(fft_freq_shifted / 1e9, 20 * np.log10(np.abs(fft_signal_shifted) + 1e-12))
+        plt.xlabel("Frequency (GHz)")
+        plt.ylabel("Magnitude (dB)")
+        plt.title("QPSK Signal Spectrum (Carrier at ~{:.1f} GHz)".format(self.freq / 1e9))
+        plt.tight_layout()
+        plt.savefig('media/tx_qpsk_fft.png', dpi=300)
+        plt.close()
+
         #
 
 
