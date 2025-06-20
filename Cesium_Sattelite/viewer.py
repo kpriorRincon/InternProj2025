@@ -483,13 +483,15 @@ def Cesium_page():
                 #bit sequence with prefix/postifx labeled
 
                 #show upsampled bits sub plot one on top of the other real and imaginary
-                ui.image('media/tx_upsampled_bits.png').style('width: 70%').force_reload()
+                ui.image('media/tx_upsampled_bits.png').style('width: 50%').force_reload()
+                ui.label('These upsampled bits are pulse shaped with the following filter:').style('font-size: 1.5em; font-weight: bold;')
+                ui.image('media/tx_rrc.png').style('width: 30%').force_reload()
                 #show the pulse shaping Re/Im
-                ui.image('media/tx_pulse_shaped_bits.png').style('width: 70%').force_reload()
+                ui.image('media/tx_pulse_shaped_bits.png').style('width: 50%').force_reload()
                 #show the baseband FFT
                 ui.image('media/tx_pulse_shaped_fft.png').style('width: 50%').force_reload()
                 #show it modulated with the carrier over a short time frame
-                ui.image('media/tx_waveform_snippet.png').style('width: 70%').force_reload()
+                ui.image('media/tx_waveform_snippet.png').style('width: 50%').force_reload()
 
         @ui.page('/channel1')
         def channel1_page():
@@ -498,20 +500,18 @@ def Cesium_page():
             ui.label('This is a placeholder for the first channel simulation step.')
 
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                #show information about h
                 ui.image('media/channel_up_h_phase.png').style('width: 40%;').force_reload()
+                #signal in signal out in time domain after attenuation is applied
                 ui.image('media/channel_up_incoming_time.png').style('width: 50%;').force_reload()
-                ui.image('media/channel_up_incoming_fft.png').style('width: 50%;').force_reload()
                 ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
-                ui.image('media/channel_up_outgoing_fft.png').style('width: 50%;').force_reload()
-            #show information about h
-            #show information about the signal in vs the receive signal e.g. attenuation/phase shift
-            #  
+
         @ui.page('/repeater')
         def repeater_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the repeater simulation step.')
-            #show signal in signal out in time and frequency > upconversion 10 MHz
+
 
         @ui.page('/channel2')
         def channel2_page():
