@@ -145,9 +145,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1272, 264.0]
+    coordinate: [1264, 264.0]
     rotation: 0
-    state: true
+    state: bypassed
 - name: analog_sig_source_x_0
   id: analog_sig_source_x
   parameters:

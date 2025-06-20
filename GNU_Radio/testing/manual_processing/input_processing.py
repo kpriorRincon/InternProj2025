@@ -21,13 +21,13 @@ print(f"Number of QPSK symbols: {len(symbols)}")
 
 ####################### Signal Processing ##########################
 # Filter parameters
-sps = 2                     # samples per symbol
-beta = 0.35                 # roll off 
-taps = 11 * sps             # span = 11 symbols
-samp_rate = 32000           # sampling rate
+sps = 2             # samples per symbol
+beta = 0.35         # roll off 
+taps = 31           # span = 11 symbols
+samp_rate = 32000   # sampling rate
 
 # Create RRC filter
-h, _ = rrcosfilter(taps, beta, 1.0, sps)
+h, _ = rrcosfilter(taps, beta, sps / samp_rate, samp_rate)
 print(f"RRC Filter length: {len(h)}")
 
 # Zero-insertion upsampling
