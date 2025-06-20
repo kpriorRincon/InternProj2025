@@ -74,7 +74,6 @@ class SigGen:
         # #plt.plot(t, np.convolve(h, h, mode='same'), '.-')
         # plt.show()
         # Normalize the filter to unit energy
-        h = h
         return t, h 
 
     def generate_qpsk(self, bits, bool_noise, noise_power=0.01):
