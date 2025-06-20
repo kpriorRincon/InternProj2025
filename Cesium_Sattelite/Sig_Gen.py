@@ -149,28 +149,59 @@ class SigGen:
         import numpy as np
         #we would like to plot
 
-        #upsampled_bits real and imaginary
-        plt.figure(figsize = (10,6))
+        #upsampled_bits real and imaginary with dashed stems at symbol locations
+        samples_per_symbol = int(self.sample_rate / self.symbol_rate)
+        symbol_indices = np.arange(0, len(self.upsampled_symbols), samples_per_symbol)
+
+        plt.figure(figsize=(10, 6))
         plt.subplot(2, 1, 1)
-        plt.plot(t, np.real(self.upsampled_symbols), 'b.-', label = 'Real')
-        plt.legend()
+        plt.plot(t, np.real(self.upsampled_symbols), 'b.-', label='Real')
+        plt.legend() 
         plt.title('Upsampled Bits I (Real Part)')
-        plt.subplot(2,1,2)
-        plt.plot(t, np.imag(self.upsampled_symbols), 'r.-', label = 'Imaginary')
+
+        plt.subplot(2, 1, 2)
+        plt.plot(t, np.imag(self.upsampled_symbols), 'r.-', label='Imaginary')
         plt.legend()
         plt.title('Upsampled Bits Q (Imaginary Part)')
+
         plt.tight_layout()
         plt.savefig('media/tx_upsampled_bits.png', dpi=300)
         plt.close()
         
+        #pulse shaping impulse response:
+        plt.figure(figsize=(5,5))
+        pulse_t,pulse_shape = self.rrc_filter(0.4, 301, 1/self.symbol_rate, self.sample_rate)
+        plt.plot(pulse_t, pulse_shape, 'o')
+        plt.xlabel("Time (s)")
+        plt.ylabel("Amplitude")
+        plt.title("RRC Filter Impulse Response")
+        plt.tight_layout()
+        plt.savefig('media/tx_rrc.png', dpi = 300)
         #Pulse Shaped bits
         plt.figure(figsize = (10,6))
         plt.subplot(2, 1, 1)
         plt.plot(t, np.real(self.pulse_shaped_symbols), 'b.-', label = 'Real')
+        plt.stem(
+            t[symbol_indices],
+            np.real(self.pulse_shaped_symbols[symbol_indices]),
+            linefmt='b--',
+            markerfmt=' ',  # No marker at the head
+            basefmt=" ",
+            label = "symbol times"
+            )
+
         plt.legend()
         plt.title('Pulse Shaped I (Real Part)')
         plt.subplot(2,1,2)
         plt.plot(t, np.imag(self.pulse_shaped_symbols), 'r.-', label = 'Imaginary')
+        plt.stem(
+            t[symbol_indices],
+            np.imag(self.pulse_shaped_symbols[symbol_indices]),
+            linefmt='r--',
+            markerfmt=' ',  # No marker at the head
+            basefmt=" ",
+            label = "symbol times"
+        )
         plt.legend()
         plt.title('Pulse Shaped Q (Imaginary Part)')
         plt.tight_layout()
