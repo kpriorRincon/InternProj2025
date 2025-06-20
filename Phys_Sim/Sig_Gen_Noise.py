@@ -44,46 +44,38 @@ class SigGen:
         - fs : Sampling frequency/rate (Hz)
 
         Returns:
-        - h : The impulse response of the RRC filter in the time domain
         - time : The time vector of the impulse response
-
+        - h : The impulse response of the RRC filter in the time domain
         """
 
-        # Importing necessary libraries
-        import numpy as np
-        from scipy.fft import fft, ifft
+        import numpy as np 
 
-        # The number of samples in each symbol
-        samples_per_symbol = int(fs * Ts)
+        # Time vector centered at zero
+        t = np.arange(-N // 2, N // 2 + 1) / fs #symmetric and centered N must be odd
 
-        # The filter span in symbols
-        total_symbols = N / samples_per_symbol
+        h = np.zeros_like(t) # start with zeros for the length of the time vector
 
-        # The total amount of time that the filter spans
-        total_time = total_symbols * Ts
-
-        # The time vector to compute the impulse response
-        time = np.linspace(-total_time / 2, total_time / 2, N, endpoint=False)
-
-        # ---------------------------- Generating the RRC impulse respose ----------------------------
-
-        # The root raised-cosine impulse response is generated from taking the square root of the raised-cosine impulse response in the frequency domain
-
-        # Raised-cosine filter impulse response in the time domain
-        num = np.cos((np.pi * beta * time) / (Ts))
-        denom = 1 - ((2 * beta * time) / (Ts)) ** 2
-        g = np.sinc(time / Ts) * (num / denom)
-
-        # Raised-cosine filter impulse response in the frequency domain
-        fg = fft(g)
-
-        # Root raised-cosine filter impulse response in the frequency domain
-        fh = np.sqrt(fg)
-
-        # Root raised-cosine filter impulse respone in the time domain
-        h = ifft(fh)
-
-        return time, h
+        for i in range(len(t)):
+            #populate h based on the impusle response
+            if t[i] == 0.0:
+                h[i] = (1.0 + beta * (4/np.pi - 1))
+            elif abs(t[i]) == Ts / (4 * beta):
+                h[i] = (beta / np.sqrt(2)) * (
+                    ((1 + 2/np.pi) * np.sin(np.pi / (4 * beta))) +
+                    ((1 - 2/np.pi) * np.cos(np.pi / (4 * beta)))
+                )
+            else:
+                numerator = np.sin(np.pi * t[i] * (1 - beta) / Ts) + 4 * beta * t[i] / Ts * np.cos(np.pi * t[i] * (1 + beta) / Ts)
+                denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
+                h[i] = numerator / denominator
+        #debug
+        # import matplotlib.pyplot as plt
+        # plt.plot(t, h, '.-')
+        # #plt.plot(t, np.convolve(h, h, mode='same'), '.-')
+        # plt.show()
+        # Normalize the filter to unit energy
+        h = h
+        return t, h 
 
     def generate_qpsk(self, bits, bool_noise, noise_power=0.01):
         """
@@ -120,16 +112,14 @@ class SigGen:
 
         # Upsample symbols to match sampling rate
         # Each symbol is held constant for samples_per_symbol duration
-        upsampled_symbols = np.concatenate(
-            [np.append(x, np.zeros(samples_per_symbol-1, dtype=complex))for x in symbols])
+
+        upsampled_symbols = np.zeros(len(symbols)*samples_per_symbol, dtype = complex)
+        upsampled_symbols[::samples_per_symbol] = symbols
 
         # Root raised cosine filter implementation
-        from commpy import filters
         beta = 0.3
-        _, pulse_shape = self.rrc_filter(
-            beta, 300, 1/self.symbol_rate, self.sample_rate)
-        # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
-        signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
+        _, pulse_shape = self.rrc_filter( beta, 301, 1/self.symbol_rate, self.sample_rate)
+        signal = np.convolve(upsampled_symbols, pulse_shape, 'same')
 
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)

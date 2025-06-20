@@ -6,7 +6,9 @@ class SigGen:
         self.sample_rate = sample_rate  # sample rate in samples per second
         self.symbol_rate = symbol_rate  # Symbol rate in symbols per second
         self.amp = amp    # Amplitude
-
+        self.upsampled_symbols = None
+        self.pulse_shaped_symbols = None
+        self.qpsk_signal = None
         # Map bit pairs to complex symbols
         self.mapping = {
             (0, 0): (1 + 1j) / np.sqrt(2),
@@ -26,46 +28,38 @@ class SigGen:
         - fs : Sampling frequency/rate (Hz)
 
         Returns:
-        - h : The impulse response of the RRC filter in the time domain
         - time : The time vector of the impulse response
-
+        - h : The impulse response of the RRC filter in the time domain
         """
 
-        # Importing necessary libraries
-        import numpy as np
-        from scipy.fft import fft, ifft
+        import numpy as np 
 
-        # The number of samples in each symbol
-        samples_per_symbol = int(fs * Ts)
+        # Time vector centered at zero
+        t = np.arange(-N // 2, N // 2 + 1) / fs #symmetric and centered N must be odd
 
-        # The filter span in symbols
-        total_symbols = N / samples_per_symbol
+        h = np.zeros_like(t) # start with zeros for the length of the time vector
 
-        # The total amount of time that the filter spans
-        total_time = total_symbols * Ts
-
-        # The time vector to compute the impulse response
-        time = np.linspace(-total_time / 2, total_time / 2, N, endpoint=False)
-
-        # ---------------------------- Generating the RRC impulse respose ----------------------------
-
-        # The root raised-cosine impulse response is generated from taking the square root of the raised-cosine impulse response in the frequency domain
-
-        # Raised-cosine filter impulse response in the time domain
-        num = np.cos((np.pi * beta * time) / (Ts))
-        denom = 1 - ((2 * beta * time) / (Ts)) ** 2
-        g = np.sinc(time / Ts) * (num / denom)
-
-        # Raised-cosine filter impulse response in the frequency domain
-        fg = fft(g)
-
-        # Root raised-cosine filter impulse response in the frequency domain
-        fh = np.sqrt(fg)
-
-        # Root raised-cosine filter impulse respone in the time domain
-        h = ifft(fh)
-
-        return time, h
+        for i in range(len(t)):
+            #populate h based on the impusle response
+            if t[i] == 0.0:
+                h[i] = (1.0 + beta * (4/np.pi - 1))
+            elif abs(t[i]) == Ts / (4 * beta):
+                h[i] = (beta / np.sqrt(2)) * (
+                    ((1 + 2/np.pi) * np.sin(np.pi / (4 * beta))) +
+                    ((1 - 2/np.pi) * np.cos(np.pi / (4 * beta)))
+                )
+            else:
+                numerator = np.sin(np.pi * t[i] * (1 - beta) / Ts) + 4 * beta * t[i] / Ts * np.cos(np.pi * t[i] * (1 + beta) / Ts)
+                denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
+                h[i] = numerator / denominator
+        #debug
+        # import matplotlib.pyplot as plt
+        # plt.plot(t, h, '.-')
+        # #plt.plot(t, np.convolve(h, h, mode='same'), '.-')
+        # plt.show()
+        # Normalize the filter to unit energy
+        h = h # we want this filter to have unit energy so convolving with it wont change the energy of a signal
+        return t, h 
 
     def generate_qpsk(self, bits):
         """
@@ -79,8 +73,6 @@ class SigGen:
         Returns:
             np.ndarray: Time vector.
             np.ndarray: QPSK waveform.
-            list: Vertical lines to show phase transition.
-            symbols (list): List of complex symbols corresponding to the bit pairs.
         """
         import numpy as np
 
@@ -99,23 +91,24 @@ class SigGen:
         total_samples = len(symbols) * samples_per_symbol
         # create a time vector that is total symbols long
         t = np.arange(total_samples) / self.sample_rate
-
         # Upsample symbols to match sampling rate
-        #this will make an array like [(1+1j), 0, 0, 0, 0, 0, 0, 0,..., (1-1j), ]
-        upsampled_symbols = np.concatenate([np.append(x, np.zeros(samples_per_symbol-1, dtype=complex))for x in symbols])
-
-        # Root raised cosine filter implementation
-        beta = 0.3
-        _, pulse_shape = self.rrc_filter(beta, 300, 1/self.symbol_rate, self.sample_rate)
+        #this will make an array like [(1+1j)/root2, 0, 0, 0, 0, 0, 0, 0,..., (1-1j)/root2, ]
+        upsampled_symbols = np.zeros(len(symbols)*samples_per_symbol, dtype = complex)
+        upsampled_symbols[::samples_per_symbol] = symbols
+        self.upsampled_symbols = upsampled_symbols
         
-        # pulse_shape = np.convolve(pulse_shape, pulse_shape)/2
-        signal = np.convolve(pulse_shape, upsampled_symbols, 'same')
+        # Root raised cosine filter implementation
+        beta = 0.4
+        _, pulse_shape = self.rrc_filter(beta, 301, 1/self.symbol_rate, self.sample_rate)
 
+        signal = np.convolve(upsampled_symbols, pulse_shape, mode='same')
+
+        self.pulse_shaped_symbols = signal
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
-
         # Modulate: multiply pulse shaped upsampled symbols with the complex carrier
-        qpsk_waveform = signal * phasor
+        qpsk_waveform = signal * phasor * self.amp
+        self.qpsk_signal = qpsk_waveform
         return t, qpsk_waveform
 
     def message_to_bits(self, message):
@@ -150,3 +143,69 @@ class SigGen:
         # Convert string input to list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
         return bit_sequence
+
+    def handler(self, t):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        #we would like to plot
+
+        #upsampled_bits real and imaginary
+        plt.figure(figsize = (10,6))
+        plt.subplot(2, 1, 1)
+        plt.plot(t, np.real(self.upsampled_symbols), 'b.-', label = 'Real')
+        plt.legend()
+        plt.title('Upsampled Bits I (Real Part)')
+        plt.subplot(2,1,2)
+        plt.plot(t, np.imag(self.upsampled_symbols), 'r.-', label = 'Imaginary')
+        plt.legend()
+        plt.title('Upsampled Bits Q (Imaginary Part)')
+        plt.tight_layout()
+        plt.savefig('media/tx_upsampled_bits.png', dpi=300)
+        plt.close()
+        
+        #Pulse Shaped bits
+        plt.figure(figsize = (10,6))
+        plt.subplot(2, 1, 1)
+        plt.plot(t, np.real(self.pulse_shaped_symbols), 'b.-', label = 'Real')
+        plt.legend()
+        plt.title('Pulse Shaped I (Real Part)')
+        plt.subplot(2,1,2)
+        plt.plot(t, np.imag(self.pulse_shaped_symbols), 'r.-', label = 'Imaginary')
+        plt.legend()
+        plt.title('Pulse Shaped Q (Imaginary Part)')
+        plt.tight_layout()
+        plt.savefig('media/tx_pulse_shaped_bits.png', dpi=300)
+        plt.close()
+        # Compute FFT of the baseband pulseshaped signal
+        # Compute FFT of the baseband pulse-shaped signal
+        pulse_shaped = self.pulse_shaped_symbols
+        N = len(pulse_shaped)
+        fft_vals = np.fft.fftshift(np.fft.fft(pulse_shaped))
+        freqs = np.fft.fftshift(np.fft.fftfreq(N, d=1/self.sample_rate))
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(freqs / 1e6, 20 * np.log10(np.abs(fft_vals) / np.max(np.abs(fft_vals))))
+        plt.xlabel("Frequency (MHz)")
+        plt.ylabel("Normalized Magnitude (dB)")
+        plt.title("FFT of Pulse Shaped Baseband Signal")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('media/tx_pulse_shaped_fft.png', dpi=300)
+        plt.close()
+        
+        
+        #plot the modulated signal 
+        plt.figure(figsize=(10, 6))
+        plt.plot(t, np.real(self.qpsk_signal))
+        plt.xlabel("Time")
+        plt.ylabel("Amplitude")
+        plt.title("Snippet of Modulated Signal")
+        plt.tight_layout()
+        plt.savefig('media/tx_waveform_snippet.png', dpi=300)
+        plt.close()
+
+        
+        #
+
+
+        #

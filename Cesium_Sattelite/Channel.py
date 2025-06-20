@@ -1,16 +1,15 @@
 class Channel: 
     def __init__(self, incoming_signal, h, noise_power, freq_shift, up = True):
-        def __init__(self, incoming_signal, h, noise_power, freq_shift, up=True):
-            """
-            Initialize a Channel object representing either an uplink or downlink channel.
-            Parameters:
-                incoming_signal: The input signal to the channel.
-                h: Channel coefficient representing attenuation and random phase rotation (single tap).
-                noise_power: The power of the noise to be added to the signal.
-                freq_shift: The frequency shift applied to the signal.
-                up (bool, optional): Boolean flag indicating the channel direction.
-                    If True, represents an uplink channel; if False, represents a downlink channel.
-            """
+        """
+        Initialize a Channel object representing either an uplink or downlink channel.
+        Parameters:
+            incoming_signal: The input signal to the channel.
+            h: Channel coefficient representing attenuation and random phase rotation (single tap).
+            noise_power: The power of the noise to be added to the signal.
+            freq_shift: The frequency shift applied to the signal.
+            up (bool, optional): Boolean flag indicating the channel direction.
+                If True, represents an uplink channel; if False, represents a downlink channel.
+        """
         
         self.incoming_signal = incoming_signal
         self.outgoing_signal = None # none until it gets computed
@@ -22,17 +21,24 @@ class Channel:
 
     def apply_channel(self, t):
         import numpy as np
+        
         #generate AWGN based on noise power
+        print(f'noise_power = {self.noise_power}')
+        
         noise_standard_deviation = np.sqrt(self.noise_power / 2)
         noise_real = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
         noise_imag = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
+        
         #apply single tap channel to incomiong signal
-        AWGN = noise_real + 1j * noise_imag#we need real and imaginary noise
+        AWGN = noise_real + 1j * noise_imag #we need real and imaginary noise
         
         #define doppler
         doppler_effect = np.exp(1j * 2 * np.pi * self.freq_shift * t)
         signal_with_doppler = doppler_effect * self.incoming_signal #apply the freq shift 
-        outgoing_signal = self.h * signal_with_doppler + AWGN # element wise addition with AWGN 
+
+        outgoing_signal = self.h * signal_with_doppler #apply single tap channel 
+        outgoing_signal +=  AWGN # element wise addition with AWGN 
+        
         self.outgoing_signal = outgoing_signal
         return outgoing_signal
     
@@ -53,52 +59,71 @@ class Channel:
         
         direction = 'up' if self.up else 'down'#specifier so that the user files can be differentiated 
 
-        #plot incoming signal in time and frequency
+        #plot incoming signal in time 
         #plot them side by side
+
         plt.figure(figsize=(10, 6))
         plt.plot(t, np.real(self.incoming_signal))
-        plt.title('Incoming Signal')
+        plt.title('Incoming Signal Time Domain')
         plt.xlabel('Time')
         plt.ylabel('Amplitude')
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_incoming_time', dpi=300)
+        plt.close()
 
+        #plot outgoing signal in time
 
-        #plot outgoing signal in time and frequency
-        #plot them side by side
         plt.figure(figsize= (10, 6))
-        plt.subplot(1,2,1)
-        plt.plot(t, np.real(self.incoming_signal))
-        plt.subplot(1,2,2) 
-        plt.plot(t, np.imag(self.incoming_signal))
+        plt.plot(t, np.real(self.outgoing_signal))
+        plt.title('Outgoing Signal Time Domain')
+        plt.xlabel('Time')
+        plt.ylabel('Amplitude')
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_time', dpi=300)
-
+        plt.close()
         # get the fft incoming
+
         plt.figure(figsize = (10, 6))
         S = np.fft.fft(self.incoming_signal)
-        S = np.fft.fftshift(S)
         S_mag_db = 20 * np.log10(np.abs(S))
         N = len(t)
+
         f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
         plt.plot(f, S_mag_db)
+        plt.title('Frequency Domain of Incoming Signal')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude (dB)')
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_incoming_fft', dpi = 300)
-        
-        # getfft outgoing
+        plt.close()
+
+        # get fft outgoing
         plt.figure(figsize = (10, 6))
         S = np.fft.fft(self.outgoing_signal)
-        S = np.fft.fftshift(S)
         S_mag_db = 20 * np.log10(np.abs(S))
         f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
         plt.plot(f, S_mag_db)
+        plt.title('Frequency Domain of Outgoing Signal')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude (dB)')
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_fft', dpi = 300)
+        plt.close()
 
         #plot the phase rotation h causes 
         # Normalize h to unit magnitude
         h_normalized = self.h / np.abs(self.h)
         phase = np.angle(h_normalized)
-
         #plotting the phase 
         plt.figure(figsize=(5, 5))
-        plt.plot([0, np.real(h_normalized)], [0, np.imag(h_normalized)], marker='o')
+        # Plot the unit circle
+        circle = plt.Circle((0, 0), 1, color='lightgray', fill=False, linestyle='--')
+        plt.gca().add_artist(circle)
+        # Plot the arc from 0 to phase
+        arc_theta = np.linspace(0, phase, 100)
+        plt.plot(np.cos(arc_theta), np.sin(arc_theta), color='orange', linewidth=2, label='Phase Arc')
+        # Plot the vector for h
+        plt.plot([0, np.real(h_normalized)], [0, np.imag(h_normalized)], marker='o', color='b', label='h normalized')
         plt.xlim(-1.1, 1.1)
         plt.ylim(-1.1, 1.1)
         plt.xlabel('Real')
@@ -106,4 +131,7 @@ class Channel:
         plt.title(f'Phase of h: {np.degrees(phase):.2f}°')
         plt.grid(True)
         plt.gca().set_aspect('equal', adjustable='box')
+        plt.legend()
+        plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_h_phase', dpi=300)
+        plt.close()
