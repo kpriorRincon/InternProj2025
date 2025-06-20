@@ -189,7 +189,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [840, 380.0]
+    coordinate: [816, 364.0]
     rotation: 0
     state: enabled
 - name: blocks_file_sink_0
@@ -222,7 +222,7 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     offset: '0'
-    repeat: 'True'
+    repeat: 'False'
     type: complex
     vlen: '1'
   states:
@@ -404,7 +404,7 @@ blocks:
     bus_structure: null
     coordinate: [768, 48.0]
     rotation: 0
-    state: enabled
+    state: disabled
 
 connections:
 - [Correlator_correlator_0, '0', blocks_file_sink_0, '0']

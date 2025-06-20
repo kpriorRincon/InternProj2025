@@ -37,9 +37,9 @@ delay = len(h) // 2
 symbols = filtered_symbols[delay::sps]
 
 # Normalize
-max_val = np.max(np.abs(symbols))
-if max_val > 0:
-    symbols /= max_val
+# max_val = np.max(np.abs(symbols))
+# if max_val > 0:
+#     symbols /= max_val
 
 ##################################### Demodulation ##########################
 if len(raw_data) > 0:
