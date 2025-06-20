@@ -57,8 +57,6 @@ class SigGen:
         # plt.plot(t, h, '.-')
         # #plt.plot(t, np.convolve(h, h, mode='same'), '.-')
         # plt.show()
-        # Normalize the filter to unit energy
-        h = h # we want this filter to have unit energy so convolving with it wont change the energy of a signal
         return t, h 
 
     def generate_qpsk(self, bits):
@@ -166,6 +164,22 @@ class SigGen:
 
         plt.tight_layout()
         plt.savefig('media/tx_upsampled_bits.png', dpi=300)
+        plt.close()
+
+        # Compute FFT of the upsampled bits (before pulse shaping)
+        upsampled = self.upsampled_symbols
+        N_upsampled = len(upsampled)
+        fft_upsampled = np.fft.fftshift(np.fft.fft(upsampled))
+        freqs_upsampled = np.fft.fftshift(np.fft.fftfreq(N_upsampled, d=1/self.sample_rate))
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(freqs_upsampled / 1e6, 20 * np.log10(np.abs(fft_upsampled) / np.max(np.abs(fft_upsampled))))
+        plt.xlabel("Frequency (MHz)")
+        plt.ylabel("Normalized Magnitude (dB)")
+        plt.title("FFT of Upsampled Bits (Baseband)")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('media/tx_upsampled_bits_fft.png', dpi=300)
         plt.close()
         
         #pulse shaping impulse response:

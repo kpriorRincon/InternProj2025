@@ -484,6 +484,8 @@ def Cesium_page():
 
                 #show upsampled bits sub plot one on top of the other real and imaginary
                 ui.image('media/tx_upsampled_bits.png').style('width: 50%').force_reload()
+                ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
+                ui.image('media/tx_upsampled_bits_fft.png').style('width: 50%').force_reload()
                 ui.label('These upsampled bits are pulse shaped with the following filter:').style('font-size: 1.5em; font-weight: bold;')
                 ui.image('media/tx_rrc.png').style('width: 30%').force_reload()
                 #show the pulse shaping Re/Im
@@ -518,11 +520,11 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
-            ui.image('media/channel_down_h_phase.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_down_incoming_time.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_down_incoming_fft.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_down_outgoing_time.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_down_outgoing_fft.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_h_phase.png').style('width: 40%;').force_reload()
+            ui.image('media/channel_down_incoming_time.png').style('width: 50%;').force_reload()
+            # ui.image('media/channel_down_incoming_fft.png').style('width: 70%;').force_reload()
+            ui.image('media/channel_down_outgoing_time.png').style('width: 50%;').force_reload()
+            # ui.image('media/channel_down_outgoing_fft.png').style('width: 70%;').force_reload()
 
         @ui.page('/receiver')
         def receiver_page():
