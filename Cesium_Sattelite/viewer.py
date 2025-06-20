@@ -399,7 +399,7 @@ def Cesium_page():
             
             #the required transmit power from tx to rep and rep to rec will be used to determine the amplitude of the outgoing waves 
             Fs = 40e6 #sample rate 40 MHz
-            symb_rate = 4e6 #10 times less than the sample rate
+            symb_rate = 2e6 #20 times less than the sample rate
 
             #decide the amplitude of the signal so that by the time it gets to the repeater it's very
             # Calculate amplitude scaling so that the QPSK signal has required_tx_power at the repeater
@@ -408,7 +408,7 @@ def Cesium_page():
             # So: amp^2 * alpha_up = required_tx_power  =>  amp = sqrt(required_tx_power / alpha_up)
             
             tx_amp = np.sqrt(required_tx_power) #we want the amplitude
-            sig_gen = SigGen.SigGen(txFreq, amp=1, sample_rate=Fs, symbol_rate=symb_rate)
+            sig_gen = SigGen.SigGen(txFreq, amp=tx_amp, sample_rate=Fs, symbol_rate=symb_rate)
 
             bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
 
@@ -418,7 +418,7 @@ def Cesium_page():
 
             #scale the power of the signal 
 
-            print(f'does: {np.mean(np.sum(np.abs(qpsk_signal)**2))} = {required_tx_power}')
+            print(f'does: {np.mean(np.abs(qpsk_signal)**2)} = {required_tx_power}')
 
             #define channel up
             channel_up = Channel.Channel(qpsk_signal, h_up, noise, f_delta_up, up = True)
@@ -478,14 +478,16 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the transmitter simulation step.')
-            #bit sequence with prefix/postifx labeled
+            
+            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                #bit sequence with prefix/postifx labeled
 
-            #show upsampled bits sub plot one on top of the other real and imaginary
-            ui.image('media/tx_upsampled_bits.png').style('width: 70%').force_reload()
-            #show the pulse shaping Re/Im
-            ui.image('media/tx_pulse_shaped_bits.png').style('width: 70%').force_reload()
-            #show it modulated with the carrier over a short time frame
-            ui.image('media/tx_waveform_snippet.png').style('width: 70%').force_reload()
+                #show upsampled bits sub plot one on top of the other real and imaginary
+                ui.image('media/tx_upsampled_bits.png').style('width: 70%').force_reload()
+                #show the pulse shaping Re/Im
+                ui.image('media/tx_pulse_shaped_bits.png').style('width: 70%').force_reload()
+                #show it modulated with the carrier over a short time frame
+                ui.image('media/tx_waveform_snippet.png').style('width: 70%').force_reload()
 
         @ui.page('/channel1')
         def channel1_page():
@@ -493,11 +495,12 @@ def Cesium_page():
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
 
-            ui.image('media/channel_up_h_phase.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_up_incoming_time.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_up_incoming_fft.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_up_outgoing_time.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_up_outgoing_fft.png').style('width: 70%;').force_reload()
+            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                ui.image('media/channel_up_h_phase.png').style('width: 40%;').force_reload()
+                ui.image('media/channel_up_incoming_time.png').style('width: 50%;').force_reload()
+                ui.image('media/channel_up_incoming_fft.png').style('width: 50%;').force_reload()
+                ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
+                ui.image('media/channel_up_outgoing_fft.png').style('width: 50%;').force_reload()
             #show information about h
             #show information about the signal in vs the receive signal e.g. attenuation/phase shift
             #  

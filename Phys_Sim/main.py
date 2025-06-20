@@ -24,7 +24,7 @@ from Plotter import Plotter
 
 
 #global objects for the Sig_Gen, Receiver, and Repeater classes
-symbol_rate = 5e6
+symbol_rate = 4e7 #symbol rate is 100 times less than the sample rate
 sample_rate = 4e9
 sig_gen_mapping ={
             (0, 0): (1 + 1j) / np.sqrt(2),
