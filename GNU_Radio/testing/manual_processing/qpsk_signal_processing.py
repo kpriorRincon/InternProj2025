@@ -25,6 +25,7 @@ from PyQt5 import Qt
 from gnuradio import qtgui
 from gnuradio.filter import firdes
 import sip
+from gnuradio import Correlator
 from gnuradio import analog
 from gnuradio import blocks
 import pmt
@@ -158,17 +159,19 @@ class qpsk_signal_processing(gr.top_block, Qt.QWidget):
         self.blocks_file_sink_0.set_unbuffered(False)
         self.analog_sig_source_x_0_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, -1000, 1, 0, 0)
         self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, 1000, 1, 0, 0)
+        self.Correlator_correlator_0 = Correlator.correlator()
 
 
         ##################################################
         # Connections
         ##################################################
+        self.connect((self.Correlator_correlator_0, 0), (self.blocks_file_sink_0, 0))
         self.connect((self.analog_sig_source_x_0, 0), (self.blocks_multiply_xx_0, 1))
         self.connect((self.analog_sig_source_x_0_0, 0), (self.blocks_multiply_xx_0_0, 1))
         self.connect((self.blocks_file_source_0, 0), (self.blocks_throttle_0, 0))
         self.connect((self.blocks_multiply_xx_0, 0), (self.blocks_multiply_xx_0_0, 0))
         self.connect((self.blocks_multiply_xx_0, 0), (self.qtgui_time_sink_x_0, 0))
-        self.connect((self.blocks_multiply_xx_0_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.blocks_multiply_xx_0_0, 0), (self.Correlator_correlator_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.blocks_multiply_xx_0, 0))
 
 

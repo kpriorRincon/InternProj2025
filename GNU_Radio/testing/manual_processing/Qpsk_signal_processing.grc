@@ -132,6 +132,22 @@ blocks:
     coordinate: [1160, 4.0]
     rotation: 0
     state: true
+- name: Correlator_correlator_0
+  id: Correlator_correlator
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    sps: '2'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1272, 264.0]
+    rotation: 0
+    state: true
 - name: analog_sig_source_x_0
   id: analog_sig_source_x
   parameters:
@@ -191,7 +207,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1304, 248.0]
+    coordinate: [1512, 248.0]
     rotation: 0
     state: true
 - name: blocks_file_source_0
@@ -249,7 +265,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1136, 256.0]
+    coordinate: [1104, 256.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle_0
@@ -391,12 +407,13 @@ blocks:
     state: enabled
 
 connections:
+- [Correlator_correlator_0, '0', blocks_file_sink_0, '0']
 - [analog_sig_source_x_0, '0', blocks_multiply_xx_0, '1']
 - [analog_sig_source_x_0_0, '0', blocks_multiply_xx_0_0, '1']
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
 - [blocks_multiply_xx_0, '0', channels_channel_model_0, '0']
 - [blocks_multiply_xx_0, '0', qtgui_time_sink_x_0, '0']
-- [blocks_multiply_xx_0_0, '0', blocks_file_sink_0, '0']
+- [blocks_multiply_xx_0_0, '0', Correlator_correlator_0, '0']
 - [blocks_throttle_0, '0', blocks_multiply_xx_0, '0']
 - [channels_channel_model_0, '0', blocks_multiply_xx_0_0, '0']
 
