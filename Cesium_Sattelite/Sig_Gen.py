@@ -189,7 +189,7 @@ class SigGen:
         # get the fft of qpsk signal
         # Compute FFT of the QPSK signal
         fft_signal = np.fft.fft(self.qpsk_signal)
-        fft_freq = np.fft.fftfreq(len(fft_signal), d=1/self.sample_rate)
+        fft_freq = np.fft.fftfreq(len(fft_signal), d=1/4e9)#since the carrier frequency is over 900 MHz I am doing roughly 4 times that for the samplin rate
 
         # Shift FFT for plotting
         fft_signal_shifted = np.fft.fftshift(fft_signal)
