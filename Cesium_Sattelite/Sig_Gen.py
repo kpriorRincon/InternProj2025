@@ -73,7 +73,7 @@ class SigGen:
             np.ndarray: QPSK waveform.
         """
         import numpy as np
-
+        from scipy.signal import resample_poly
         # Convert bits to symbols
         if len(bits) % 2 != 0:
             raise ValueError("Bit sequence must have an even length.")
@@ -102,6 +102,7 @@ class SigGen:
         signal = np.convolve(upsampled_symbols, pulse_shape, mode='same')
 
         self.pulse_shaped_symbols = signal
+
         # Generate complex phasor at carrier frequency
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
         # Modulate: multiply pulse shaped upsampled symbols with the complex carrier

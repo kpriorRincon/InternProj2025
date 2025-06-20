@@ -42,7 +42,7 @@ class Channel:
         self.outgoing_signal = outgoing_signal
         return outgoing_signal
     
-    def handler(self, t, Fs):
+    def handler(self, t, tune_frequency, samples_per_symbol):
         """
         Handles plotting and frequency analysis of the incoming signal.
         This method generates and saves plots of the real and imaginary parts of the incoming signal
@@ -62,25 +62,25 @@ class Channel:
         #plot incoming signal in time 
         #plot them side by side
 
-        plt.figure(figsize=(10, 6))
-        plt.plot(t, np.real(self.incoming_signal))
-        plt.title('Incoming Signal Time Domain')
-        plt.xlabel('Time')
-        plt.ylabel('Amplitude')
-        plt.tight_layout()
-        plt.savefig(f'media/channel_{direction}_incoming_time', dpi=300)
-        plt.close()
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(t, np.real(self.incoming_signal))
+        # plt.title('Incoming Signal Time Domain')
+        # plt.xlabel('Time')
+        # plt.ylabel('Amplitude')
+        # plt.tight_layout()
+        # plt.savefig(f'media/channel_{direction}_incoming_time', dpi=300)
+        # plt.close()
 
         #plot outgoing signal in time
 
-        plt.figure(figsize= (10, 6))
-        plt.plot(t, np.real(self.outgoing_signal))
-        plt.title('Outgoing Signal Time Domain')
-        plt.xlabel('Time')
-        plt.ylabel('Amplitude')
-        plt.tight_layout()
-        plt.savefig(f'media/channel_{direction}_outgoing_time', dpi=300)
-        plt.close()
+        # plt.figure(figsize= (10, 6))
+        # plt.plot(t, np.real(self.outgoing_signal))
+        # plt.title('Outgoing Signal Time Domain')
+        # plt.xlabel('Time')
+        # plt.ylabel('Amplitude')
+        # plt.tight_layout()
+        # plt.savefig(f'media/channel_{direction}_outgoing_time', dpi=300)
+        # plt.close()
         # get the fft incoming
         # plt.figure(figsize = (10, 6))
         # S = np.fft.fft(self.incoming_signal)
@@ -132,5 +132,69 @@ class Channel:
         plt.gca().set_aspect('equal', adjustable='box')
         plt.legend()
         plt.tight_layout()
-        plt.savefig(f'media/channel_{direction}_h_phase', dpi=300)
+        plt.savefig(f'media/channel_{direction}_h_phase.png', dpi=300)
+        plt.close()
+
+        tuned_signal = self.incoming_signal * np.exp(-1j * 2 * np.pi * tune_frequency * t )# we want to tune down to baseband
+        #plot fft of the baseband incoming signal
+        plt.figure(figsize=(10, 6))
+        S = np.fft.fft(tuned_signal)
+        S_mag_db = 20 * np.log10(np.abs(S))
+        N = len(t)
+        Fs = 1 / (t[1] - t[0])
+        f = np.fft.fftshift(np.fft.fftfreq(N, d=1/Fs))
+        plt.plot(f, np.fft.fftshift(S_mag_db))
+        plt.title('Frequency Domain of Tuned Incoming Signal (Baseband)')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude (dB)')
+        plt.xlim(-Fs/6, Fs/6)
+        plt.tight_layout()
+        plt.savefig(f'media/channel_{direction}_incoming_tuned_fft.png', dpi=300)
+        plt.close()
+
+        # Plot constellation of the tuned incoming signal
+        plt.figure(figsize=(6, 6))
+        symbol_indices = np.arange(0, len(tuned_signal), int(samples_per_symbol))
+        print(f'the symbol incidies: {symbol_indices}')
+        plt.scatter(np.real(tuned_signal), np.imag(tuned_signal), color='blue', s=10, label='Oversampled')
+        #this should be where the symbols actually are
+        plt.scatter(np.real(tuned_signal[symbol_indices]), np.imag(tuned_signal[symbol_indices]), color='red', s=30, label='Symbol Samples')
+        plt.xlabel('In-Phase')
+        plt.ylabel('Quadrature')
+        plt.title('Constellation of Tuned Incoming Signal')
+        plt.grid(True)
+        plt.legend()
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.tight_layout()
+        plt.savefig(f'media/channel_{direction}_incoming_tuned_constellation.png', dpi=300)
+        plt.close()
+
+
+        #plot fft of the baseband outgoing singla
+        tuned_outgoing_signal = self.outgoing_signal * np.exp(-1j * 2 * np.pi * tune_frequency * t)
+        plt.figure(figsize=(10, 6))
+        S_out = np.fft.fft(tuned_outgoing_signal)
+        S_out_mag_db = 20 * np.log10(np.abs(S_out))
+        plt.plot(f, np.fft.fftshift(S_out_mag_db))
+        plt.title('Frequency Domain of Tuned Outgoing Signal (Baseband)')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude (dB)')
+        plt.xlim(-Fs/6, Fs/6)
+        plt.tight_layout()
+        plt.savefig(f'media/channel_{direction}_outgoing_tuned_fft.png', dpi=300)
+        plt.close()
+
+        # Plot constellation of the tuned outgoing signal
+        plt.figure(figsize=(6, 6))
+        symbol_indices = np.arange(0, len(tuned_outgoing_signal), int(samples_per_symbol))
+        plt.scatter(np.real(tuned_outgoing_signal), np.imag(tuned_outgoing_signal), color='blue', s=10, label='Oversampled')
+        plt.scatter(np.real(tuned_outgoing_signal[symbol_indices]), np.imag(tuned_outgoing_signal[symbol_indices]), color='red', s=30, label='Interpreted Symbol Samples')
+        plt.xlabel('In-Phase')
+        plt.ylabel('Quadrature')
+        plt.title('Constellation of Tuned Outgoing Signal')
+        plt.grid(True)
+        plt.legend()
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.tight_layout()
+        plt.savefig(f'media/channel_{direction}_outgoing_tuned_constellation.png', dpi=300)
         plt.close()

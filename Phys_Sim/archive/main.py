@@ -26,7 +26,7 @@ symbol_rate = 10e6
 
 #global objects for the Sig_Gen, Receiver, and Repeater classes
 symbol_rate = 20e6
-sample_rate = 4e9
+sample_rate = 60e6
 sig_gen = Sig_Gen.SigGen(sample_rate = sample_rate, symbol_rate = symbol_rate)
 repeater = Repeater.Repeater(sampling_frequency=sample_rate, symbol_rate=symbol_rate)
 receiver = Receiver.Receiver(sampling_rate=sample_rate)

@@ -425,7 +425,7 @@ def Cesium_page():
             #apply the channel: 
             qpsk_signal_after_channel = channel_up.apply_channel(t)
             #run the channel_up_handler:
-            channel_up.handler(t, 4e9) #generate all the plots we want to display, note we pass in a higher sample rate just so we can actually get FFT data for the incoming signal
+            channel_up.handler(t,txFreq, Fs/symb_rate) #generate all the plots we want to display, note we pass in a higher sample rate just so we can actually get FFT data for the incoming signal
             
             #upconvert:
             #we want the outgoing power to reach the required power
@@ -441,7 +441,7 @@ def Cesium_page():
             channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
             #This signal is what gets fed into the repeater
             repeated_siganl_after_channel = channel_down.apply_channel(t)
-            channel_down.handler(t, 4e9)
+            channel_down.handler(t,txFreq + 10e6 ,Fs/symb_rate)
 
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
@@ -449,25 +449,25 @@ def Cesium_page():
         ui.button('start simulation', on_click=start_simulation)
         
         # Transmitter image (clickable)
-        with ui.link(target='/transmitter').style('width: 10vw; position: fixed; bottom: 2vh; left: 36vw; z-index: 1000; cursor: pointer;'):
+        with ui.link(target='/transmitter', new_tab = True).style('width: 10vw; position: fixed; bottom: 2vh; left: 36vw; z-index: 1000; cursor: pointer;'):
             ui.image('../Phys_Sim/media/antenna_graphic.png').style('width: 100%;')
         ui.label('Transmitter').style('position: fixed; bottom: 12vh; left: 38vw; z-index: 1005; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
         ui.label('15dBi').style('position: fixed; bottom: 12vh; left: 45vw; z-index: 1008; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
         # Channel 1 cloud (clickable)
-        with ui.link(target='/channel1').style('width: 10vw; position: fixed; bottom: 42vh; left: 43vw; z-index: 1001; cursor: pointer;'):
+        with ui.link(target='/channel1', new_tab = True).style('width: 10vw; position: fixed; bottom: 42vh; left: 43vw; z-index: 1001; cursor: pointer;'):
             ui.image('../Phys_Sim/media/cloud.png').style('width: 100%;')
 
         # Repeater satellite (clickable)
-        with ui.link(target='/repeater').style('width: 12vw; position: fixed; bottom: 64vh; left: 54vw; z-index: 1002; cursor: pointer;'):
+        with ui.link(target='/repeater', new_tab = True).style('width: 12vw; position: fixed; bottom: 64vh; left: 54vw; z-index: 1002; cursor: pointer;'):
             ui.image('../Phys_Sim/media/sattelite.png').style('width: 100%;')
         ui.label('Repeater').style('position: fixed; bottom: 76vh; left: 57vw; z-index: 1006; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
         ui.label('10dBi').style('position: fixed; bottom: 76vh; left: 65vw; z-index: 1009; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
         # Channel 2 cloud (clickable)
-        with ui.link(target='/channel2').style('width: 10vw; position: fixed; bottom: 42vh; left: 67vw; z-index: 1003; cursor: pointer;'):
+        with ui.link(target='/channel2', new_tab = True).style('width: 10vw; position: fixed; bottom: 42vh; left: 67vw; z-index: 1003; cursor: pointer;'):
             ui.image('../Phys_Sim/media/cloud.png').style('width: 100%;')
 
         # Receiver image (clickable)
-        with ui.link(target='/receiver').style('width: 10vw; position: fixed; bottom: 2vh; left: 80vw; z-index: 1004; cursor: pointer;'):
+        with ui.link(target='/receiver', new_tab=True).style('width: 10vw; position: fixed; bottom: 2vh; left: 80vw; z-index: 1004; cursor: pointer;'):
             ui.image('../Phys_Sim/media/antenna_graphic_flipped.png').style('width: 100%;')
         ui.label('Receiver').style('position: fixed; bottom: 12vh; left: 84vw; z-index: 1007; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')        
         ui.label('15dBi').style('position: fixed; bottom: 12vh; left: 90vw; z-index: 1008; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
@@ -487,14 +487,12 @@ def Cesium_page():
                 ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
                 ui.image('media/tx_upsampled_bits_fft.png').style('width: 50%').force_reload()
                 ui.label('These upsampled bits are pulse shaped with the following filter:').style('font-size: 1.5em; font-weight: bold;')
-                ui.image('media/tx_rrc.png').style('width: 30%').force_reload()
+                ui.image('media/tx_rrc.png').style('width: 30%') #don't need to force reload because it doesn't change between siulations
                 #show the pulse shaping Re/Im
                 ui.image('media/tx_pulse_shaped_bits.png').style('width: 50%').force_reload()
                 #show the baseband FFT
                 ui.image('media/tx_pulse_shaped_fft.png').style('width: 50%').force_reload()
-                #show it modulated with the carrier over a short time frame
-                ui.image('media/tx_waveform_snippet.png').style('width: 50%').force_reload()
-
+                
         @ui.page('/channel1')
         def channel1_page():
             ui.button('Back', on_click=ui.navigate.back)
@@ -502,11 +500,24 @@ def Cesium_page():
             ui.label('This is a placeholder for the first channel simulation step.')
 
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                
                 #show information about h
                 ui.image('media/channel_up_h_phase.png').style('width: 40%;').force_reload()
-                #signal in signal out in time domain after attenuation is applied
-                ui.image('media/channel_up_incoming_time.png').style('width: 50%;').force_reload()
-                ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
+
+                with ui.row().style('width:100%'):
+                    # constellation plot of incoming signal
+                    ui.image('media/channel_up_incoming_tuned_constellation.png').style('width: 40%').force_reload()
+                    # tune to baseband and show the fft
+                    ui.image('media/channel_up_incoming_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
+                ui.label("Note that the tuned signal is tuned based on the transmit carrier so the frequency offset from doppler manifests as phase smearing of the symbols").style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
+                with ui.row().style('width:100%'):
+                    # constellation plot of outgoing signal
+                    ui.image('media/channel_up_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
+                    # fft outgoing
+                    ui.image('media/channel_up_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
+
+                # ui.image('media/channel_up_incoming_time.png').style('width: 50%;').force_reload()
+                # ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
 
         @ui.page('/repeater')
         def repeater_page():
@@ -520,11 +531,22 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
-            ui.image('media/channel_down_h_phase.png').style('width: 40%;').force_reload()
-            ui.image('media/channel_down_incoming_time.png').style('width: 50%;').force_reload()
-            # ui.image('media/channel_down_incoming_fft.png').style('width: 70%;').force_reload()
-            ui.image('media/channel_down_outgoing_time.png').style('width: 50%;').force_reload()
-            # ui.image('media/channel_down_outgoing_fft.png').style('width: 70%;').force_reload()
+            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                
+                #show information about h
+                ui.image('media/channel_down_h_phase.png').style('width: 40%;').force_reload()
+
+                with ui.row().style('width:100%'):
+                    # constellation plot of incoming signal
+                    ui.image('media/channel_down_incoming_tuned_constellation.png').style('width: 40%').force_reload()
+                    # tune to baseband and show the fft
+                    ui.image('media/channel_down_incoming_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
+                ui.label("Note that the tuned signal is tuned based on the transmit carrier so the frequency offset from doppler manifests as phase smearing of the symbols").style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
+                with ui.row().style('width:100%'):
+                    # constellation plot of outgoing signal
+                    ui.image('media/channel_down_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
+                    # fft outgoing
+                    ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
 
         @ui.page('/receiver')
         def receiver_page():
