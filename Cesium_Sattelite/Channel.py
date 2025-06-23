@@ -27,7 +27,7 @@ def fractional_delay(signal, delay_in_sec, Fs):
     new_signal = padded_signal[delay:]  # Shift back by delay
 
     #create a new time vector with the correcct size
-    new_t = 
+    new_t = np.arange(len(new_signal)) / Fs
     
     return new_t, new_signal
 
