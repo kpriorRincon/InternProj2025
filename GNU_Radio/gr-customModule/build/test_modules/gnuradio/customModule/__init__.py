@@ -22,4 +22,5 @@ except ModuleNotFoundError:
 # import any pure python here
 from .QPSK_Modulator import QPSK_Modulator
 from .QPSK_Demodulator import QPSK_Demodulator
+from .upsampler import upsampler
 #

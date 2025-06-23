@@ -3,11 +3,15 @@
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/__init__.py
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/QPSK_Modulator.py
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/QPSK_Demodulator.py
+/usr/local/lib/python3.10/dist-packages/gnuradio/customModule/upsampler.py
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/__init__.pyc
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/QPSK_Modulator.pyc
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/QPSK_Demodulator.pyc
+/usr/local/lib/python3.10/dist-packages/gnuradio/customModule/upsampler.pyc
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/__init__.pyo
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/QPSK_Modulator.pyo
 /usr/local/lib/python3.10/dist-packages/gnuradio/customModule/QPSK_Demodulator.pyo
+/usr/local/lib/python3.10/dist-packages/gnuradio/customModule/upsampler.pyo
 /usr/local/share/gnuradio/grc/blocks/customModule_QPSK_Modulator.block.yml
 /usr/local/share/gnuradio/grc/blocks/customModule_QPSK_Demodulator.block.yml
+/usr/local/share/gnuradio/grc/blocks/customModule_upsampler.block.yml
