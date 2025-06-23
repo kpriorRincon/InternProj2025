@@ -9,6 +9,7 @@ from nicegui import ui, app
 import os
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 from datetime import datetime, timezone, timedelta
 # function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
@@ -423,29 +424,46 @@ def Cesium_page():
             #define channel up
             channel_up = Channel.Channel(qpsk_signal, h_up, noise, f_delta_up, up = True)
             #apply the channel: 
-            qpsk_signal_after_channel = channel_up.apply_channel(t)
+            new_t, qpsk_signal_after_channel = channel_up.apply_channel(t, time_delay_up)
             #run the channel_up_handler:
-            channel_up.handler(t,txFreq, Fs/symb_rate) #generate all the plots we want to display, note we pass in a higher sample rate just so we can actually get FFT data for the incoming signal
+            channel_up.handler(new_t,txFreq, Fs/symb_rate) #generate all the plots we want to display, note we pass in a higher sample rate just so we can actually get FFT data for the incoming signal
             
-            #upconvert:
+            #amplify and upconvert:
             #we want the outgoing power to reach the required power
-            Pcurr = np.mean(np.sum(np.abs(qpsk_signal_after_channel)**2))
+            Pcurr = np.mean(np.abs(qpsk_signal_after_channel)**2)
             gain = np.sqrt(required_rep_power/Pcurr)#this gain is used to get the power of the signal to desired power
-            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * t) * qpsk_signal_after_channel
-            
+            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * new_t) * qpsk_signal_after_channel
+            #generate a plot of the tuned fft of the qpsk_signal_after_channel for the repeater page
+            repeated_qpsk_signal_tuned = repeated_qpsk_signal * np.exp(-1j * 2 * np.pi * txFreq * new_t)
+            N = len(repeated_qpsk_signal_tuned)
+            fft_repeated = np.fft.fftshift(np.fft.fft(repeated_qpsk_signal_tuned))
+            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d=1/Fs))
+
+            plt.figure(figsize=(10, 6))
+            plt.plot(freqs_repeated / 1e6, 20 * np.log10(np.abs(fft_repeated)))
+            plt.xlabel("Frequency (MHz)")
+            plt.ylabel("Magnitude (dB)")
+            plt.title("FFT of Repeated Signal (Tuned to Transmit Frequency)")
+            plt.grid(True)
+            plt.tight_layout()
+            plt.savefig('media/repeater_fft.png', dpi=300)
+            plt.close()
+
             #now we want to see if we actually got to the desired power
             #debug:
-            print(f'does: {np.mean(np.sum(np.abs(repeated_qpsk_signal)**2))} = {required_rep_power}')
+            print(f'does: {np.mean(np.abs(repeated_qpsk_signal)**2)} = {required_rep_power}')
 
             #run the signal through channel down
             channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
-            #This signal is what gets fed into the repeater
-            repeated_siganl_after_channel = channel_down.apply_channel(t)
-            channel_down.handler(t,txFreq + 10e6 ,Fs/symb_rate)
+            
+            #This signal is what gets fed into the reciever
+            new_t,repeated_siganl_after_channel = channel_down.apply_channel(t, time_delay_down)
+            channel_down.handler(new_t, txFreq + 10e6, Fs/symb_rate)
 
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
             return
+        
         ui.button('start simulation', on_click=start_simulation)
         
         # Transmitter image (clickable)
@@ -524,7 +542,8 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the repeater simulation step.')
-
+            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                ui.image('media/repeater_fft.png').style('width: 40%;').force_reload()
 
         @ui.page('/channel2')
         def channel2_page():
@@ -549,6 +568,7 @@ def Cesium_page():
                     ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
 
         @ui.page('/receiver')
+
         def receiver_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')

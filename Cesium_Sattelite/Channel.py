@@ -1,3 +1,25 @@
+#helper function
+def fractional_delay(signal, delay_in_sec, Fs):
+    """
+    Apply fractional delya using interpolation (sinc-based)
+    'signal' a signal to apply the time delay
+    'delay_in_seconds' delay to apply to signal
+    'Fs' Sample rate used to convert delay to units of samples
+    """
+    import numpy as np 
+    
+    delay_in_samples = Fs * delay_in_sec # samples/seconds * seconds = samples
+    #filter taps
+    N = 21
+    n = np.arange(-N//2, N//2)
+    h = np.sinc(n-delay_in_samples)
+    h *= np.hamming(N) #something like a rectangular window
+    h /= np.sum(h)
+    new_signal = np.convolve(signal, h)
+    new_t = np.arange(len(new_signal)) * 1 / Fs #extend the length of the time vector to fit the new signal length
+    return new_t, new_signal
+
+
 class Channel: 
     def __init__(self, incoming_signal, h, noise_power, freq_shift, up = True):
         """
@@ -19,9 +41,9 @@ class Channel:
         self.up = up
 
 
-    def apply_channel(self, t):
+    def apply_channel(self, t, time_delay):
         import numpy as np
-        
+        Fs = 1/(t[1] - t[0]) #get the sample rate from the time vector
         #generate AWGN based on noise power
         print(f'noise_power = {self.noise_power}')
         
@@ -38,9 +60,9 @@ class Channel:
 
         outgoing_signal = self.h * signal_with_doppler #apply single tap channel 
         outgoing_signal +=  AWGN # element wise addition with AWGN 
-        
+        new_t, outgoing_signal = fractional_delay(outgoing_signal, time_delay, Fs) #apply the time delay
         self.outgoing_signal = outgoing_signal
-        return outgoing_signal
+        return new_t, outgoing_signal
     
     def handler(self, t, tune_frequency, samples_per_symbol):
         """
