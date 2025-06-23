@@ -1,5 +1,5 @@
 #helper function
-def fractional_delay(signal, delay_in_sec, Fs):
+def fractional_delay(t, signal, delay_in_sec, Fs):
     """
     Apply fractional delya using interpolation (sinc-based)
     'signal' a signal to apply the time delay
@@ -27,7 +27,7 @@ def fractional_delay(signal, delay_in_sec, Fs):
     # new_signal = padded_signal[delay:]  # Shift back by delay
 
     #create a new time vector with the correcct size
-    new_t = np.arange(len(new_signal)) / Fs
+    new_t = t[0] + np.arange(len(new_signal)) / Fs # t[0] might be 0 but if it isn't the rest of the time vector will be offset by this amount
     
     return new_t, new_signal
 
@@ -71,7 +71,7 @@ class Channel:
         signal_noisy = signal_channel + AWGN
 
         # Apply fractional delay
-        new_t, delayed_signal = fractional_delay(signal_noisy, time_delay, Fs)
+        new_t, delayed_signal = fractional_delay(t, signal_noisy, time_delay, Fs)
 
         self.outgoing_signal = delayed_signal
         
