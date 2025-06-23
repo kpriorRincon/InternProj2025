@@ -18,8 +18,8 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     h *= np.hamming(N) #something like a rectangular window
     h /= np.sum(h) #normalize to get unity gain, we don't want to change the amplitude/power
 
-    #apply filter: keep original lenght and center delay
-    new_signal = np.convolve(signal, h, 'same')
+    #apply filter: keep original length and center delay
+    new_signal = np.convolve(signal, h, mode='same')
 
     #cut out Group delay from FIR filter
     # delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
@@ -59,8 +59,7 @@ class Channel:
 
         # Generate complex AWGN
         noise_std = np.sqrt(self.noise_power / 2)
-        AWGN = np.random.normal(0, noise_std, len(self.incoming_signal)) \
-            + 1j * np.random.normal(0, noise_std, len(self.incoming_signal))
+        AWGN = np.random.normal(0, noise_std, len(self.incoming_signal)) + 1j * np.random.normal(0, noise_std, len(self.incoming_signal))
 
         # Apply Doppler shift
         doppler = np.exp(1j * 2 * np.pi * self.freq_shift * t)

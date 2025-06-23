@@ -426,7 +426,7 @@ def Cesium_page():
             #apply the channel: 
             new_t, qpsk_signal_after_channel = channel_up.apply_channel(t, time_delay_up)
             #run the channel_up_handler:
-            channel_up.handler(t, new_t,txFreq, Fs/symb_rate) #generate all the plots we want to display, note we pass in a higher sample rate just so we can actually get FFT data for the incoming signal
+            channel_up.handler(t, new_t, txFreq, Fs/symb_rate) #generate all the plots we want to display
             
             #amplify and upconvert:
             #we want the outgoing power to reach the required power
@@ -458,7 +458,7 @@ def Cesium_page():
             
             #This signal is what gets fed into the reciever
             new_t2,repeated_siganl_after_channel = channel_down.apply_channel(new_t, time_delay_down)
-            channel_down.handler(new_t, new_t2, txFreq + 10e6, Fs / symb_rate)
+            channel_down.handler(new_t, new_t2, txFreq + 10e6, Fs / symb_rate) #tune to tx + 10 MHz
 
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
