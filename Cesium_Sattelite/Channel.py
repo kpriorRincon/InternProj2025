@@ -16,15 +16,15 @@ def fractional_delay(signal, delay_in_sec, Fs):
     n = np.arange(-N//2, N//2)
     h = np.sinc(n-delay_in_samples)
     h *= np.hamming(N) #something like a rectangular window
-    h /= np.sum(h)
+    h /= np.sum(h) #normalize to get unity gain, we don't want to change the amplitude/power
 
-    #apply filter
-    new_signal = np.convolve(signal, h)
+    #apply filter: keep original lenght and center delay
+    new_signal = np.convolve(signal, h, 'same')
 
     #cut out Group delay from FIR filter
-    delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-    padded_signal = np.pad(new_signal, (0, delay), mode='constant')
-    new_signal = padded_signal[delay:]  # Shift back by delay
+    # delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
+    # padded_signal = np.pad(new_signal, (0, delay), mode='constant')
+    # new_signal = padded_signal[delay:]  # Shift back by delay
 
     #create a new time vector with the correcct size
     new_t = np.arange(len(new_signal)) / Fs
