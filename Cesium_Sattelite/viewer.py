@@ -16,6 +16,7 @@ from get_TLE import get_up_to_date_TLE
 # importing classes
 import Sig_Gen as SigGen
 import Channel as Channel
+import channel_correction
 
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
@@ -65,7 +66,6 @@ def update_text_boxes(e):
                     button.props('color=green')
                 # selected appears to be working well
                 print(f'currently selected:{selected}')
-
             count = int(e.value)
             sat_buttons = {}
 
@@ -457,8 +457,24 @@ def Cesium_page():
             channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
             
             #This signal is what gets fed into the reciever
-            new_t2,repeated_siganl_after_channel = channel_down.apply_channel(new_t, time_delay_down)
+            new_t2,repeated_signal_after_channel = channel_down.apply_channel(new_t, time_delay_down)
+
             channel_down.handler(new_t, new_t2, txFreq + 10e6, Fs / symb_rate) #tune to tx + 10 MHz
+            
+            ###-----------------------------------
+            ##we need to functionalize this block later TODO 
+            #apply rrc before we do corrections
+            h,_ =sig_gen.rrc_filter( 0.4 , 301, 1/symb_rate, Fs)
+            repeated_signal_after_channel = np.convolve(repeated_signal_after_channel, h, mdde = 'same')
+            
+            # coarse freq correction 
+            coarse_freq_corrected = channel_correction.coarse_freq_recovery(repeated_signal_after_channel)
+            #time correction
+            time_corrected = channel_correction.mueller(coarse_freq_corrected, Fs/symb_rate)
+            #fine freq correction
+            corrected_signal = channel_correction.costas(time_corrected, new_t2)
+            
+            #### -------------------------------------
 
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
@@ -510,7 +526,8 @@ def Cesium_page():
                 ui.image('media/tx_pulse_shaped_bits.png').style('width: 50%').force_reload()
                 #show the baseband FFT
                 ui.image('media/tx_pulse_shaped_fft.png').style('width: 50%').force_reload()
-                
+                #show the constellation plot
+                ui.image('media/tx_constellation.png').style('width: 50%').force_reload()
         @ui.page('/channel1')
         def channel1_page():
             ui.button('Back', on_click=ui.navigate.back)
