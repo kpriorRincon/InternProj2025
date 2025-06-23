@@ -1,5 +1,5 @@
 #helper function
-def fractional_delay(signal, delay_in_sec, Fs):
+def fractional_delay(t, signal, delay_in_sec, Fs):
     """
     Apply fractional delya using interpolation (sinc-based)
     'signal' a signal to apply the time delay
@@ -16,18 +16,18 @@ def fractional_delay(signal, delay_in_sec, Fs):
     n = np.arange(-N//2, N//2)
     h = np.sinc(n-delay_in_samples)
     h *= np.hamming(N) #something like a rectangular window
-    h /= np.sum(h)
+    h /= np.sum(h) #normalize to get unity gain, we don't want to change the amplitude/power
 
-    #apply filter
-    new_signal = np.convolve(signal, h)
+    #apply filter: keep original length and center delay
+    new_signal = np.convolve(signal, h, mode='same')
 
     #cut out Group delay from FIR filter
-    delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-    padded_signal = np.pad(new_signal, (0, delay), mode='constant')
-    new_signal = padded_signal[delay:]  # Shift back by delay
+    # delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
+    # padded_signal = np.pad(new_signal, (0, delay), mode='constant')
+    # new_signal = padded_signal[delay:]  # Shift back by delay
 
     #create a new time vector with the correcct size
-    new_t = np.arange(len(new_signal)) / Fs
+    new_t = t[0] + np.arange(len(new_signal)) / Fs # t[0] might be 0 but if it isn't the rest of the time vector will be offset by this amount
     
     return new_t, new_signal
 
@@ -59,8 +59,7 @@ class Channel:
 
         # Generate complex AWGN
         noise_std = np.sqrt(self.noise_power / 2)
-        AWGN = np.random.normal(0, noise_std, len(self.incoming_signal)) \
-            + 1j * np.random.normal(0, noise_std, len(self.incoming_signal))
+        AWGN = np.random.normal(0, noise_std, len(self.incoming_signal)) + 1j * np.random.normal(0, noise_std, len(self.incoming_signal))
 
         # Apply Doppler shift
         doppler = np.exp(1j * 2 * np.pi * self.freq_shift * t)
@@ -71,7 +70,7 @@ class Channel:
         signal_noisy = signal_channel + AWGN
 
         # Apply fractional delay
-        new_t, delayed_signal = fractional_delay(signal_noisy, time_delay, Fs)
+        new_t, delayed_signal = fractional_delay(t, signal_noisy, time_delay, Fs)
 
         self.outgoing_signal = delayed_signal
         

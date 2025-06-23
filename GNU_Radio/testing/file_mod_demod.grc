@@ -1,0 +1,277 @@
+options:
+  parameters:
+    author: trevorwiseman
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: file_mod_demod
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: file_mod_demod
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '32000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [224, 8.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_0
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: ''
+    file: /home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_read_in.txt
+    type: byte
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1264, 484.0]
+    rotation: 0
+    state: true
+- name: blocks_file_source_0
+  id: blocks_file_source
+  parameters:
+    affinity: ''
+    alias: ''
+    begin_tag: pmt.PMT_NIL
+    comment: ''
+    file: /home/trevorwiseman/Documents/GitHub/InternProj2025/GNU_Radio/testing/bits_to_send.txt
+    length: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    repeat: 'True'
+    type: byte
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [40, 268.0]
+    rotation: 0
+    state: true
+- name: blocks_throttle_0
+  id: blocks_throttle
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [632, 304.0]
+    rotation: 0
+    state: true
+- name: digital_psk_demod_0
+  id: digital_psk_demod
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    constellation_points: '8'
+    differential: 'True'
+    excess_bw: '0.35'
+    freq_bw: 6.28/100.0
+    log: 'False'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    mod_code: '"gray"'
+    phase_bw: 6.28/100.0
+    samples_per_symbol: '2'
+    timing_bw: 6.28/100.0
+    verbose: 'False'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [928, 440.0]
+    rotation: 0
+    state: true
+- name: digital_psk_mod_0
+  id: digital_psk_mod
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    constellation_points: '8'
+    differential: 'True'
+    excess_bw: '0.35'
+    log: 'False'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    mod_code: '"gray"'
+    samples_per_symbol: '2'
+    verbose: 'False'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [296, 268.0]
+    rotation: 0
+    state: true
+- name: filter_fft_rrc_filter_0
+  id: filter_fft_rrc_filter
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha: '0.35'
+    comment: ''
+    decim: '1'
+    gain: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    ntaps: 11*samp_rate
+    nthreads: '1'
+    samp_rate: samp_rate
+    sym_rate: '1.0'
+    type: ccc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1136, 248.0]
+    rotation: 0
+    state: true
+- name: filter_fft_rrc_filter_0_0
+  id: filter_fft_rrc_filter
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha: '0.35'
+    comment: ''
+    decim: '1'
+    gain: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    ntaps: 11*samp_rate
+    nthreads: '1'
+    samp_rate: samp_rate
+    sym_rate: '1.0'
+    type: ccc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [296, 448.0]
+    rotation: 0
+    state: true
+- name: fir_filter_xxx_0
+  id: fir_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_delay: '0'
+    taps: '51'
+    type: ccc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [648, 496.0]
+    rotation: 0
+    state: true
+- name: interp_fir_filter_xxx_0
+  id: interp_fir_filter_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    interp: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_delay: '0'
+    taps: '51'
+    type: ccc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [848, 296.0]
+    rotation: 0
+    state: true
+- name: virtual_sink_0
+  id: virtual_sink
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: ''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1456, 304.0]
+    rotation: 0
+    state: true
+- name: virtual_source_0
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: ''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [64, 504.0]
+    rotation: 0
+    state: true
+
+connections:
+- [blocks_file_source_0, '0', digital_psk_mod_0, '0']
+- [blocks_throttle_0, '0', interp_fir_filter_xxx_0, '0']
+- [digital_psk_demod_0, '0', blocks_file_sink_0, '0']
+- [digital_psk_mod_0, '0', blocks_throttle_0, '0']
+- [filter_fft_rrc_filter_0, '0', virtual_sink_0, '0']
+- [filter_fft_rrc_filter_0_0, '0', fir_filter_xxx_0, '0']
+- [fir_filter_xxx_0, '0', digital_psk_demod_0, '0']
+- [interp_fir_filter_xxx_0, '0', filter_fft_rrc_filter_0, '0']
+- [virtual_source_0, '0', filter_fft_rrc_filter_0_0, '0']
+
+metadata:
+  file_format: 1
