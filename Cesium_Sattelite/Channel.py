@@ -9,14 +9,26 @@ def fractional_delay(signal, delay_in_sec, Fs):
     import numpy as np 
     
     delay_in_samples = Fs * delay_in_sec # samples/seconds * seconds = samples
+    
     #filter taps
-    N = 21
+    N = 301
+    #construct filter
     n = np.arange(-N//2, N//2)
     h = np.sinc(n-delay_in_samples)
     h *= np.hamming(N) #something like a rectangular window
     h /= np.sum(h)
+
+    #apply filter
     new_signal = np.convolve(signal, h)
-    new_t = np.arange(len(new_signal)) * 1 / Fs #extend the length of the time vector to fit the new signal length
+
+    #cut out Group delay from FIR filter
+    delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
+    padded_signal = np.pad(new_signal, (0, delay), mode='constant')
+    new_signal = padded_signal[delay:]  # Shift back by delay
+
+    #create a new time vector with the correcct size
+    new_t = 
+    
     return new_t, new_signal
 
 
@@ -43,28 +55,29 @@ class Channel:
 
     def apply_channel(self, t, time_delay):
         import numpy as np
-        Fs = 1/(t[1] - t[0]) #get the sample rate from the time vector
-        #generate AWGN based on noise power
-        print(f'noise_power = {self.noise_power}')
-        
-        noise_standard_deviation = np.sqrt(self.noise_power / 2)
-        noise_real = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
-        noise_imag = np.random.normal(0, noise_standard_deviation, len(self.incoming_signal))
-        
-        #apply single tap channel to incomiong signal
-        AWGN = noise_real + 1j * noise_imag #we need real and imaginary noise
-        
-        #define doppler
-        doppler_effect = np.exp(1j * 2 * np.pi * self.freq_shift * t)
-        signal_with_doppler = doppler_effect * self.incoming_signal #apply the freq shift 
+        Fs = 1 / (t[1] - t[0]) #extract the sample rate from time vector
 
-        outgoing_signal = self.h * signal_with_doppler #apply single tap channel 
-        outgoing_signal +=  AWGN # element wise addition with AWGN 
-        new_t, outgoing_signal = fractional_delay(outgoing_signal, time_delay, Fs) #apply the time delay
-        self.outgoing_signal = outgoing_signal
-        return new_t, outgoing_signal
+        # Generate complex AWGN
+        noise_std = np.sqrt(self.noise_power / 2)
+        AWGN = np.random.normal(0, noise_std, len(self.incoming_signal)) \
+            + 1j * np.random.normal(0, noise_std, len(self.incoming_signal))
+
+        # Apply Doppler shift
+        doppler = np.exp(1j * 2 * np.pi * self.freq_shift * t)
+        signal_doppler = self.incoming_signal * doppler
+
+        # Apply single-tap channel and add noise
+        signal_channel = self.h * signal_doppler
+        signal_noisy = signal_channel + AWGN
+
+        # Apply fractional delay
+        new_t, delayed_signal = fractional_delay(signal_noisy, time_delay, Fs)
+
+        self.outgoing_signal = delayed_signal
+        
+        return new_t, delayed_signal
     
-    def handler(self, t, tune_frequency, samples_per_symbol):
+    def handler(self, t, new_t, tune_frequency, samples_per_symbol):
         """
         Handles plotting and frequency analysis of the incoming signal.
         This method generates and saves plots of the real and imaginary parts of the incoming signal
@@ -193,15 +206,18 @@ class Channel:
 
 
         #plot fft of the baseband outgoing singla
-        tuned_outgoing_signal = self.outgoing_signal * np.exp(-1j * 2 * np.pi * tune_frequency * t)
+        tuned_outgoing_signal = self.outgoing_signal * np.exp(-1j * 2 * np.pi * tune_frequency * new_t)
+        N = len(new_t)
+        Fs = 1 / (new_t[1] - new_t[0])
+        f = np.fft.fftshift(np.fft.fftfreq(N, d=1/Fs))
         plt.figure(figsize=(10, 6))
         S_out = np.fft.fft(tuned_outgoing_signal)
         S_out_mag_db = 20 * np.log10(np.abs(S_out))
-        plt.plot(f, np.fft.fftshift(S_out_mag_db))
+        plt.plot(f/1e6, np.fft.fftshift(S_out_mag_db))
         plt.title('Frequency Domain of Tuned Outgoing Signal (Baseband)')
-        plt.xlabel('Frequency (Hz)')
+        plt.xlabel('Frequency (MHz)')
         plt.ylabel('Magnitude (dB)')
-        plt.xlim(-Fs/6, Fs/6)
+        # plt.xlim(-Fs/6, Fs/6)
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_tuned_fft.png', dpi=300)
         plt.close()

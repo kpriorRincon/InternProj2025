@@ -174,9 +174,9 @@ class SigGen:
         freqs_upsampled = np.fft.fftshift(np.fft.fftfreq(N_upsampled, d=1/self.sample_rate))
 
         plt.figure(figsize=(10, 6))
-        plt.plot(freqs_upsampled / 1e6, 20 * np.log10(np.abs(fft_upsampled) / np.max(np.abs(fft_upsampled))))
+        plt.plot(freqs_upsampled / 1e6, 20 * np.log10(np.abs(fft_upsampled)))
         plt.xlabel("Frequency (MHz)")
-        plt.ylabel("Normalized Magnitude (dB)")
+        plt.ylabel("Magnitude (dB)")
         plt.title("FFT of Upsampled Bits (Baseband)")
         plt.grid(True)
         plt.tight_layout()
@@ -230,9 +230,9 @@ class SigGen:
         freqs = np.fft.fftshift(np.fft.fftfreq(N, d=1/self.sample_rate))
 
         plt.figure(figsize=(10, 6))
-        plt.plot(freqs / 1e6, 20 * np.log10(np.abs(fft_vals) / np.max(np.abs(fft_vals))))
+        plt.plot(freqs / 1e6, 20 * np.log10(np.abs(fft_vals) ))
         plt.xlabel("Frequency (MHz)")
-        plt.ylabel("Normalized Magnitude (dB)")
+        plt.ylabel("Magnitude (dB)")
         plt.title("FFT of Pulse Shaped Baseband Signal")
         plt.grid(True)
         plt.tight_layout()
