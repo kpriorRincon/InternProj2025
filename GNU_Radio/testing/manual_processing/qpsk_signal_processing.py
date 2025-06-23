@@ -82,6 +82,7 @@ class qpsk_signal_processing(gr.top_block, Qt.QWidget):
         self.sps = sps = 2
         self.samp_rate = samp_rate = 32e3
         self.noise_volt = noise_volt = .01
+        self.input_vector = input_vector = [0,1,0,1]
         self.freq_offset = freq_offset = 0.025
         self.excess_bw = excess_bw = 0.35
 
@@ -155,6 +156,12 @@ class qpsk_signal_processing(gr.top_block, Qt.QWidget):
     def set_noise_volt(self, noise_volt):
         self.noise_volt = noise_volt
         self.channels_channel_model_0.set_noise_voltage(self.noise_volt)
+
+    def get_input_vector(self):
+        return self.input_vector
+
+    def set_input_vector(self, input_vector):
+        self.input_vector = input_vector
 
     def get_freq_offset(self):
         return self.freq_offset

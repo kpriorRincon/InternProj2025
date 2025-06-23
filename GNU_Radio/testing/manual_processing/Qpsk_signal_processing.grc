@@ -66,6 +66,18 @@ blocks:
     coordinate: [1360, 4.0]
     rotation: 0
     state: true
+- name: input_vector
+  id: variable
+  parameters:
+    comment: ''
+    value: '[0,1,0,1]'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [560, 24.0]
+    rotation: 0
+    state: enabled
 - name: noise_volt
   id: variable_qtgui_range
   parameters:
@@ -231,7 +243,7 @@ blocks:
     bus_structure: null
     coordinate: [0, 196.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: blocks_multiply_xx_0
   id: blocks_multiply_xx
   parameters:
@@ -287,6 +299,26 @@ blocks:
     coordinate: [288, 232.0]
     rotation: 0
     state: enabled
+- name: blocks_vector_source_x_0
+  id: blocks_vector_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    repeat: 'True'
+    tags: '[]'
+    type: complex
+    vector: input_vector
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [40, 416.0]
+    rotation: 0
+    state: disabled
 - name: channels_channel_model_0
   id: channels_channel_model
   parameters:
@@ -415,6 +447,7 @@ connections:
 - [blocks_multiply_xx_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_multiply_xx_0_0, '0', Correlator_correlator_0, '0']
 - [blocks_throttle_0, '0', blocks_multiply_xx_0, '0']
+- [blocks_vector_source_x_0, '0', blocks_throttle_0, '0']
 - [channels_channel_model_0, '0', blocks_multiply_xx_0_0, '0']
 
 metadata:

@@ -2,6 +2,7 @@ import numpy as np
 import demodulator as dm
 from scipy.signal import fftconvolve
 from commpy.filters import rrcosfilter
+from matplotlib import pyplot as plt
 
 #################################### Helper Functions #############################
 def bits_to_text(bits):
@@ -30,20 +31,20 @@ h, _ = rrcosfilter(taps, beta, sps / samp_rate, samp_rate)
 print(f"RRC Filter length: {len(h)}")
 
 # Matched filtering
-filtered_symbols = fftconvolve(raw_data, h, mode='full')
+filtered_symbols = fftconvolve(raw_data, np.conj(h), mode='full')
 
 # Remove group delay and downsample
-delay = len(h) // 2
-symbols = filtered_symbols[delay::sps]
+group_delay = (len(h) - 1) // 2
+symbols = filtered_symbols[group_delay::sps]
 
 # Normalize
-# max_val = np.max(np.abs(symbols))
-# if max_val > 0:
-#     symbols /= max_val
+max_val = np.max(np.abs(symbols))
+if max_val > 0:
+    symbols /= max_val
 
 ##################################### Demodulation ##########################
-if len(raw_data) > 0:
-    bits = dm.phase_rotation_handler(raw_data)
+if len(filtered_symbols) > 0:
+    bits = dm.phase_rotation_handler(filtered_symbols)
 
     print("First 32 bits received:", bits)
     print("Total bits received: ", len(bits))
@@ -54,3 +55,9 @@ if len(raw_data) > 0:
     print("Received message length: ", len(text))
 else:
     print("No symbols recovered!")
+
+# print("Received symbols:\n", symbols)
+# plt.scatter(np.real(symbols), np.imag(symbols), marker='o')
+# plt.grid()
+# plt.title("Received Symbols")
+# plt.show()

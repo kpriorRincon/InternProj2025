@@ -46,22 +46,23 @@ class correlator(gr.sync_block):
 
     def work(self, input_items, output_items):
         # get inputs
-        rx_signal = input_items[0]
+        rx_signal = input_items[0][:]
         start_index = 0
         end_index = len(rx_signal) - 1
 
-        print("Received signal length: ", len(rx_signal))
+        # if rx_signal.size > 0:
+        #     # correlate
+        #     correlated_signal = fftconvolve(rx_signal, np.conj(np.flip(self.startSequence)), mode='full')
+        #     # end_cor_signal = fftconvolve(rx_signal, np.conj(np.flip(self.endSequence)), mode='full')
 
-        if rx_signal.size > 0:
-            # correlate
-            correlated_signal = fftconvolve(rx_signal, np.conj(np.flip(self.startSequence)), mode='full')
-            # end_cor_signal = fftconvolve(rx_signal, np.conj(np.flip(self.endSequence)), mode='full')
-
-            # get indices
-            start_index = np.argmax(np.abs(correlated_signal)) - 16*self.sps # go back 16 symbols e.g. 32 bits
-            # end_index = np.argmax(np.abs(end_cor_signal))
+        #     # get indices
+        #     start_index = np.argmax(np.abs(correlated_signal)) - 16*self.sps # go back 16 symbols e.g. 32 bits
+            
+        #     if start_index > end_index:
+        #         start_index = 0
+        #     # end_index = np.argmax(np.abs(end_cor_signal))
 
         # return the signal at those indices
-        output_items[0][:] = rx_signal[start_index:end_index]
-        
+        # output_items[0] = rx_signal[start_index:end_index]
+        output_items[0][:] = rx_signal[0:32]
         return len(output_items[0])
