@@ -239,16 +239,31 @@ class SigGen:
         plt.savefig('media/tx_pulse_shaped_fft.png', dpi=300)
         plt.close()
         
+        # Plot the constellation diagram of the pulse-shaped symbols
+        plt.figure(figsize=(6, 6))
+        plt.plot(
+            np.real(self.pulse_shaped_symbols[::samples_per_symbol]),
+            np.imag(self.pulse_shaped_symbols[::samples_per_symbol]),
+            'bo'
+        )
+        plt.xlabel("In-phase (I)")
+        plt.ylabel("Quadrature (Q)")
+        plt.title("Constellation Diagram (Pulse Shaped Symbols)")
+        plt.grid(True)
+        plt.axis('equal')
+        plt.tight_layout()
+        plt.savefig('media/tx_constellation.png', dpi=300)
+        plt.close()
         
         #plot the modulated signal 
-        plt.figure(figsize=(10, 6))
-        plt.plot(t, np.real(self.qpsk_signal))
-        plt.xlabel("Time")
-        plt.ylabel("Amplitude")
-        plt.title("Snippet of Modulated Signal")
-        plt.tight_layout()
-        plt.savefig('media/tx_waveform_snippet.png', dpi=300)
-        plt.close()
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(t, np.real(self.qpsk_signal))
+        # plt.xlabel("Time")
+        # plt.ylabel("Amplitude")
+        # plt.title("Snippet of Modulated Signal")
+        # plt.tight_layout()
+        # plt.savefig('media/tx_waveform_snippet.png', dpi=300)
+        # plt.close()
 
         
         #

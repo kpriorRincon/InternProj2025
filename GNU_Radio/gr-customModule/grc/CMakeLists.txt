@@ -8,5 +8,6 @@
 
 install(FILES
     customModule_QPSK_Modulator.block.yml
-    customModule_QPSK_Demodulator.block.yml DESTINATION share/gnuradio/grc/blocks
+    customModule_QPSK_Demodulator.block.yml
+    customModule_upsampler.block.yml DESTINATION share/gnuradio/grc/blocks
 )

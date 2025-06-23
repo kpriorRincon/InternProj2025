@@ -7,8 +7,16 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     'Fs' Sample rate used to convert delay to units of samples
     """
     import numpy as np 
-    
-    delay_in_samples = Fs * delay_in_sec # samples/seconds * seconds = samples
+    #first step we need to shift by integer 
+    #for now we are only gonna get the fractional part of the delay
+    total_delay = delay_in_sec * Fs # = samples
+    fractional_delay = total_delay % 1 # to get the remainder
+    integer_delay = int(total_delay)
+
+    print(f'fractional delay in samples: {fractional_delay}')
+    #then shift by fractional samples with the leftover 
+    delay_in_samples = fractional_delay
+    #Fs * delay_in_sec # samples/seconds * seconds = samples
     
     #filter taps
     N = 301

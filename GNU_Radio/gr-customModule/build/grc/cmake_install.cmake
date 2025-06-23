@@ -46,6 +46,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/gnuradio/grc/blocks" TYPE FILE FILES
     "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/grc/customModule_QPSK_Modulator.block.yml"
     "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/grc/customModule_QPSK_Demodulator.block.yml"
+    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/grc/customModule_upsampler.block.yml"
     )
 endif()
 
