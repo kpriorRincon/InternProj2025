@@ -9,7 +9,7 @@ def bits_to_text(bits):
     return ''.join(chars)
 
 # Load file
-raw_data = np.fromfile("bits_read_in.bin", dtype=np.uint8)
+raw_data = np.fromfile("bits_read_in.bin", dtype=np.uint32)
 print("Raw data loaded from file:\n", raw_data)
 
 # Conver raw data to bits
