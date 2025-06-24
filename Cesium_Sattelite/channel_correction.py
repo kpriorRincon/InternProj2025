@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 20e3
+freq_offset = 2e3
 fs = 40e6
 symb_rate = 2e6
 
@@ -68,20 +68,29 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     mag_inc = 20 * np.log(np.abs(fft_vals_bef))
 
     freqs = np.linspace(-fs/2, fs/2, len(fft_vals_bef))
-    plt.plot(freqs, qpsk_wave)
+    plt.plot(freqs, fft_vals_bef)
+    plt.title('fft before')
     plt.show()
     qpsk_wave_r = qpsk_wave**4
 
     fft_vals = np.fft.fftshift(np.abs(np.fft.fft(qpsk_wave_r)))
     plt.plot(freqs, fft_vals)
+    plt.axvline(x=freqs[np.argmax(fft_vals)], color='r', linestyle=':', label=f'Peak: {freqs[np.argmax(fft_vals)]:.1f} Hz')
+    plt.annotate('Divide frequency\nby 4\n(signal raised\nto 4th power)', 
+                 xy=(freqs[np.argmax(fft_vals)], np.max(fft_vals)), 
+                 xytext=(freqs[np.argmax(fft_vals)], np.max(fft_vals)*0.8),
+                 fontsize=10, color='blue')
+    plt.legend()
+    plt.title('fft of sig^4 after')
     plt.show()
 
     freq_tone = freqs[np.argmax(fft_vals)] / order 
-    print(freq_tone)
+    print(f'frequency offset(coarse freq): {freq_tone}')
     
     t = np.arange(len(qpsk_wave)) / fs
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
+    #after coarse detection
     fft_vals_cor = np.fft.fftshift(np.abs(np.fft.fft(fixed_qpsk)))
     mag_out = 20 * np.log(np.abs(fft_vals_cor))
     return fixed_qpsk
@@ -103,8 +112,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase
     #Following params determine feedback loop speed
-    alpha = 0.125 #0.132 immediate phase correction based on current error
-    beta = 0.01 #0.00932  tracks accumalated phase error
+    alpha = 0.01 #0.132 immediate phase correction based on current error
+    beta = 0.0001 #0.00932  tracks accumalated phase error
     out = np.zeros(N, dtype=np.complex64)
     freq_log = []
     
@@ -195,10 +204,12 @@ def runCorrection(signal, FS, symbol_rate):
     #find start index by convolving signal with preamble
     start_corr_sig = fftconvolve(signal, np.conj(np.flip(start_waveform)), mode = 'same')
     plt.figure()
+    plt.title('start correlation')
     plt.plot(start_corr_sig)
     end_corr_signal = fftconvolve(signal, np.conj(np.flip(end_waveform)), mode = 'same')
     plt.figure()
     plt.plot(end_corr_signal)
+    plt.title('end correlation')
     plt.show()
     #get the index
     start = np.argmax(np.abs(start_corr_sig)) - int((8) * (FS/symbol_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
@@ -218,14 +229,14 @@ def runCorrection(signal, FS, symbol_rate):
     # mueller_corrected = mueller(signal, FS/symbol_rate)
 
     # #5. Fine Freq (Costas)
-    signal_ready_for_demod = costas_loop(freq_corrected, FS/symbol_rate)
+    #signal_ready_for_demod = costas_loop(freq_corrected, FS/symbol_rate)
     
     #decimate and return
-    return signal_ready_for_demod[::int(FS / symb_rate)]
+    return freq_corrected[::int(FS / symb_rate)]
 
 def main():
     sig_gen = SigGen(freq=900e6, amp=1,sample_rate=fs, symbol_rate=symb_rate)
-    bits = sig_gen.message_to_bits('hello there'*3)
+    bits = sig_gen.message_to_bits('hello there' * 3)
     print(f'num symbols: {len(bits)//2}')
     t, qpsk_wave = sig_gen.generate_qpsk(bits)
     print(f'length of wave: {len(qpsk_wave)}')
@@ -233,17 +244,17 @@ def main():
     #test time correction
     # delay_sec = 0.00113424
     # new_t, new_signal = fractional_delay(t, qpsk_wave, delay_sec, fs)
-
     #test frequency correction
-    new_signal = qpsk_wave * np.exp(-1j* 2 * np.pi * freq_offset * t)
+    new_signal = qpsk_wave * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
     #tune to "close to baseband"
     tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
 
-    coarse_fixed = coarse_freq_recovery(tuned_sig)
-    costas_loop(coarse_fixed, fs/symb_rate)
+    # coarse_fixed = coarse_freq_recovery(tuned_sig)
+    # costas_loop(coarse_fixed, fs/symb_rate)
 
     signal_ready = runCorrection(tuned_sig, fs, symb_rate)
     
+    #convert bits to string
     bits = np.zeros((len(signal_ready), 2), dtype=int)
     for i in range(len(signal_ready)):
         angle = np.angle(signal_ready[i], deg=True) % 360
@@ -269,8 +280,7 @@ def main():
     decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
     print(f"The decoded message = {decoded_string}")
 
-    plt.plot(signal_ready)
-    # bits = signal_ready[::sig_gen.sample_rate/sig_gen.sample_rate] potentially don't need to decimate because mueller already does that 
+    # plt.plot(signal_ready)
 
     """
     plt.subplot(2, 1, 1)
@@ -280,6 +290,7 @@ def main():
     plt.figure(figsize=(10, 5))
     """
 
+    """
     plt.subplot(2,2,1)
     plt.title("Constellation: orig")
     plt.scatter(np.real(qpsk_wave), np.imag(qpsk_wave), s=2, alpha=0.5)
@@ -297,6 +308,7 @@ def main():
     plt.xlabel("In-phase")
     plt.ylabel("Quadrature")
     plt.legend()
+    """
     
     # plt.subplot(2,2,3)
     # plt.title("Constellation: time_corrected")
