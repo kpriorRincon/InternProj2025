@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 2e3
+freq_offset = 20e3
 fs = 40e6
 symb_rate = 2e6
 
@@ -110,11 +110,11 @@ def costas_loop(qpsk_wave, sps):
     # requires downconversion to baseband first
     N = len(qpsk_wave)
     phase = 0
-    freq = 0 # derivative of phase; rate of change of phase
+    freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
-    alpha = 0.01 #0.132 immediate phase correction based on current error
-    beta = 0.0001 #0.00932  tracks accumalated phase error
-    out = np.zeros(N, dtype=np.complex64)
+    alpha = 0.0003 #0.132 immediate phase correction based on current error
+    beta = 0.0000001 #0.00932  tracks accumalated phase error
+    out = np.zeros(N, dtype = complex)
     freq_log = []
     
     for i in range(N):
@@ -122,6 +122,7 @@ def costas_loop(qpsk_wave, sps):
         error = phase_detector_4(out[i])
 
         freq += (beta * error)
+        #log frequency in Hz
         freq_log.append(freq * fs / (2 * np.pi ))
         phase += freq + (alpha * error)
 
@@ -129,13 +130,15 @@ def costas_loop(qpsk_wave, sps):
             phase -= 2*np.pi
         while phase < 0:
             phase += 2*np.pi
-    print(freq_log[-1])
+    
+    #finds the frequency at the end when it converged
+    print(f' converged frequency offset: {freq_log[-1]}')
 
     plt.plot(freq_log,'.-')
     plt.title('freq converge')
     plt.show()
-    t = np.arange(len(qpsk_wave)) * (sps/fs)
-    return qpsk_wave * np.exp(-1j * 2 * np.pi * freq * t)
+    t = np.arange(len(qpsk_wave)) / fs
+    return qpsk_wave * np.exp(-1j * 2 * np.pi * freq_log[-1] * t)
     
 def mueller(samples, sps):
     samples_interpolated = signal.resample_poly(samples, 16, 1)
@@ -229,10 +232,10 @@ def runCorrection(signal, FS, symbol_rate):
     # mueller_corrected = mueller(signal, FS/symbol_rate)
 
     # #5. Fine Freq (Costas)
-    #signal_ready_for_demod = costas_loop(freq_corrected, FS/symbol_rate)
+    signal_ready_for_demod = costas_loop(freq_corrected, FS/symbol_rate)
     
     #decimate and return
-    return freq_corrected[::int(FS / symb_rate)]
+    return signal_ready_for_demod[::int(FS / symb_rate)]
 
 def main():
     sig_gen = SigGen(freq=900e6, amp=1,sample_rate=fs, symbol_rate=symb_rate)
