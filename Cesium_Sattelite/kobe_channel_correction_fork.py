@@ -246,7 +246,7 @@ def runCorrection(signal, FS, symbol_rate):
     plt.title('end correlation')
     plt.show()
     #get the index
-    start = np.argmax(np.abs(start_corr_sig)) - int((8) * (FS/symbol_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
+    start = np.argmax(np.abs(start_corr_sig)) - int((8) * (FS/symbol_rate)) # If the preamble is 32 bits long, its 16 symbols, since convolvin gwith mode = same is centered we shift back by 8 to include our preamble symbols * samples/symbol = samples
     end = np.argmax(np.abs(end_corr_signal)) + int(8 * (FS/symbol_rate))
     print(f'start: {start}, end: {end}')
 
