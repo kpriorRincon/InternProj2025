@@ -27,6 +27,7 @@ from gnuradio import blocks
 import pmt
 from gnuradio import channels
 from gnuradio.filter import firdes
+from gnuradio import filter
 from gnuradio import gr
 from gnuradio.fft import window
 import sys
@@ -149,6 +150,8 @@ class qpsk_signal_processing(gr.top_block, Qt.QWidget):
         self.analog_sig_source_x_0.set_sampling_freq(self.samp_rate)
         self.analog_sig_source_x_0_0.set_sampling_freq(self.samp_rate)
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
+        self.filter_fft_rrc_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, 1.0, 0.35, int(11*self.samp_rate)))
+        self.filter_fft_rrc_filter_0_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, 1.0, 0.35, int(11*self.samp_rate)))
 
     def get_noise_volt(self):
         return self.noise_volt
@@ -192,6 +195,27 @@ def main(top_block_cls=qpsk_signal_processing, options=None):
 
     tb.show()
 
+    # Countdown timer setup
+    countdown_seconds = 1
+    remaining_seconds = countdown_seconds
+    original_title = tb.windowTitle()
+
+    def update_countdown():
+        nonlocal remaining_seconds
+        if remaining_seconds > 0:
+            tb.setWindowTitle(f"{original_title} - Closing in {remaining_seconds}s")
+            remaining_seconds -= 1
+        else:
+            countdown_timer.stop()
+            tb.stop()
+            tb.wait()
+            Qt.QApplication.quit()
+
+    # Timer for countdown updates
+    countdown_timer = Qt.QTimer()
+    countdown_timer.timeout.connect(update_countdown)
+    countdown_timer.start(1000)  # Update every second
+
     def sig_handler(sig=None, frame=None):
         tb.stop()
         tb.wait()
@@ -205,7 +229,7 @@ def main(top_block_cls=qpsk_signal_processing, options=None):
     timer.start(500)
     timer.timeout.connect(lambda: None)
 
-    qapp.exec_()
+    sys.exit(qapp.exec_())
 
 if __name__ == '__main__':
     main()

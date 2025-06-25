@@ -29,12 +29,18 @@ parameters:
 #      * vlen (optional - data stream vector length. Default is 1)
 #      * optional (optional - set to 1 for optional inputs. Default is 0)
 inputs:
-- label: in0
+- label: Sig
+  domain: stream
+  dtype: complex
+- label: SrtMrk
+  domain: stream
+  dtype: complex
+- label: EndMrk
   domain: stream
   dtype: complex
 
 outputs:
-- label: out0
+- label: CorSig
   domain: stream
   dtype: complex
 
