@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
 freq_offset = 2210.123
-fs = 40e6
-symb_rate = 2e6
+fs = 2.88e6
+symb_rate = fs/20
 
 
 def fractional_delay(t, signal, delay_in_sec, Fs):
