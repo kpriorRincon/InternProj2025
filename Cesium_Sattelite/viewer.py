@@ -453,27 +453,21 @@ def Cesium_page():
             #debug:
             print(f'does: {np.mean(np.abs(repeated_qpsk_signal)**2)} = {required_rep_power}')
 
-            #run the signal through channel down
+            # run the signal through channel down
             channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
             
-            #This signal is what gets fed into the reciever
+            # This signal is what gets fed into the reciever
             new_t2,repeated_signal_after_channel = channel_down.apply_channel(new_t, time_delay_down)
 
             channel_down.handler(new_t, new_t2, txFreq + 10e6, Fs / symb_rate) #tune to tx + 10 MHz
             
             ###-----------------------------------
             ##we need to functionalize this block later TODO 
-            #apply rrc before we do corrections
-            h,_ =sig_gen.rrc_filter( 0.4 , 301, 1/symb_rate, Fs)
-            repeated_signal_after_channel = np.convolve(repeated_signal_after_channel, h, mdde = 'same')
             
-            # coarse freq correction 
-            coarse_freq_corrected = channel_correction.coarse_freq_recovery(repeated_signal_after_channel)
-            #time correction
-            time_corrected = channel_correction.mueller(coarse_freq_corrected, Fs/symb_rate)
-            #fine freq correction
-            corrected_signal = channel_correction.costas(time_corrected, new_t2)
-            
+            #Very first step tune to what we THINK is baseband
+            tuned_signal = repeated_signal_after_channel * np.exp(-1j * 2 * np.pi * (txFreq + 10e6) * new_t2)
+            # signal_ready_for_demod = channel_correction.runCorrection(tuned_signal)
+        
             #### -------------------------------------
 
             # channel_down = Channel.Channel()
@@ -545,6 +539,8 @@ def Cesium_page():
                     # tune to baseband and show the fft
                     ui.image('media/channel_up_incoming_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
                 ui.label("Note that the tuned signal is tuned based on the transmit carrier so the frequency offset from doppler manifests as phase smearing of the symbols").style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
+                ui.label('Also note that this interpreted symbols are not aligned with the delayed signal').style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
+                
                 with ui.row().style('width:100%'):
                     # constellation plot of outgoing signal
                     ui.image('media/channel_up_outgoing_tuned_constellation.png').style('width: 40%').force_reload()

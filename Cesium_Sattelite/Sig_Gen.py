@@ -1,23 +1,6 @@
-class SigGen:
+#helper function:
 
-    def __init__(self, freq=1.0, amp=1.0, sample_rate=40e6, symbol_rate=4e6):
-        import numpy as np
-        self.freq = freq  # Frequency in Hz
-        self.sample_rate = sample_rate  # sample rate in samples per second
-        self.symbol_rate = symbol_rate  # Symbol rate in symbols per second
-        self.amp = amp    # Amplitude
-        self.upsampled_symbols = None
-        self.pulse_shaped_symbols = None
-        self.qpsk_signal = None
-        # Map bit pairs to complex symbols
-        self.mapping = {
-            (0, 0): (1 + 1j) / np.sqrt(2),
-            (0, 1): (-1 + 1j) / np.sqrt(2),
-            (1, 1): (-1 - 1j) / np.sqrt(2),
-            (1, 0): (1 - 1j) / np.sqrt(2)
-        }
-
-    def rrc_filter(self, beta, N, Ts, fs):
+def rrc_filter(beta, N, Ts, fs):
         """
         Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response
 
@@ -57,7 +40,26 @@ class SigGen:
         # plt.plot(t, h, '.-')
         # #plt.plot(t, np.convolve(h, h, mode='same'), '.-')
         # plt.show()
-        return t, h 
+        return t, h
+
+class SigGen:
+
+    def __init__(self, freq=1.0, amp=1.0, sample_rate=40e6, symbol_rate=4e6):
+        import numpy as np
+        self.freq = freq  # Frequency in Hz
+        self.sample_rate = sample_rate  # sample rate in samples per second
+        self.symbol_rate = symbol_rate  # Symbol rate in symbols per second
+        self.amp = amp    # Amplitude
+        self.upsampled_symbols = None
+        self.pulse_shaped_symbols = None
+        self.qpsk_signal = None
+        # Map bit pairs to complex symbols
+        self.mapping = {
+            (0, 0): (1 + 1j) / np.sqrt(2),
+            (0, 1): (-1 + 1j) / np.sqrt(2),
+            (1, 1): (-1 - 1j) / np.sqrt(2),
+            (1, 0): (1 - 1j) / np.sqrt(2)
+        } 
 
     def generate_qpsk(self, bits):
         """
@@ -97,13 +99,17 @@ class SigGen:
         
         # Root raised cosine filter implementation
         beta = 0.4
-        _, pulse_shape = self.rrc_filter(beta, 301, 1/self.symbol_rate, self.sample_rate)
+        _, pulse_shape = rrc_filter(beta, 301, 1/self.symbol_rate, self.sample_rate)
 
         signal = np.convolve(upsampled_symbols, pulse_shape, mode='same')
+        #delay = (301 - 1) // 2 
+        #signal = np.pad(signal, (0, delay), mode='constant')
+        #signal = signal[delay:]
 
         self.pulse_shaped_symbols = signal
 
         # Generate complex phasor at carrier frequency
+        t = np.arange(len(signal))/self.sample_rate
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
         # Modulate: multiply pulse shaped upsampled symbols with the complex carrier
         qpsk_waveform = signal * phasor * self.amp
@@ -185,7 +191,7 @@ class SigGen:
         
         #pulse shaping impulse response:
         plt.figure(figsize=(5,5))
-        pulse_t,pulse_shape = self.rrc_filter(0.4, 301, 1/self.symbol_rate, self.sample_rate)
+        pulse_t,pulse_shape = rrc_filter(0.4, 301, 1/self.symbol_rate, self.sample_rate)
         plt.plot(pulse_t, pulse_shape, 'o')
         plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
