@@ -47,6 +47,8 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/grc/customModule_QPSK_Modulator.block.yml"
     "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/grc/customModule_QPSK_Demodulator.block.yml"
     "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/grc/customModule_upsampler.block.yml"
+    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/grc/customModule_downsampler.block.yml"
+    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/grc/customModule_vec_to_var.block.yml"
     )
 endif()
 
