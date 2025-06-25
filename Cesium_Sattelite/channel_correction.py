@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 20e3
+freq_offset = 21.12e3
 fs = 40e6
 symb_rate = 2e6
 
