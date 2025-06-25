@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 21.12e3
+freq_offset = 2210.123
 fs = 40e6
 symb_rate = 2e6
 
@@ -120,8 +120,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
-    alpha = 0.01 #0.132 immediate phase correction based on current error
-    beta = 0.00001 #0.00932  tracks accumalated phase error
+    alpha = 0.0001 # immediate phase correction based on current error
+    beta = 0.000001 #  tracks accumalated phase error
     out = np.zeros(N, dtype = complex)
     freq_log = []
     
@@ -177,18 +177,20 @@ def mueller(samples, sps):
 def runCorrection(signal, FS, symbol_rate):
     from scipy.signal import fftconvolve
     #1. Apply RRC to incoming signal 
+    og_len = len(signal)
     _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
-    signal = np.convolve(signal, h, mode = 'same')    
+    signal = np.convolve(signal, h, mode = 'full')    
+    delay = (301 - 1) // 2 #account for group delay
+    signal = signal[delay:delay + og_len]
+    #correct the group delay
+     
     #note at this point we would want to correlate with a signal that has been RC filtered 
     # not RRC filtered because it has been through 2 RRC filters at this point in the chain
-    #delay = (300 - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-    #signal = np.pad(signal, (0, delay), mode='constant')
-    #signal = signal[delay:]
 
-    # #3. Coarse Freq first?
+    #2. Coarse Freq first?
     freq_corrected = coarse_freq_recovery(signal)
 
-    #2. Correlation
+    #3 Correlation
     sig_gen = SigGen(0, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
         # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
     start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
@@ -198,7 +200,9 @@ def runCorrection(signal, FS, symbol_rate):
     _, start_waveform = sig_gen.generate_qpsk(start_sequence)
 
     #then apply RRC to make a full RC filter to compare agianst
-    start_waveform = np.convolve(start_waveform, h, mode = 'same')
+    og_len = len(start_waveform)
+    start_waveform = np.convolve(start_waveform, h, mode = 'full')
+    start_waveform = start_waveform[delay:delay + og_len]
     plt.figure()
     plt.plot(start_waveform)
     plt.title('start waveform to compare against')
@@ -212,9 +216,11 @@ def runCorrection(signal, FS, symbol_rate):
                     0, 0, 0, 1, 0, 0, 1, 0]
     
     _, end_waveform = sig_gen.generate_qpsk(end_sequence)
-    
+    og_len = len(end_waveform) 
+
     #then apply RRC to make a full RC filter to compare agianst
     end_waveform = np.convolve(end_waveform, h, mode = 'same')
+    end_waveform = end_waveform[delay:delay+og_len] 
     plt.figure()
     plt.plot(end_waveform)
     plt.title('end waveform to compare against')
@@ -262,10 +268,10 @@ def runCorrection(signal, FS, symbol_rate):
 
 
     # #5. Fine Freq (Costas)
-    #signal_ready_for_demod = costas_loop(signal, FS/symbol_rate)
+    signal_ready_for_demod = costas_loop(signal, FS/symbol_rate)
     
     #decimation has already happened with mueller and muller
-    return signal[::int(FS/symbol_rate)]
+    return signal_ready_for_demod[::int(FS/symbol_rate)]
 
 def main():
     sig_gen = SigGen(freq=900e6, amp=1,sample_rate=fs, symbol_rate=symb_rate)
@@ -276,18 +282,18 @@ def main():
     
     
     #test time correction
-    delay_sec = (1/fs) * 10 # : 10 sample delay
-    new_t, new_signal = fractional_delay(t, qpsk_wave, delay_sec, fs)
+    #delay_sec = (1/fs) * 10 # : 10 sample delay
+    #new_t, new_signal = fractional_delay(t, qpsk_wave, delay_sec, fs)
     
     #test frequency correction
-    new_signal = new_signal * np.exp(-1j* 2 * np.pi * freq_offset * new_t) # shifts down by freq offset
+    new_signal = qpsk_wave * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
     
     
     #tune to "close to baseband"
-    tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * new_t)
+    tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
 
     signal_ready = runCorrection(tuned_sig, fs, symb_rate)
-    
+    print(f'symbol length after runCorrection : {len(signal_ready)}') 
     #convert bits to string
     bits = np.zeros((len(signal_ready), 2), dtype=int)
     for i in range(len(signal_ready)):
