@@ -3,6 +3,7 @@ import demodulator as dm
 from scipy.signal import fftconvolve
 from commpy.filters import rrcosfilter
 from matplotlib import pyplot as plt
+import correlator as cr
 
 #################################### Helper Functions #############################
 def bits_to_text(bits):
@@ -25,26 +26,35 @@ sps = 2             # samples per symbol
 beta = 0.35         # roll off 
 taps = 31           # must match Tx
 samp_rate = 32000   # sampling rate
+decimation_factor = sps
 
 # RRC matched filter
-h, _ = rrcosfilter(taps, beta, sps / samp_rate, samp_rate)
+_, h = rrcosfilter(taps, beta, sps / samp_rate, samp_rate)
 print(f"RRC Filter length: {len(h)}")
 
 # Matched filtering
 filtered_symbols = fftconvolve(raw_data, np.conj(h), mode='full')
+print("Filtered signal length: ", len(filtered_symbols))
+
+# Correlation
+start, end = cr.correlator(filtered_symbols, sps)
+print(f"Start {start}, End {end}")
+correlated_signal = filtered_symbols[start:end]
+#print("Correlated signal: \n", correlated_signal)
 
 # Remove group delay and downsample
-group_delay = (len(h) - 1) // 2
-symbols = filtered_symbols[group_delay::sps]
+group_delay = int((taps-1)/2)
+symbols = correlated_signal[::sps]
+print("Number of symbols after decimation: ", len(symbols))
 
 # Normalize
-max_val = np.max(np.abs(symbols))
-if max_val > 0:
-    symbols /= max_val
+#max_val = np.max(np.abs(symbols))
+#if max_val > 0:
+#    symbols /= max_val
 
 ##################################### Demodulation ##########################
-if len(filtered_symbols) > 0:
-    bits = dm.phase_rotation_handler(filtered_symbols)
+if len(symbols) > 0:
+    bits = dm.phase_rotation_handler(symbols)
 
     print("First 32 bits received:", bits)
     print("Total bits received: ", len(bits))

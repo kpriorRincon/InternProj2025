@@ -16,35 +16,24 @@ def read_qpsk(symbols):
     
     """
 
-    symbols = input_items[0]
-    bits = output_items[0]
+    # print("Reading bits from symbols")
+    bits = np.zeros((len(symbols), 2), dtype=int)
+    for i in range(len(symbols)):
+        angle = np.angle(symbols[i], deg=True) % 360
 
-    num_symbols = len(symbols)
-    num_bits = len(symbols) * 2
-
-    for i in range(num_symbols):
-        complex_number = symbols[i]
-        real = np.real(complex_number)
-        imag = np.imag(complex_number)
-
-        # Determine bits based on quadrant
-        if real > 0 and imag > 0:
-            bit1 = 0
-            bit2 = 0
-        elif real < 0 and imag > 0:
-            bit1 = 0
-            bit2 = 1
-        elif real > 0 and imag < 0:
-            bit1 = 1
-            bit2 = 0
-        elif real < 0 and imag < 0:
-            bit1 = 1
-            bit2 = 1
-
-        bits[2 * i] = bit1
-        bits[2 * i + 1] = bit2
-
-    return len(bits)
+        # codex for the phases to bits
+        if 0 <= angle < 90:
+            bits[i] = [1, 1]  # 45°
+        elif 90 <= angle < 180:
+            bits[i] = [0, 1]  # 135°
+        elif 180 <= angle < 270:
+            bits[i] = [0, 0]  # 225°
+        else:
+            bits[i] = [1, 0]  # 315°
+    
+    # put into a single list
+    best_bits = ''.join(str(b) for pair in bits for b in pair)
+    return best_bits
 
 def phase_rotation_handler(sampled_symbols):
     """ 

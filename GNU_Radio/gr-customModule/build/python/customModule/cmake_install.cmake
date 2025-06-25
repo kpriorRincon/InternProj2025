@@ -1,4 +1,4 @@
-# Install script for directory: /home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule
+# Install script for directory: /home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -42,31 +42,37 @@ if(NOT DEFINED CMAKE_OBJDUMP)
   set(CMAKE_OBJDUMP "/usr/bin/objdump")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3.10/dist-packages/gnuradio/customModule" TYPE FILE FILES
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/__init__.py"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/QPSK_Modulator.py"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/QPSK_Demodulator.py"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/upsampler.py"
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3.12/dist-packages/gnuradio/customModule" TYPE FILE FILES
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/__init__.py"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/QPSK_Modulator.py"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/QPSK_Demodulator.py"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/upsampler.py"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/downsampler.py"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/python/customModule/vec_to_var.py"
     )
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3.10/dist-packages/gnuradio/customModule" TYPE FILE FILES
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/__init__.pyc"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/QPSK_Modulator.pyc"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/QPSK_Demodulator.pyc"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/upsampler.pyc"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/__init__.pyo"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/QPSK_Modulator.pyo"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/QPSK_Demodulator.pyo"
-    "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/upsampler.pyo"
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3.12/dist-packages/gnuradio/customModule" TYPE FILE FILES
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/__init__.pyc"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/QPSK_Modulator.pyc"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/QPSK_Demodulator.pyc"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/upsampler.pyc"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/downsampler.pyc"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/vec_to_var.pyc"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/__init__.pyo"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/QPSK_Modulator.pyo"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/QPSK_Demodulator.pyo"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/upsampler.pyo"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/downsampler.pyo"
+    "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/vec_to_var.pyo"
     )
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/bindings/cmake_install.cmake")
+  include("/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/bindings/cmake_install.cmake")
 
 endif()
 

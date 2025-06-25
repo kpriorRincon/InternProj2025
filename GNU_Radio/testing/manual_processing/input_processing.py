@@ -12,14 +12,16 @@ open('bits_read_in.bin', 'w').close()
 
 # User input
 msg = input("Enter your message: ")
+print("Message length: ", len(msg))
 
 # Convert to bits
 bits = [int(b) for c in msg for b in format(ord(c), '08b')]
 print("Bits to send\n", bits)
+print("Number of bits: ", len(bits))
 
 # Create QPSK symbols
 symbols = md.generate_qpsk(bits)
-#print(f"Number of QPSK symbols: {len(symbols)}")
+print(f"Number of QPSK symbols: {len(symbols)}")
 #plt.scatter(np.real(symbols), np.imag(symbols), marker='o')
 
 ####################### Signal Processing ##########################
@@ -30,7 +32,7 @@ taps = 31           # span = 11 symbols
 samp_rate = 32000   # sampling rate
 
 # Create RRC filter
-h, _ = rrcosfilter(taps, beta, sps / samp_rate, samp_rate)
+_, h = rrcosfilter(taps, beta, sps / samp_rate, samp_rate)
 print(f"RRC Filter length: {len(h)}")
 
 # Zero-insertion upsampling
@@ -43,11 +45,12 @@ upsampled_symbols[::sps] = symbols
 
 # Pulse shaping
 shaped_symbols = fftconvolve(upsampled_symbols, h, mode='full')
+print("Number of symbols to transmit: ", len(shaped_symbols))
 
 # Normalize symbols
-max_val = np.max(np.abs(shaped_symbols))
+max_val = np.max(np.abs(upsampled_symbols))
 if max_val > 0:
-    shaped_symbols /= max_val
+    upsampled_symbols /= max_val
 
 # print("What the symbols look like \n", shaped_symbols)
 # plt.scatter(np.real(shaped_symbols), np.imag(shaped_symbols), marker='o')

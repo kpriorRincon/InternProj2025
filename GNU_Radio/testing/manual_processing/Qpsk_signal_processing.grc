@@ -144,22 +144,6 @@ blocks:
     coordinate: [1160, 4.0]
     rotation: 0
     state: true
-- name: Correlator_correlator_0
-  id: Correlator_correlator
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    sps: '2'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1264, 264.0]
-    rotation: 0
-    state: bypassed
 - name: analog_sig_source_x_0
   id: analog_sig_source_x
   parameters:
@@ -179,7 +163,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [304, 324.0]
+    coordinate: [720, 356.0]
     rotation: 0
     state: enabled
 - name: analog_sig_source_x_0_0
@@ -201,7 +185,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [816, 364.0]
+    coordinate: [168, 684.0]
     rotation: 0
     state: enabled
 - name: blocks_file_sink_0
@@ -219,7 +203,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1512, 248.0]
+    coordinate: [1152, 604.0]
     rotation: 0
     state: true
 - name: blocks_file_source_0
@@ -259,7 +243,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [592, 240.0]
+    coordinate: [976, 296.0]
     rotation: 0
     state: enabled
 - name: blocks_multiply_xx_0_0
@@ -277,7 +261,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1104, 256.0]
+    coordinate: [496, 616.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle_0
@@ -296,7 +280,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [288, 232.0]
+    coordinate: [760, 288.0]
     rotation: 0
     state: enabled
 - name: blocks_vector_source_x_0
@@ -337,7 +321,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [800, 204.0]
+    coordinate: [1120, 260.0]
     rotation: 0
     state: bypassed
 - name: qtgui_time_sink_x_0
@@ -434,21 +418,46 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [768, 48.0]
+    coordinate: [1152, 156.0]
     rotation: 0
     state: disabled
+- name: virtual_sink_0
+  id: virtual_sink
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: ''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1368, 304.0]
+    rotation: 0
+    state: true
+- name: virtual_source_0
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: ''
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [168, 608.0]
+    rotation: 0
+    state: true
 
 connections:
-- [Correlator_correlator_0, '0', blocks_file_sink_0, '0']
 - [analog_sig_source_x_0, '0', blocks_multiply_xx_0, '1']
 - [analog_sig_source_x_0_0, '0', blocks_multiply_xx_0_0, '1']
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
 - [blocks_multiply_xx_0, '0', channels_channel_model_0, '0']
 - [blocks_multiply_xx_0, '0', qtgui_time_sink_x_0, '0']
-- [blocks_multiply_xx_0_0, '0', Correlator_correlator_0, '0']
+- [blocks_multiply_xx_0_0, '0', blocks_file_sink_0, '0']
 - [blocks_throttle_0, '0', blocks_multiply_xx_0, '0']
-- [blocks_vector_source_x_0, '0', blocks_throttle_0, '0']
-- [channels_channel_model_0, '0', blocks_multiply_xx_0_0, '0']
+- [channels_channel_model_0, '0', virtual_sink_0, '0']
+- [virtual_source_0, '0', blocks_multiply_xx_0_0, '0']
 
 metadata:
   file_format: 1

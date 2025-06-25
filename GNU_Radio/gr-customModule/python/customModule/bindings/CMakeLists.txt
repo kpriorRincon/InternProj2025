@@ -29,7 +29,7 @@ include(GrPybind)
 ########################################################################
 
 list(APPEND customModule_python_files
-    python_bindings.cc)
+    corSymIn_python.cc python_bindings.cc)
 
 GR_PYBIND_MAKE_OOT(customModule
    ../../..
