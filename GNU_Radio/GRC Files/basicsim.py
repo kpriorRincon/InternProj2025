@@ -10,6 +10,10 @@
 
 from PyQt5 import Qt
 from gnuradio import qtgui
+<<<<<<< HEAD
+=======
+import sip
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
 from gnuradio import blocks
 from gnuradio import customModule
 from gnuradio import filter
@@ -18,7 +22,6 @@ from gnuradio import gr
 from gnuradio.fft import window
 import sys
 import signal
-from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
@@ -96,13 +99,22 @@ class basicsim(gr.top_block, Qt.QWidget):
                 num_taps))
         self.qtgui_const_sink_x_0_0 = qtgui.const_sink_c(
             1024, #size
+<<<<<<< HEAD
             "", #name
+=======
+            "Tx", #name
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
             1, #number of inputs
             None # parent
         )
         self.qtgui_const_sink_x_0_0.set_update_time(0.10)
+<<<<<<< HEAD
         self.qtgui_const_sink_x_0_0.set_y_axis((-2), 2)
         self.qtgui_const_sink_x_0_0.set_x_axis((-2), 2)
+=======
+        self.qtgui_const_sink_x_0_0.set_y_axis(-2, 2)
+        self.qtgui_const_sink_x_0_0.set_x_axis(-2, 2)
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
         self.qtgui_const_sink_x_0_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
         self.qtgui_const_sink_x_0_0.enable_autoscale(False)
         self.qtgui_const_sink_x_0_0.enable_grid(False)
@@ -113,8 +125,13 @@ class basicsim(gr.top_block, Qt.QWidget):
             '', '', '', '', '']
         widths = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
+<<<<<<< HEAD
         colors = ["blue", "red", "green", "black", "cyan",
             "magenta", "yellow", "dark red", "dark green", "dark blue"]
+=======
+        colors = ["blue", "red", "red", "red", "red",
+            "red", "red", "red", "red", "red"]
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
         styles = [0, 0, 0, 0, 0,
             0, 0, 0, 0, 0]
         markers = [0, 0, 0, 0, 0,
@@ -137,13 +154,22 @@ class basicsim(gr.top_block, Qt.QWidget):
         self.top_layout.addWidget(self._qtgui_const_sink_x_0_0_win)
         self.qtgui_const_sink_x_0 = qtgui.const_sink_c(
             1024, #size
+<<<<<<< HEAD
             "", #name
+=======
+            "Rx", #name
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
             1, #number of inputs
             None # parent
         )
         self.qtgui_const_sink_x_0.set_update_time(0.10)
+<<<<<<< HEAD
         self.qtgui_const_sink_x_0.set_y_axis((-2), 2)
         self.qtgui_const_sink_x_0.set_x_axis((-2), 2)
+=======
+        self.qtgui_const_sink_x_0.set_y_axis(-2, 2)
+        self.qtgui_const_sink_x_0.set_x_axis(-2, 2)
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
         self.qtgui_const_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
         self.qtgui_const_sink_x_0.enable_autoscale(False)
         self.qtgui_const_sink_x_0.enable_grid(False)
@@ -154,8 +180,13 @@ class basicsim(gr.top_block, Qt.QWidget):
             '', '', '', '', '']
         widths = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
+<<<<<<< HEAD
         colors = ["blue", "red", "green", "black", "cyan",
             "magenta", "yellow", "dark red", "dark green", "dark blue"]
+=======
+        colors = ["blue", "red", "red", "red", "red",
+            "red", "red", "red", "red", "red"]
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
         styles = [0, 0, 0, 0, 0,
             0, 0, 0, 0, 0]
         markers = [0, 0, 0, 0, 0,
@@ -183,21 +214,31 @@ class basicsim(gr.top_block, Qt.QWidget):
         self.blocks_vector_source_x_0 = blocks.vector_source_i(marker+data, True, 1, [])
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_int*1, samp_rate,True)
         self.blocks_skiphead_0_0_0_0 = blocks.skiphead(gr.sizeof_int*1, group_delay)
+<<<<<<< HEAD
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_int*1, '/home/trevor/Documents/InternProj2025/GNU_Radio/testing/bits_read_in.bin', False)
         self.blocks_file_sink_0.set_unbuffered(False)
+=======
+        self.blocks_null_sink_0 = blocks.null_sink(gr.sizeof_int*1)
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_skiphead_0_0_0_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.blocks_skiphead_0_0_0_0, 0), (self.blocks_null_sink_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.customModule_QPSK_Modulator_0, 0))
         self.connect((self.blocks_vector_source_x_0, 0), (self.blocks_throttle_0, 0))
         self.connect((self.customModule_QPSK_Demodulator_0, 0), (self.blocks_skiphead_0_0_0_0, 0))
         self.connect((self.customModule_QPSK_Modulator_0, 0), (self.customModule_upsampler_0, 0))
+<<<<<<< HEAD
         self.connect((self.customModule_QPSK_Modulator_0, 0), (self.qtgui_const_sink_x_0, 0))
         self.connect((self.customModule_downsampler_0, 0), (self.customModule_QPSK_Demodulator_0, 0))
         self.connect((self.customModule_downsampler_0, 0), (self.qtgui_const_sink_x_0_0, 0))
+=======
+        self.connect((self.customModule_QPSK_Modulator_0, 0), (self.qtgui_const_sink_x_0_0, 0))
+        self.connect((self.customModule_downsampler_0, 0), (self.customModule_QPSK_Demodulator_0, 0))
+        self.connect((self.customModule_downsampler_0, 0), (self.qtgui_const_sink_x_0, 0))
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
         self.connect((self.customModule_upsampler_0, 0), (self.root_raised_cosine_filter_1, 0))
         self.connect((self.root_raised_cosine_filter_0, 0), (self.customModule_downsampler_0, 0))
         self.connect((self.root_raised_cosine_filter_1, 0), (self.root_raised_cosine_filter_0, 0))
