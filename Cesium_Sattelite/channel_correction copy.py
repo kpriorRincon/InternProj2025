@@ -4,8 +4,9 @@ from Sig_Gen import SigGen
 from Receiver import Receiver
 from scipy import signal
 
-freq_offset = 20e3
+freq_offset = 100
 fs=1e6
+symb_rate = 1000
 
 
 def fractional_delay(t, signal, delay_in_sec, Fs):
@@ -139,7 +140,7 @@ def mueller(samples, sps):
 
 
 def main():
-    sig_gen = SigGen(freq=900e6, amp=1,sample_rate=fs, symbol_rate=1000)
+    sig_gen = SigGen(freq=900e6, amp=1,sample_rate=fs, symbol_rate=symb_rate)
     rec = Receiver(fs)
     bits = sig_gen.message_to_bits('hello there'*3)
     print(f'num symbols: {len(bits)//2}')
@@ -161,7 +162,7 @@ def main():
     plt.subplot(2,1,2)
     plt.plot(np.imag(time_corrected), label = "Imag")
     plt.figure(figsize=(10, 5))
-    """
+    
 
     plt.subplot(2,2,1)
     plt.title("Constellation: orig")
@@ -194,6 +195,6 @@ def main():
     # offset_qpsk = frequency_offset(qpsk_wave, t)
     # coarse_fixed = coarse_freq_recovery(offset_qpsk)
     # costas_loop(coarse_fixed)
-
+    """
 if __name__ == "__main__":
     main()

@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 2e3
-fs = 40e6
-symb_rate = 2e6
+freq_offset = 10
+fs = 1e6
+symb_rate = 1000
 
 
 def fractional_delay(t, signal, delay_in_sec, Fs):
@@ -112,8 +112,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase
     #Following params determine feedback loop speed
-    alpha = 0.01 #0.132 immediate phase correction based on current error
-    beta = 0.0001 #0.00932  tracks accumalated phase error
+    alpha = 0.3 #0.0006 #0.132 immediate phase correction based on current error
+    beta = 0.01#0.0000004 #0.00932  tracks accumalated phase error
     out = np.zeros(N, dtype=np.complex64)
     freq_log = []
     
@@ -135,6 +135,7 @@ def costas_loop(qpsk_wave, sps):
     plt.title('freq converge')
     plt.show()
     t = np.arange(len(qpsk_wave)) * (sps/fs)
+    
     return qpsk_wave * np.exp(-1j * 2 * np.pi * freq * t)
     
 def mueller(samples, sps):
@@ -165,15 +166,21 @@ def mueller(samples, sps):
 def runCorrection(signal, FS, symbol_rate):
     from scipy.signal import fftconvolve
     #1. Apply RRC to incoming signal 
-    _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
-    signal = np.convolve(signal, h, mode = 'same')    
+    #_, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
+    #signal = np.convolve(signal, h, mode = 'same')    
     #note at this point we would want to correlate with a signal that has been RC filtered 
     # not RRC filtered because it has been through 2 RRC filters at this point in the chain
-    #delay = (300 - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
+    delay = (301 - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
     #signal = np.pad(signal, (0, delay), mode='constant')
+    _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
+    #print(f"Length of filter {len(h)}")
+    orig_len = len(signal)
+    signal = np.convolve(signal, h, mode = 'full')    
+    #print(f"Length of signal full: {len(signal)}")
+    signal = signal[delay: delay + orig_len]
     #signal = signal[delay:]
 
-
+    #signal = signal[delay: -delay or None]
     #2. Correlation
     sig_gen = SigGen(0, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
         # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
@@ -182,9 +189,14 @@ def runCorrection(signal, FS, symbol_rate):
                     0, 0, 1, 0, 1, 0, 1, 1,
                     1, 0, 1, 1, 0, 0, 0, 1]
     _, start_waveform = sig_gen.generate_qpsk(start_sequence)
-
+    start_orig_len = len(start_waveform)
+    start_waveform = np.convolve(start_waveform, h, mode = 'full')    
+    #print(f"Length of signal full: {len(signal)}")
+    start_waveform = start_waveform[delay: delay + start_orig_len]
     #then apply RRC to make a full RC filter to compare agianst
-    start_waveform = np.convolve(start_waveform, h, mode = 'same')
+    #start_waveform = np.convolve(start_waveform, h, mode = 'same')
+    #start_waveform = start_waveform[delay: -delay or None]
+
     #start_waveform = np.pad(start_waveform, (0, delay), mode='constant')
     #start_waveform = start_waveform[delay:]
     # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
@@ -194,66 +206,87 @@ def runCorrection(signal, FS, symbol_rate):
                     0, 0, 0, 1, 0, 0, 1, 0]
     
     _, end_waveform = sig_gen.generate_qpsk(end_sequence)
+    end_orig_len = len(end_waveform)
+    end_waveform = np.convolve(end_waveform, h, mode = 'full')    
+    #print(f"Length of signal full: {len(signal)}")
+    end_waveform = end_waveform[delay: delay + end_orig_len]
     #then apply RRC to make a full RC filter to compare agianst
-    end_waveform = np.convolve(end_waveform, h, mode = 'same')
+    #nd_waveform = np.convolve(end_waveform, h, mode = 'same')
+    #end_waveform = end_waveform[delay: -delay or None]
+
 
     #end_waveform = np.pad(end_waveform, (0, delay), mode='constant')
     #end_waveform = end_waveform[delay:]
     # now run cross correlation
 
     #find start index by convolving signal with preamble
-    start_corr_sig = fftconvolve(signal, np.conj(np.flip(start_waveform)), mode = 'same')
+    start_corr_sig = np.convolve(signal, np.conj(np.flip(start_waveform)), mode = 'same')
+    #start_corr_delay = (len(start_waveform) - 1) // 2
+    #start_corr_sig = start_corr_sig[start_corr_delay: len(start_waveform) + start_corr_delay]
     plt.figure()
     plt.title('start correlation')
     plt.plot(start_corr_sig)
-    end_corr_signal = fftconvolve(signal, np.conj(np.flip(end_waveform)), mode = 'same')
+    end_corr_signal = np.convolve(signal, np.conj(np.flip(end_waveform)), mode = 'same')
+    #end_corr_delay = (len(end_waveform) - 1) // 2
+    #end_corr_signal = end_corr_signal[end_corr_delay: len(end_waveform) + end_corr_delay]
+
     plt.figure()
     plt.plot(end_corr_signal)
     plt.title('end correlation')
     plt.show()
     #get the index
     start = np.argmax(np.abs(start_corr_sig)) - int((8) * (FS/symbol_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
-    end = np.argmax(np.abs(end_corr_signal)) + int(8 * (FS/symbol_rate))
+    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS/symbol_rate))
     print(f'start: {start}, end: {end}')
 
-
     #the signal will contain the markers at the begining and the end
-    print(f'length of signal: {len(signal)}\n signal: {signal}')
+    #print(f'length of signal: {len(signal)}\n signal: {signal}')
 
     signal = signal[start:end]
 
+    print(f'length of signal: {len(signal)}\n')
+
     # print(f'length of signal: {len(signal)}\n signal: {signal}')
     # #3. Coarse Freq
-    freq_corrected = coarse_freq_recovery(signal)
+
+    
+
+    #signal = coarse_freq_recovery(signal)
     # #4. Time Synch (Muellers)
     # mueller_corrected = mueller(signal, FS/symbol_rate)
 
     # #5. Fine Freq (Costas)
-    #signal_ready_for_demod = costas_loop(freq_corrected, FS/symbol_rate)
+    #signal = costas_loop(signal, FS/symbol_rate)
     
-    #decimate and return
-    return freq_corrected[::int(FS / symb_rate)]
+    #signal = np.roll(signal, -delay)
+
+    #print(len(signal))    #decimate and return
+    #print(f"sps: {FS/ symb_rate}")
+    #print(len(signal[::int(FS / symb_rate)]))
+    
+    return signal[::int(FS / symb_rate)]
 
 def main():
     sig_gen = SigGen(freq=900e6, amp=1,sample_rate=fs, symbol_rate=symb_rate)
     bits = sig_gen.message_to_bits('hello there' * 3)
     print(f'num symbols: {len(bits)//2}')
     t, qpsk_wave = sig_gen.generate_qpsk(bits)
-    print(f'length of wave: {len(qpsk_wave)}')
+    print(f'length of initial wave: {len(qpsk_wave)}')
     
     #test time correction
     # delay_sec = 0.00113424
     # new_t, new_signal = fractional_delay(t, qpsk_wave, delay_sec, fs)
     #test frequency correction
-    new_signal = qpsk_wave * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
+    #qpsk_wave = qpsk_wave * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
     #tune to "close to baseband"
-    tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
+    tuned_sig = qpsk_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
 
     # coarse_fixed = coarse_freq_recovery(tuned_sig)
     # costas_loop(coarse_fixed, fs/symb_rate)
 
     signal_ready = runCorrection(tuned_sig, fs, symb_rate)
-    
+    print(f'length of after wave: {len(signal_ready)}')
+
     #convert bits to string
     bits = np.zeros((len(signal_ready), 2), dtype=int)
     for i in range(len(signal_ready)):
@@ -274,11 +307,15 @@ def main():
     print(f' the bits are {bits}')
 
     #bits to message:
+    l_bits = bits[-32:]
+    l_bits = ''.join(str(bit) for bit in l_bits)
+
     bits = bits[32:-32]
     bits = ''.join(str(bit) for bit in bits)
     # convert the bits into a string
     decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
     print(f"The decoded message = {decoded_string}")
+    #print(f"Last marker: {''.join(chr(int(l_bits[i*8:i*8+8],2)) for i in range(len(l_bits)//8))}")
 
     # plt.plot(signal_ready)
 

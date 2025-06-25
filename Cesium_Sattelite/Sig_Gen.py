@@ -18,7 +18,7 @@ def rrc_filter(beta, N, Ts, fs):
         import numpy as np 
 
         # Time vector centered at zero
-        t = np.arange(-N // 2, N // 2 + 1) / fs #symmetric and centered N must be odd
+        t = np.arange(-N // 2, N // 2) / fs #symmetric and centered N must be odd
 
         h = np.zeros_like(t) # start with zeros for the length of the time vector
 
@@ -44,7 +44,7 @@ def rrc_filter(beta, N, Ts, fs):
 
 class SigGen:
 
-    def __init__(self, freq=1.0, amp=1.0, sample_rate=40e6, symbol_rate=4e6):
+    def __init__(self, freq=1.0, amp=1.0, sample_rate=40e6, symbol_rate=2e6):
         import numpy as np
         self.freq = freq  # Frequency in Hz
         self.sample_rate = sample_rate  # sample rate in samples per second
@@ -100,12 +100,17 @@ class SigGen:
         # Root raised cosine filter implementation
         beta = 0.4
         _, pulse_shape = rrc_filter(beta, 301, 1/self.symbol_rate, self.sample_rate)
+        #print(f"Length of filter {len(pulse_shape)}")
 
-        signal = np.convolve(upsampled_symbols, pulse_shape, mode='same')
-        #delay = (301 - 1) // 2 
+        #print(len(upsampled_symbols))
+        signal = np.convolve(upsampled_symbols, pulse_shape, mode='full')
+        delay = (301 - 1) // 2 
+
+        signal = signal[delay: delay + len(upsampled_symbols)]
         #signal = np.pad(signal, (0, delay), mode='constant')
         #signal = signal[delay:]
-
+        #signal = np.roll(signal, -delay)
+        #signal = signal[delay: -delay or None]
         self.pulse_shaped_symbols = signal
 
         # Generate complex phasor at carrier frequency
