@@ -1,4 +1,4 @@
-# Install script for directory: /home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule
+# Install script for directory: /home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -42,18 +42,18 @@ if(NOT DEFINED CMAKE_OBJDUMP)
   set(CMAKE_OBJDUMP "/usr/bin/objdump")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/gnuradio-customModule" TYPE FILE FILES "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/cmake/Modules/gnuradio-customModuleConfig.cmake")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/gnuradio-customModule" TYPE FILE FILES "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/cmake/Modules/gnuradio-customModuleConfig.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/include/gnuradio/customModule/cmake_install.cmake")
-  include("/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/lib/cmake_install.cmake")
-  include("/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/apps/cmake_install.cmake")
-  include("/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/docs/cmake_install.cmake")
-  include("/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/cmake_install.cmake")
-  include("/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/grc/cmake_install.cmake")
+  include("/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/include/gnuradio/customModule/cmake_install.cmake")
+  include("/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/lib/cmake_install.cmake")
+  include("/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/apps/cmake_install.cmake")
+  include("/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/docs/cmake_install.cmake")
+  include("/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/python/customModule/cmake_install.cmake")
+  include("/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/grc/cmake_install.cmake")
 
 endif()
 
@@ -65,5 +65,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -6,20 +6,10 @@
 #
 # GNU Radio Python Flow Graph
 # Title: Not titled yet
-# GNU Radio version: 3.10.1.1
+# GNU Radio version: 3.10.9.2
 
-from packaging.version import Version as StrictVersion
-
-if __name__ == '__main__':
-    import ctypes
-    import sys
-    if sys.platform.startswith('linux'):
-        try:
-            x11 = ctypes.cdll.LoadLibrary('libX11.so')
-            x11.XInitThreads()
-        except:
-            print("Warning: failed to XInitThreads()")
-
+from PyQt5 import Qt
+from gnuradio import qtgui
 from gnuradio import blocks
 from gnuradio import customModule
 from gnuradio import filter
@@ -33,10 +23,9 @@ from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
 import numpy as np
+import sip
 
 
-
-from gnuradio import qtgui
 
 class basicsim(gr.top_block, Qt.QWidget):
 
@@ -47,8 +36,8 @@ class basicsim(gr.top_block, Qt.QWidget):
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
-        except:
-            pass
+        except BaseException as exc:
+            print(f"Qt GUI: Could not set Icon: {str(exc)}", file=sys.stderr)
         self.top_scroll_layout = Qt.QVBoxLayout()
         self.setLayout(self.top_scroll_layout)
         self.top_scroll = Qt.QScrollArea()
@@ -64,12 +53,11 @@ class basicsim(gr.top_block, Qt.QWidget):
         self.settings = Qt.QSettings("GNU Radio", "basicsim")
 
         try:
-            if StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
-                self.restoreGeometry(self.settings.value("geometry").toByteArray())
-            else:
-                self.restoreGeometry(self.settings.value("geometry"))
-        except:
-            pass
+            geometry = self.settings.value("geometry")
+            if geometry:
+                self.restoreGeometry(geometry)
+        except BaseException as exc:
+            print(f"Qt GUI: Could not restore geometry: {str(exc)}", file=sys.stderr)
 
         ##################################################
         # Variables
@@ -89,12 +77,13 @@ class basicsim(gr.top_block, Qt.QWidget):
         ##################################################
         # Blocks
         ##################################################
+
         self.root_raised_cosine_filter_1 = filter.interp_fir_filter_ccf(
             1,
             firdes.root_raised_cosine(
                 1,
                 samp_rate,
-                samp_rate/sps,
+                (samp_rate/sps),
                 alpha,
                 num_taps))
         self.root_raised_cosine_filter_0 = filter.fir_filter_ccf(
@@ -102,17 +91,99 @@ class basicsim(gr.top_block, Qt.QWidget):
             firdes.root_raised_cosine(
                 1,
                 samp_rate,
-                samp_rate/sps,
+                (samp_rate/sps),
                 alpha,
                 num_taps))
+        self.qtgui_const_sink_x_0_0 = qtgui.const_sink_c(
+            1024, #size
+            "", #name
+            1, #number of inputs
+            None # parent
+        )
+        self.qtgui_const_sink_x_0_0.set_update_time(0.10)
+        self.qtgui_const_sink_x_0_0.set_y_axis((-2), 2)
+        self.qtgui_const_sink_x_0_0.set_x_axis((-2), 2)
+        self.qtgui_const_sink_x_0_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
+        self.qtgui_const_sink_x_0_0.enable_autoscale(False)
+        self.qtgui_const_sink_x_0_0.enable_grid(False)
+        self.qtgui_const_sink_x_0_0.enable_axis_labels(True)
+
+
+        labels = ['', '', '', '', '',
+            '', '', '', '', '']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ["blue", "red", "green", "black", "cyan",
+            "magenta", "yellow", "dark red", "dark green", "dark blue"]
+        styles = [0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0]
+        markers = [0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+
+        for i in range(1):
+            if len(labels[i]) == 0:
+                self.qtgui_const_sink_x_0_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_const_sink_x_0_0.set_line_label(i, labels[i])
+            self.qtgui_const_sink_x_0_0.set_line_width(i, widths[i])
+            self.qtgui_const_sink_x_0_0.set_line_color(i, colors[i])
+            self.qtgui_const_sink_x_0_0.set_line_style(i, styles[i])
+            self.qtgui_const_sink_x_0_0.set_line_marker(i, markers[i])
+            self.qtgui_const_sink_x_0_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_const_sink_x_0_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0_0.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_const_sink_x_0_0_win)
+        self.qtgui_const_sink_x_0 = qtgui.const_sink_c(
+            1024, #size
+            "", #name
+            1, #number of inputs
+            None # parent
+        )
+        self.qtgui_const_sink_x_0.set_update_time(0.10)
+        self.qtgui_const_sink_x_0.set_y_axis((-2), 2)
+        self.qtgui_const_sink_x_0.set_x_axis((-2), 2)
+        self.qtgui_const_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
+        self.qtgui_const_sink_x_0.enable_autoscale(False)
+        self.qtgui_const_sink_x_0.enable_grid(False)
+        self.qtgui_const_sink_x_0.enable_axis_labels(True)
+
+
+        labels = ['', '', '', '', '',
+            '', '', '', '', '']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ["blue", "red", "green", "black", "cyan",
+            "magenta", "yellow", "dark red", "dark green", "dark blue"]
+        styles = [0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0]
+        markers = [0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+
+        for i in range(1):
+            if len(labels[i]) == 0:
+                self.qtgui_const_sink_x_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_const_sink_x_0.set_line_label(i, labels[i])
+            self.qtgui_const_sink_x_0.set_line_width(i, widths[i])
+            self.qtgui_const_sink_x_0.set_line_color(i, colors[i])
+            self.qtgui_const_sink_x_0.set_line_style(i, styles[i])
+            self.qtgui_const_sink_x_0.set_line_marker(i, markers[i])
+            self.qtgui_const_sink_x_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_const_sink_x_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_const_sink_x_0_win)
         self.customModule_upsampler_0 = customModule.upsampler(sps)
         self.customModule_downsampler_0 = customModule.downsampler(sps)
         self.customModule_QPSK_Modulator_0 = customModule.QPSK_Modulator()
         self.customModule_QPSK_Demodulator_0 = customModule.QPSK_Demodulator()
-        self.blocks_vector_source_x_0 = blocks.vector_source_i(marker+data, False, 1, [])
+        self.blocks_vector_source_x_0 = blocks.vector_source_i(marker+data, True, 1, [])
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_int*1, samp_rate,True)
         self.blocks_skiphead_0_0_0_0 = blocks.skiphead(gr.sizeof_int*1, group_delay)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_int*1, '/home/empire/Documents/InternProj2025/GNU_Radio/testing/bits_read_in.bin', False)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_int*1, '/home/trevor/Documents/InternProj2025/GNU_Radio/testing/bits_read_in.bin', False)
         self.blocks_file_sink_0.set_unbuffered(False)
 
 
@@ -124,7 +195,9 @@ class basicsim(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_vector_source_x_0, 0), (self.blocks_throttle_0, 0))
         self.connect((self.customModule_QPSK_Demodulator_0, 0), (self.blocks_skiphead_0_0_0_0, 0))
         self.connect((self.customModule_QPSK_Modulator_0, 0), (self.customModule_upsampler_0, 0))
+        self.connect((self.customModule_QPSK_Modulator_0, 0), (self.qtgui_const_sink_x_0, 0))
         self.connect((self.customModule_downsampler_0, 0), (self.customModule_QPSK_Demodulator_0, 0))
+        self.connect((self.customModule_downsampler_0, 0), (self.qtgui_const_sink_x_0_0, 0))
         self.connect((self.customModule_upsampler_0, 0), (self.root_raised_cosine_filter_1, 0))
         self.connect((self.root_raised_cosine_filter_0, 0), (self.customModule_downsampler_0, 0))
         self.connect((self.root_raised_cosine_filter_1, 0), (self.root_raised_cosine_filter_0, 0))
@@ -144,8 +217,8 @@ class basicsim(gr.top_block, Qt.QWidget):
     def set_num_taps(self, num_taps):
         self.num_taps = num_taps
         self.set_group_delay(int(self.num_taps/2))
-        self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
-        self.root_raised_cosine_filter_1.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
+        self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), self.alpha, self.num_taps))
+        self.root_raised_cosine_filter_1.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), self.alpha, self.num_taps))
 
     def get_sps(self):
         return self.sps
@@ -153,8 +226,8 @@ class basicsim(gr.top_block, Qt.QWidget):
     def set_sps(self, sps):
         self.sps = sps
         self.set_skip(int((self.group_delay/2)*(self.sps/2)))
-        self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
-        self.root_raised_cosine_filter_1.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
+        self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), self.alpha, self.num_taps))
+        self.root_raised_cosine_filter_1.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), self.alpha, self.num_taps))
 
     def get_group_delay(self):
         return self.group_delay
@@ -176,8 +249,8 @@ class basicsim(gr.top_block, Qt.QWidget):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
-        self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
-        self.root_raised_cosine_filter_1.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
+        self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), self.alpha, self.num_taps))
+        self.root_raised_cosine_filter_1.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), self.alpha, self.num_taps))
 
     def get_modulated_marker(self):
         return self.modulated_marker
@@ -216,17 +289,14 @@ class basicsim(gr.top_block, Qt.QWidget):
 
     def set_alpha(self, alpha):
         self.alpha = alpha
-        self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
-        self.root_raised_cosine_filter_1.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
+        self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), self.alpha, self.num_taps))
+        self.root_raised_cosine_filter_1.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), self.alpha, self.num_taps))
 
 
 
 
 def main(top_block_cls=basicsim, options=None):
 
-    if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
-        style = gr.prefs().get_string('qtgui', 'style', 'raster')
-        Qt.QApplication.setGraphicsSystem(style)
     qapp = Qt.QApplication(sys.argv)
 
     tb = top_block_cls()
