@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 20210.123
-fs = 1e6
+freq_offset = 2000
+fs = 2.88e6
 symb_rate = fs/20
 
 def integer_delay(num_samples, signal):
@@ -50,13 +50,8 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     if len(new_signal) == len(signal):
         print('signal lengths are the same: with mode = full and trimming')
 
-    #cut out Group delay from FIR filter
-    # delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-    # padded_signal = np.pad(new_signal, (0, delay), mode='constant')
-    # new_signal = padded_signal[delay:]  # Shift back by delay
-
     #create a new time vector with the correcct size
-    new_t = np.arange(len(new_signal)) / Fs # t[0] might be 0 but if it isn't the rest of the time vector will be offset by this amount
+    new_t = np.arange(len(new_signal)) / Fs #longer time vector because the signal is delayed and padded in the front 
     
     #debug---------------------
     # import matplotlib.pyplot as plt
@@ -123,8 +118,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
-    alpha = 0.001 # immediate phase correction based on current error
-    beta = 0.0000006#  tracks accumalated phase error
+    alpha = 0.0001 # immediate phase correction based on current error
+    beta = 0.00000006#  tracks accumalated phase error
     out = np.zeros(N, dtype = complex)
     freq_log = []
     
@@ -285,8 +280,8 @@ def main():
     #signal, t = integer_delay(100, qpsk_wave)
     
     #test time correction
-    delay_sec = 0.00432 # some random delay in seconds 
-    t, signal = fractional_delay(t, qpsk_wave, delay_sec, fs)
+    delay_sec = 0.00432 # some random delay in seconds the fractional delay should be 0.6
+    t, signal = fractional_delay(t, signal, delay_sec, fs)
     
     #test frequency correction
     new_signal = signal * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
@@ -294,7 +289,7 @@ def main():
     
     #tune to "close to baseband"
     tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
-
+    
     signal_ready = runCorrection(tuned_sig, fs, symb_rate)
     print(f'Symbol length after runCorrection : {len(signal_ready)}') 
     #convert bits to string
