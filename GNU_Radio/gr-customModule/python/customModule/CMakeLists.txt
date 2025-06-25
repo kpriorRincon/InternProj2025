@@ -23,7 +23,10 @@ GR_PYTHON_INSTALL(
     FILES
     __init__.py
     QPSK_Modulator.py
-    QPSK_Demodulator.py DESTINATION ${GR_PYTHON_DIR}/gnuradio/customModule
+    QPSK_Demodulator.py
+    upsampler.py
+    downsampler.py
+    vec_to_var.py DESTINATION ${GR_PYTHON_DIR}/gnuradio/customModule
 )
 
 ########################################################################

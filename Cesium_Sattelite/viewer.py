@@ -16,6 +16,7 @@ from get_TLE import get_up_to_date_TLE
 # importing classes
 import Sig_Gen as SigGen
 import Channel as Channel
+import channel_correction
 
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
@@ -65,7 +66,6 @@ def update_text_boxes(e):
                     button.props('color=green')
                 # selected appears to be working well
                 print(f'currently selected:{selected}')
-
             count = int(e.value)
             sat_buttons = {}
 
@@ -453,12 +453,22 @@ def Cesium_page():
             #debug:
             print(f'does: {np.mean(np.abs(repeated_qpsk_signal)**2)} = {required_rep_power}')
 
-            #run the signal through channel down
+            # run the signal through channel down
             channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
             
-            #This signal is what gets fed into the reciever
-            new_t2,repeated_siganl_after_channel = channel_down.apply_channel(new_t, time_delay_down)
+            # This signal is what gets fed into the reciever
+            new_t2,repeated_signal_after_channel = channel_down.apply_channel(new_t, time_delay_down)
+
             channel_down.handler(new_t, new_t2, txFreq + 10e6, Fs / symb_rate) #tune to tx + 10 MHz
+            
+            ###-----------------------------------
+            ##we need to functionalize this block later TODO 
+            
+            #Very first step tune to what we THINK is baseband
+            tuned_signal = repeated_signal_after_channel * np.exp(-1j * 2 * np.pi * (txFreq + 10e6) * new_t2)
+            # signal_ready_for_demod = channel_correction.runCorrection(tuned_signal)
+        
+            #### -------------------------------------
 
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
@@ -510,7 +520,8 @@ def Cesium_page():
                 ui.image('media/tx_pulse_shaped_bits.png').style('width: 50%').force_reload()
                 #show the baseband FFT
                 ui.image('media/tx_pulse_shaped_fft.png').style('width: 50%').force_reload()
-                
+                #show the constellation plot
+                ui.image('media/tx_constellation.png').style('width: 50%').force_reload()
         @ui.page('/channel1')
         def channel1_page():
             ui.button('Back', on_click=ui.navigate.back)
@@ -528,6 +539,8 @@ def Cesium_page():
                     # tune to baseband and show the fft
                     ui.image('media/channel_up_incoming_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
                 ui.label("Note that the tuned signal is tuned based on the transmit carrier so the frequency offset from doppler manifests as phase smearing of the symbols").style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
+                ui.label('Also note that this interpreted symbols are not aligned with the delayed signal').style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
+                
                 with ui.row().style('width:100%'):
                     # constellation plot of outgoing signal
                     ui.image('media/channel_up_outgoing_tuned_constellation.png').style('width: 40%').force_reload()

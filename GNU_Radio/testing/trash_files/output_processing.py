@@ -23,13 +23,13 @@ print("Raw data shape:", raw_data.shape)
 
 #################################### Correlator ###############################
 
-start, end = cr.correlator(raw_data, 2)
-correlated_data = raw_data[start:end]
+#start, end = cr.correlator(raw_data, 2)
+#correlated_data = raw_data[start:end]
 
 ##################################### Demodulation ############################
 
-if len(correlated_data) > 0:
-    bits = dm.phase_rotation_handler(correlated_data)
+if len(raw_data) > 0:
+    bits = dm.phase_rotation_handler(raw_data)
 
     print("Bits received:", bits)
     print("Total bits received: ", len(bits))

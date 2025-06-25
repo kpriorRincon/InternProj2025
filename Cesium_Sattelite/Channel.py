@@ -7,9 +7,19 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     'Fs' Sample rate used to convert delay to units of samples
     """
     import numpy as np 
+    #first step we need to shift by integer 
+    #for now we are only gonna get the fractional part of the delay
+    total_delay = delay_in_sec * Fs # seconds * samples/second = samples
+    fractional_delay = total_delay % 1 # to get the remainder
+    integer_delay = int(total_delay)
+
+    print(f'fractional delay in samples: {fractional_delay}')
+    #then shift by fractional samples with the leftover 
+    delay_in_samples = fractional_delay
+    #Fs * delay_in_sec # samples/seconds * seconds = samples
     
-    delay_in_samples = Fs * delay_in_sec # samples/seconds * seconds = samples
-    
+    #pad with zeros for the integer_delay
+    delayed = np.concatenate([np.zeros(integer_delay), signal])
     #filter taps
     N = 301
     #construct filter
@@ -18,17 +28,26 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     h *= np.hamming(N) #something like a rectangular window
     h /= np.sum(h) #normalize to get unity gain, we don't want to change the amplitude/power
 
-    #apply filter: keep original length and center delay
-    new_signal = np.convolve(signal, h, mode='same')
+    #apply filter: same
+    new_signal = np.convolve(delayed, h, mode='same')
 
     #cut out Group delay from FIR filter
-    # delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-    # padded_signal = np.pad(new_signal, (0, delay), mode='constant')
-    # new_signal = padded_signal[delay:]  # Shift back by delay
+    delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
+    padded_signal = np.pad(new_signal, (0, delay), mode='constant')
+    new_signal = padded_signal[delay:]  # Shift back by delay
 
     #create a new time vector with the correcct size
     new_t = t[0] + np.arange(len(new_signal)) / Fs # t[0] might be 0 but if it isn't the rest of the time vector will be offset by this amount
     
+    #debug---------------------
+    # import matplotlib.pyplot as plt
+    # plt.figure()
+    # plt.plot(t,np.real(signal),label='OG')
+    # plt.plot(new_t, np.real(new_signal), label='Delayed')
+    # plt.legend()
+    # plt.grid()
+    # plt.show()
+    #end debug-------------------
     return new_t, new_signal
 
 
@@ -54,23 +73,27 @@ class Channel:
 
 
     def apply_channel(self, t, time_delay):
+        """
+        convert x(t) --> hx(t - T) +n(T) from channel effects
+        """
         import numpy as np
         Fs = 1 / (t[1] - t[0]) #extract the sample rate from time vector
-
-        # Generate complex AWGN
-        noise_std = np.sqrt(self.noise_power / 2)
-        AWGN = np.random.normal(0, noise_std, len(self.incoming_signal)) + 1j * np.random.normal(0, noise_std, len(self.incoming_signal))
 
         # Apply Doppler shift
         doppler = np.exp(1j * 2 * np.pi * self.freq_shift * t)
         signal_doppler = self.incoming_signal * doppler
 
-        # Apply single-tap channel and add noise
+        # Apply single-tap channel h
         signal_channel = self.h * signal_doppler
-        signal_noisy = signal_channel + AWGN
-
+        
         # Apply fractional delay
-        new_t, delayed_signal = fractional_delay(t, signal_noisy, time_delay, Fs)
+        new_t, delayed_signal = fractional_delay(t, signal_channel, time_delay, Fs)
+        
+        #apply noise after delay
+        # Generate complex AWGN
+        noise_std = np.sqrt(self.noise_power / 2)
+        AWGN = np.random.normal(0, noise_std, len(delayed_signal)) + 1j * np.random.normal(0, noise_std, len(delayed_signal))
+        signal_noisy = delayed_signal + AWGN
 
         self.outgoing_signal = delayed_signal
         
@@ -216,7 +239,7 @@ class Channel:
         plt.title('Frequency Domain of Tuned Outgoing Signal (Baseband)')
         plt.xlabel('Frequency (MHz)')
         plt.ylabel('Magnitude (dB)')
-        # plt.xlim(-Fs/6, Fs/6)
+        plt.xlim(-Fs/6, Fs/6)
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_tuned_fft.png', dpi=300)
         plt.close()

@@ -221,7 +221,7 @@ class Receiver:
     
     # sample the received signal and do error checking
     def demodulator(self, qpsk_waveform, sample_rate, symbol_rate, t, fc):
-        # attenuate signa
+        # attenuate signal
         if self.attenuate:
             attenuated_signal = attenuator(self.R, fc, qpsk_waveform)
             ## tune to baseband ##
