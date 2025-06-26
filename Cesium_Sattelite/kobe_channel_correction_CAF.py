@@ -243,11 +243,13 @@ def CAF(incoming_signal,FS,symb_rate):
     plt.legend()
     plt.title('2D Heatmap of Correlation')
     plt.show() 
-    
+
     # Plot each correlation vs delay for each frequency as a colored line
     plt.figure(figsize=(10, 6))
+    color_list = ['r','g','b', 'm', 'c', 'k']
     for idx, freq in enumerate(freqs):
-        plt.plot(np.arange(len(correlations[idx])), correlations[idx], label=f'{freq} Hz')
+        color_for_this_iteration = color_list[idx % 6]
+        plt.plot(np.arange(len(correlations[idx])), correlations[idx], label=f'{freq} Hz', color = color_for_this_iteration, linestyle = ':')
     plt.xlabel('Delay (samples)')
     plt.ylabel('Correlation magnitude')
     plt.title('Correlation vs Delay for Each Frequency')
