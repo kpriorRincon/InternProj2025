@@ -1,0 +1,34 @@
+Sample Rate: 1 MHz
+Frequency Offset: 20000 Hz
+Coarse Frequency Correction: 20013.72369624884 Hz
+Testing 200 alphas and 1000 betas.
+Total number of test cases: 200000.
+Best alpha: 0.08600000000000001
+Best beta: 0.0001
+Best Costas Correction -13.720275417517124 Hz
+Total correction: 20000.003420831323 Hz
+Minimum error: 0.0034208313227281906 Hz
+
+
+Sample Rate: 2.88 MHz
+Frequency Offset: 20000 Hz
+Coarse Frequency Correction: 20066.331443243835 Hz
+Testing 200 alphas and 1000 betas.
+Total number of test cases: 200000.
+Best alpha: 0.159
+Best beta: 0.00881
+Best Costas Correction -66.30340905280946 Hz
+Total correction: 20000.028034191026 Hz
+Minimum error: 0.028034191025653854 Hz
+
+Sample Rate: 2.88 MHz
+Frequency Offset: 20000 Hz
+Coarse Frequency Correction: 20127.388535031816 Hz
+Testing 200 alphas and 1000 betas.
+Total number of test cases: 200000.
+Frequency Offset: 2880000.0 Hz
+Best alpha: 0.027
+Best beta: 0.00286
+Best Costas Correction -127.4148945308421 Hz
+Total correction: 19999.973640500975 Hz
+Minimum error: 0.026359499024692923 Hz

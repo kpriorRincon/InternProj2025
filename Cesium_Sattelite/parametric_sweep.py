@@ -118,8 +118,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
-    alpha = 0.027 #0.132 immediate phase correction based on current error
-    beta = 0.00286 #0.00932  tracks accumalated phase error
+    alpha = 0.000925 #0.132 immediate phase correction based on current error
+    beta = 0.000000745 #0.00932  tracks accumalated phase error
     out = np.zeros(N, dtype=np.complex64)
     freq_log = []
     
@@ -191,7 +191,10 @@ def runCorrection(signal, FS, symbol_rate):
     #2. Correlation
     sig_gen = SigGen(0, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
         # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
-    start_sequence = sig_gen.start_sequence
+    start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
+                    1, 0, 1, 0, 0, 1, 0, 0,
+                    0, 0, 1, 0, 1, 0, 1, 1,
+                    1, 0, 1, 1, 0, 0, 0, 1]
     _, start_waveform = sig_gen.generate_qpsk(start_sequence)
     start_orig_len = len(start_waveform)
     start_waveform = np.convolve(start_waveform, h, mode = 'full')    
@@ -204,7 +207,10 @@ def runCorrection(signal, FS, symbol_rate):
     #start_waveform = np.pad(start_waveform, (0, delay), mode='constant')
     #start_waveform = start_waveform[delay:]
     # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
-    end_sequence = sig_gen.end_sequence
+    end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
+                    1, 0, 0, 0, 0, 0, 1, 0, 
+                    0, 0, 1, 1, 1, 1, 0, 1, 
+                    0, 0, 0, 1, 0, 0, 1, 0]
     
     _, end_waveform = sig_gen.generate_qpsk(end_sequence)
     end_orig_len = len(end_waveform)
@@ -236,7 +242,7 @@ def runCorrection(signal, FS, symbol_rate):
     plt.title('end correlation')
     plt.show()
     #get the index
-    start = np.argmax(np.abs(start_corr_sig)) - int((32) * (FS/symbol_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
+    start = np.argmax(np.abs(start_corr_sig)) - int((8) * (FS/symbol_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
     end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS/symbol_rate))
     print(f'start: {start}, end: {end}')
 
@@ -257,7 +263,7 @@ def main():
     t, qpsk_wave = sig_gen.generate_qpsk(bits)
     print(f'length of initial wave: {len(qpsk_wave)}')
     
-    #qpsk_wave, t = integer_delay(qpsk_wave, 10)
+    qpsk_wave, t = integer_delay(qpsk_wave, 10)
     #t, qpsk_wave = fractional_delay(t, qpsk_wave, 0.004, fs)
 
     #test time correction
@@ -300,7 +306,7 @@ def main():
     l_bits = bits[-32:]
     l_bits = ''.join(str(bit) for bit in l_bits)
 
-    bits = bits[128:-32]
+    bits = bits[32:-32]
     bits = ''.join(str(bit) for bit in bits)
     # convert the bits into a string
     decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))

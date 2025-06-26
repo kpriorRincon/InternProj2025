@@ -126,7 +126,7 @@ def calculate_cross_correlation(seq1, seq2):
 # Example usage
 if __name__ == "__main__":
     # Generate Gold codes for m=5
-    m = 5
+    m = 7
     print(f"Generating Gold codes for m={m}")
     print(f"Sequence length: {2**m - 1}")
     
