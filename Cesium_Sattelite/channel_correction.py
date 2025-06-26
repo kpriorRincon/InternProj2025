@@ -118,8 +118,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
-    alpha = 0.001 #0.0006 #0.132 immediate phase correction based on current error
-    beta = 0.0000006#0.0000004 #0.00932  tracks accumalated phase error
+    alpha = 0.001#0.0006 #0.132 immediate phase correction based on current error
+    beta = 0.0000007#0.0000004 #0.00932  tracks accumalated phase error
     out = np.zeros(N, dtype=np.complex64)
     freq_log = []
     
@@ -146,7 +146,7 @@ def costas_loop(qpsk_wave, sps):
     t = np.arange(len(qpsk_wave)) / fs
     return qpsk_wave * np.exp(-1j * 2 * np.pi * freq_log[-1] * t)
     
-def mueller(samples, sps):
+def mueller(sauples, sps):
     samples_interpolated = signal.resample_poly(samples, 16, 1)
 
     mu = 0 # initial estimate of phase of sample
@@ -173,26 +173,23 @@ def mueller(samples, sps):
 
 def runCorrection(signal, FS, symbol_rate):
     from scipy.signal import fftconvolve
-    #1. Apply RRC to incoming signal 
-    #_, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
-    #signal = np.convolve(signal, h, mode = 'same')    
-    #note at this point we would want to correlate with a signal that has been RC filtered 
-    # not RRC filtered because it has been through 2 RRC filters at this point in the chain
+    
+    #coarse freq
+    signal = coarse_freq_recovery(signal)
+    
+     #fine freq
+    signal = costas_loop(signal, FS/symbol_rate)
+    
     delay = (301 - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-    #signal = np.pad(signal, (0, delay), mode='constant')
     _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
-    #print(f"Length of filter {len(h)}")
     orig_len = len(signal)
     signal = np.convolve(signal, h, mode = 'full')    
-    #print(f"Length of signal full: {len(signal)}")
     signal = signal[delay: delay + orig_len]
-    #signal = signal[delay:]
+    
+   
 
-
-
-    #signal = signal[delay: -delay or None]
     #2. Correlation
-    sig_gen = SigGen(freq_offset, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
+    sig_gen = SigGen(0, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
         # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
     start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
                     1, 0, 1, 0, 0, 1, 0, 0,
@@ -249,30 +246,13 @@ def runCorrection(signal, FS, symbol_rate):
     end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS/symbol_rate))
     print(f'start: {start}, end: {end}')
 
-    #the signal will contain the markers at the begining and the end
-    #print(f'length of signal: {len(signal)}\n signal: {signal}')
 
     signal = signal[start:end]
 
     print(f'length of signal: {len(signal)}\n')
 
-    # print(f'length of signal: {len(signal)}\n signal: {signal}')
-    # #3. Coarse Freq
 
-    signal = coarse_freq_recovery(signal)
-    
 
-    # #4. Time Synch (Muellers)
-    #signal = mueller(signal, FS/symbol_rate)
-
-    # #5. Fine Freq (Costas)
-    signal = costas_loop(signal, FS/symbol_rate)
-    
-    #signal = np.roll(signal, -delay)
-
-    #print(len(signal))    #decimate and return
-    #print(f"sps: {FS/ symb_rate}")
-    #print(len(signal[::int(FS / symb_rate)]))
     
     return signal[::int(FS / symb_rate)]
 
@@ -283,7 +263,7 @@ def main():
     t, qpsk_wave = sig_gen.generate_qpsk(bits)
     print(f'length of initial wave: {len(qpsk_wave)}')
     
-    #qpsk_wave, t = integer_delay(qpsk_wave, 10)
+    qpsk_wave, t = integer_delay(qpsk_wave, 10)
     #t, qpsk_wave = fractional_delay(t, qpsk_wave, 0.004, fs)
 
     #test time correction
@@ -298,6 +278,9 @@ def main():
     # costas_loop(coarse_fixed, fs/symb_rate)
 
     signal_ready = runCorrection(tuned_sig, fs, symb_rate)
+    plt.figure()
+    plt.plot(np.real(signal_ready), np.imag(signal_ready), 'o')
+    plt.show()    
     print(f'length of after wave: {len(signal_ready)}')
 
     #convert bits to string
