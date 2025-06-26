@@ -11,5 +11,5 @@
 ########################################################################
 install(FILES
     api.h
-    DESTINATION include/gnuradio/customModule
+    corSymIn.h DESTINATION include/gnuradio/customModule
 )

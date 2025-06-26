@@ -13,9 +13,8 @@ def bits_to_text(bits):
 raw_data = np.fromfile("bits_read_in.bin", dtype=np.uint8)
 print("Raw data loaded from file:\n", raw_data)
 
-# Conver raw data to bits
+# Convert raw data to bits
 bits = raw_data.tolist()
-print("First 32 bits received:", bits[:32])
 print("Total bits received: ", len(bits))
 
 # print the received message

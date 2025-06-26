@@ -1,4 +1,4 @@
-# Install script for directory: /home/empire/Documents/InternProj2025/GNU_Radio/gr-customModule/docs
+# Install script for directory: /home/trevor/Documents/InternProj2025/GNU_Radio/gr-customModule/docs
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

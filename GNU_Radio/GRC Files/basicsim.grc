@@ -144,7 +144,7 @@ blocks:
     alias: ''
     append: 'False'
     comment: ''
-    file: /home/empire/Documents/InternProj2025/GNU_Radio/testing/bits_read_in.bin
+    file: /home/trevor/Documents/InternProj2025/GNU_Radio/testing/bits_read_in.bin
     type: int
     unbuffered: 'False'
     vlen: '1'
@@ -322,6 +322,17 @@ blocks:
     autoscale: 'False'
     axislabels: 'True'
     color1: '"blue"'
+<<<<<<< HEAD
+    color10: '"dark blue"'
+    color2: '"red"'
+    color3: '"green"'
+    color4: '"black"'
+    color5: '"cyan"'
+    color6: '"magenta"'
+    color7: '"yellow"'
+    color8: '"dark red"'
+    color9: '"dark green"'
+=======
     color10: '"red"'
     color2: '"red"'
     color3: '"red"'
@@ -331,6 +342,7 @@ blocks:
     color7: '"red"'
     color8: '"red"'
     color9: '"red"'
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
     comment: ''
     grid: 'False'
     gui_hint: ''
@@ -355,7 +367,11 @@ blocks:
     marker7: '0'
     marker8: '0'
     marker9: '0'
+<<<<<<< HEAD
+    name: '""'
+=======
     name: '"Rx"'
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
     nconnections: '1'
     size: '1024'
     style1: '0'
@@ -393,9 +409,19 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
+<<<<<<< HEAD
     coordinate: [600, 564.0]
+=======
+<<<<<<< HEAD
+    coordinate: [312, 280.0]
+    rotation: 0
+    state: enabled
+=======
+    coordinate: [904, 336.0]
+>>>>>>> 926537b24ef249125dd83ce9aa4b81d90df4ec75
     rotation: 0
     state: true
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
 - name: qtgui_const_sink_x_0_0
   id: qtgui_const_sink_x
   parameters:
@@ -414,6 +440,17 @@ blocks:
     autoscale: 'False'
     axislabels: 'True'
     color1: '"blue"'
+<<<<<<< HEAD
+    color10: '"dark blue"'
+    color2: '"red"'
+    color3: '"green"'
+    color4: '"black"'
+    color5: '"cyan"'
+    color6: '"magenta"'
+    color7: '"yellow"'
+    color8: '"dark red"'
+    color9: '"dark green"'
+=======
     color10: '"red"'
     color2: '"red"'
     color3: '"red"'
@@ -423,6 +460,7 @@ blocks:
     color7: '"red"'
     color8: '"red"'
     color9: '"red"'
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
     comment: ''
     grid: 'False'
     gui_hint: ''
@@ -447,7 +485,11 @@ blocks:
     marker7: '0'
     marker8: '0'
     marker9: '0'
+<<<<<<< HEAD
+    name: '""'
+=======
     name: '"Tx"'
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
     nconnections: '1'
     size: '1024'
     style1: '0'
@@ -485,6 +527,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
+<<<<<<< HEAD
     coordinate: [496, 268.0]
     rotation: 0
     state: true
@@ -772,8 +815,17 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [712, 308.0]
+=======
+<<<<<<< HEAD
+    coordinate: [904, 296.0]
+    rotation: 0
+    state: enabled
+=======
+    coordinate: [304, 420.0]
+>>>>>>> 926537b24ef249125dd83ce9aa4b81d90df4ec75
     rotation: 0
     state: true
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
 - name: root_raised_cosine_filter_0
   id: root_raised_cosine_filter
   parameters:
@@ -855,10 +907,19 @@ connections:
 - [blocks_vector_source_x_0, '0', blocks_throttle_0, '0']
 - [customModule_QPSK_Demodulator_0, '0', blocks_skiphead_0_0_0_0, '0']
 - [customModule_QPSK_Modulator_0, '0', customModule_upsampler_0, '0']
+<<<<<<< HEAD
+- [customModule_QPSK_Modulator_0, '0', qtgui_const_sink_x_0, '0']
+- [customModule_downsampler_0, '0', customModule_QPSK_Demodulator_0, '0']
+- [customModule_downsampler_0, '0', qtgui_const_sink_x_0_0, '0']
+=======
 - [customModule_QPSK_Modulator_0, '0', qtgui_const_sink_x_0_0, '0']
 - [customModule_downsampler_0, '0', customModule_QPSK_Demodulator_0, '0']
 - [customModule_downsampler_0, '0', qtgui_const_sink_x_0, '0']
+<<<<<<< HEAD
 - [customModule_upsampler_0, '0', qtgui_time_sink_x_0_0, '0']
+=======
+>>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
+>>>>>>> 926537b24ef249125dd83ce9aa4b81d90df4ec75
 - [customModule_upsampler_0, '0', root_raised_cosine_filter_1, '0']
 - [root_raised_cosine_filter_0, '0', customModule_downsampler_0, '0']
 - [root_raised_cosine_filter_1, '0', qtgui_const_sink_x_1, '0']
@@ -868,3 +929,4 @@ connections:
 
 metadata:
   file_format: 1
+  grc_version: 3.10.9.2

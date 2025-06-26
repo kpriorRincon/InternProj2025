@@ -12,6 +12,7 @@
 include(GrPlatform) #define LIB_SUFFIX
 
 list(APPEND customModule_sources
+    corSymIn_impl.cc
 )
 
 set(customModule_sources "${customModule_sources}" PARENT_SCOPE)
