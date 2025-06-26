@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 20000
+freq_offset = 2000
 fs = 1e6
 symb_rate = 1e6/20
 
@@ -118,8 +118,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
-    alpha = 0.001#0.0006 #0.132 immediate phase correction based on current error
-    beta = 0.0000007#0.0000004 #0.00932  tracks accumalated phase error
+    alpha = 0.086 #0.0001 #immediate phase correction based on current error
+    beta = 0.0001#0.00000006 #tracks accumalated phase error
     out = np.zeros(N, dtype=np.complex64)
     freq_log = []
     
@@ -146,7 +146,7 @@ def costas_loop(qpsk_wave, sps):
     t = np.arange(len(qpsk_wave)) / fs
     return qpsk_wave * np.exp(-1j * 2 * np.pi * freq_log[-1] * t)
     
-def mueller(sauples, sps):
+def mueller(samples, sps):
     samples_interpolated = signal.resample_poly(samples, 16, 1)
 
     mu = 0 # initial estimate of phase of sample
