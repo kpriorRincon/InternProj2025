@@ -2,10 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 10
+freq_offset = 20000
 fs = 1e6
-symb_rate = 1000
+symb_rate = 1e6/20
 
+
+def integer_delay(qpsk_wave, int_delay):
+    padded_signal = np.pad(qpsk_wave, (int_delay, 0), mode='constant')
+    t = np.arange(len(padded_signal)) / fs
+    return padded_signal , t
 
 def fractional_delay(t, signal, delay_in_sec, Fs):
     """
@@ -19,6 +24,7 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     #for now we are only gonna get the fractional part of the delay
     total_delay = delay_in_sec * Fs # seconds * samples/second = samples
     fractional_delay = total_delay % 1 # to get the remainder
+    fractional_delay = 0.9
     integer_delay = int(total_delay)
 
     print(f'fractional delay in samples: {fractional_delay}')
@@ -27,8 +33,8 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     #Fs * delay_in_sec # samples/seconds * seconds = samples
     
     #pad with zeros for the integer_delay
-    if integer_delay > 0:
-        signal = np.concatenate([np.zeros(integer_delay, dtype=complex), signal])
+    #if integer_delay > 0:
+    #    signal = np.concatenate([np.zeros(integer_delay, dtype=complex), signal])
     #filter taps
     N = 301
     #construct filter
@@ -112,8 +118,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
-    alpha = 0.3 #0.0006 #0.132 immediate phase correction based on current error
-    beta = 0.01#0.0000004 #0.00932  tracks accumalated phase error
+    alpha = 0.001 #0.0006 #0.132 immediate phase correction based on current error
+    beta = 0.0000006#0.0000004 #0.00932  tracks accumalated phase error
     out = np.zeros(N, dtype=np.complex64)
     freq_log = []
     
@@ -123,7 +129,7 @@ def costas_loop(qpsk_wave, sps):
 
         freq += (beta * error)
         #log frequency in Hz
-        freq_log.append(freq * fs / (2 * np.pi ))
+        freq_log.append(freq * fs / (2 * np.pi))
         phase += freq + (alpha * error)
 
         while phase >= 2*np.pi:
@@ -182,9 +188,11 @@ def runCorrection(signal, FS, symbol_rate):
     signal = signal[delay: delay + orig_len]
     #signal = signal[delay:]
 
+
+
     #signal = signal[delay: -delay or None]
     #2. Correlation
-    sig_gen = SigGen(0, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
+    sig_gen = SigGen(freq_offset, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
         # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
     start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
                     1, 0, 1, 0, 0, 1, 0, 0,
@@ -227,13 +235,13 @@ def runCorrection(signal, FS, symbol_rate):
     #start_corr_sig = start_corr_sig[start_corr_delay: len(start_waveform) + start_corr_delay]
     plt.figure()
     plt.title('start correlation')
-    plt.plot(start_corr_sig)
+    plt.plot(np.abs(start_corr_sig))
     end_corr_signal = np.convolve(signal, np.conj(np.flip(end_waveform)), mode = 'same')
     #end_corr_delay = (len(end_waveform) - 1) // 2
     #end_corr_signal = end_corr_signal[end_corr_delay: len(end_waveform) + end_corr_delay]
 
     plt.figure()
-    plt.plot(end_corr_signal)
+    plt.plot(np.abs(end_corr_signal))
     plt.title('end correlation')
     plt.show()
     #get the index
@@ -251,14 +259,14 @@ def runCorrection(signal, FS, symbol_rate):
     # print(f'length of signal: {len(signal)}\n signal: {signal}')
     # #3. Coarse Freq
 
+    signal = coarse_freq_recovery(signal)
     
 
-    #signal = coarse_freq_recovery(signal)
     # #4. Time Synch (Muellers)
-    # mueller_corrected = mueller(signal, FS/symbol_rate)
+    #signal = mueller(signal, FS/symbol_rate)
 
     # #5. Fine Freq (Costas)
-    #signal = costas_loop(signal, FS/symbol_rate)
+    signal = costas_loop(signal, FS/symbol_rate)
     
     #signal = np.roll(signal, -delay)
 
@@ -275,11 +283,14 @@ def main():
     t, qpsk_wave = sig_gen.generate_qpsk(bits)
     print(f'length of initial wave: {len(qpsk_wave)}')
     
+    #qpsk_wave, t = integer_delay(qpsk_wave, 10)
+    #t, qpsk_wave = fractional_delay(t, qpsk_wave, 0.004, fs)
+
     #test time correction
     # delay_sec = 0.00113424
     # new_t, new_signal = fractional_delay(t, qpsk_wave, delay_sec, fs)
     #test frequency correction
-    #qpsk_wave = qpsk_wave * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
+    qpsk_wave = qpsk_wave * np.exp(1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
     #tune to "close to baseband"
     tuned_sig = qpsk_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
 
