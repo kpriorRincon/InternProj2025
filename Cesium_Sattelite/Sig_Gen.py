@@ -60,7 +60,17 @@ class SigGen:
             (1, 1): (-1 - 1j) / np.sqrt(2),
             (1, 0): (1 - 1j) / np.sqrt(2)
         } 
-
+        
+        self.start_sequence =[1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
+ 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1,
+ 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1,
+ 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1]
+        
+        self.end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
+                        1, 0, 0, 0, 0, 0, 1, 0,
+                        0, 0, 1, 1, 1, 1, 0, 1,
+                        0, 0, 0, 1, 0, 0, 1, 0]
+        
     def generate_qpsk(self, bits):
         """
         Generate a QPSK signal from a sequence of bits.
@@ -132,23 +142,15 @@ class SigGen:
         Returns:
             list: List of bits (0s and 1s).
         """
-        # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
-        start_sequence = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
- 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1,
- 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1,
- 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1]
+      
 
-        # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
-        end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
-                        1, 0, 0, 0, 0, 0, 1, 0,
-                        0, 0, 1, 1, 1, 1, 0, 1,
-                        0, 0, 0, 1, 0, 0, 1, 0]
+
 
         message_binary = ''.join(format(ord(x), '08b') for x in message)
 
         # Add start and end sequences to the message binary
-        message_binary = ''.join(str(bit) for bit in start_sequence) + \
-            message_binary + ''.join(str(bit) for bit in end_sequence)
+        message_binary = ''.join(str(bit) for bit in self.start_sequence) + \
+            message_binary + ''.join(str(bit) for bit in self.end_sequence)
         # print(message_binary)
         # Convert string input to list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
