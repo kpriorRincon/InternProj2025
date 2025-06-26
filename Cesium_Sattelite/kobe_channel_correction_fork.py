@@ -2,11 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 2210.123
+freq_offset = 2000
 fs = 2.88e6
 symb_rate = fs/20
 
-
+def integer_delay(num_samples, signal):
+    signal = np.concatenate([np.zeros(num_samples, dtype=complex), signal])
+    t = np.arange(len(signal))/fs 
+    return signal, t 
 def fractional_delay(t, signal, delay_in_sec, Fs):
     """
     Apply fractional delya using interpolation (sinc-based)
@@ -47,13 +50,8 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     if len(new_signal) == len(signal):
         print('signal lengths are the same: with mode = full and trimming')
 
-    #cut out Group delay from FIR filter
-    # delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-    # padded_signal = np.pad(new_signal, (0, delay), mode='constant')
-    # new_signal = padded_signal[delay:]  # Shift back by delay
-
     #create a new time vector with the correcct size
-    new_t = np.arange(len(new_signal)) / Fs # t[0] might be 0 but if it isn't the rest of the time vector will be offset by this amount
+    new_t = np.arange(len(new_signal)) / Fs #longer time vector because the signal is delayed and padded in the front 
     
     #debug---------------------
     # import matplotlib.pyplot as plt
@@ -121,7 +119,7 @@ def costas_loop(qpsk_wave, sps):
     freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
     alpha = 0.0001 # immediate phase correction based on current error
-    beta = 0.000001 #  tracks accumalated phase error
+    beta = 0.00000006#  tracks accumalated phase error
     out = np.zeros(N, dtype = complex)
     freq_log = []
     
@@ -189,7 +187,6 @@ def runCorrection(signal, FS, symbol_rate):
 
     #2. Coarse Freq first?
     freq_corrected = coarse_freq_recovery(signal)
-
     #3 Correlation
     sig_gen = SigGen(0, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
         # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
@@ -219,7 +216,7 @@ def runCorrection(signal, FS, symbol_rate):
     og_len = len(end_waveform) 
 
     #then apply RRC to make a full RC filter to compare agianst
-    end_waveform = np.convolve(end_waveform, h, mode = 'same')
+    end_waveform = np.convolve(end_waveform, h, mode = 'full')
     end_waveform = end_waveform[delay:delay+og_len] 
     plt.figure()
     plt.plot(end_waveform)
@@ -227,32 +224,32 @@ def runCorrection(signal, FS, symbol_rate):
     #end_waveform = np.pad(end_waveform, (0, delay), mode='constant')
     #end_waveform = end_waveform[delay:]
     # now run cross correlation
-    plt.figure()
-    plt.plot(freq_corrected[0:350])
-    plt.title('incoming signal (first 350 smaples)')
+    #plt.figure()
+    #plt.plot(freq_corrected[0:350])
+    #plt.title('incoming signal (first 350 smaples)')
 
-    plt.figure()
-    plt.plot(freq_corrected[-350:])
-    plt.title('incoming signal (last 350 samples)')
+    #plt.figure()
+    #plt.plot(freq_corrected[-350:])
+    #plt.title('incoming signal (last 350 samples)')
 
     #find start index by convolving signal with preamble
-    start_corr_sig = fftconvolve(freq_corrected, np.conj(np.flip(start_waveform)), mode = 'same')
+    start_corr_sig = np.convolve(freq_corrected, np.conj(np.flip(start_waveform)), mode = 'same')
     plt.figure()
     plt.title('start correlation')
-    plt.plot(start_corr_sig)
-    end_corr_signal = fftconvolve(freq_corrected, np.conj(np.flip(end_waveform)), mode = 'same')
+    plt.plot(np.abs(start_corr_sig))
+    end_corr_signal = np.convolve(freq_corrected, np.conj(np.flip(end_waveform)), mode = 'same')
     plt.figure()
-    plt.plot(end_corr_signal)
+    plt.plot(np.abs(end_corr_signal))
     plt.title('end correlation')
     plt.show()
     #get the index
-    start = np.argmax(np.abs(start_corr_sig)) - int((8) * (FS/symbol_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
+    start = np.argmax(np.abs(start_corr_sig)) - int((8) * (FS/symbol_rate)) # If the preamble is 32 bits long, its 16 symbols, since convolvin gwith mode = same is centered we shift back by 8 to include our preamble symbols * samples/symbol = samples
     end = np.argmax(np.abs(end_corr_signal)) + int(8 * (FS/symbol_rate))
     print(f'start: {start}, end: {end}')
 
 
     #the signal will contain the markers at the begining and the end
-    print(f'length of signal: {len(signal)}\n signal: {signal}')
+    print(f'length of signal: {len(signal)}')
 
     signal = freq_corrected[start:end]
     print(f'length of signal after trim: {len(signal)}\n signal: {signal}')
@@ -274,26 +271,27 @@ def runCorrection(signal, FS, symbol_rate):
     return signal_ready_for_demod[::int(FS/symbol_rate)]
 
 def main():
-    sig_gen = SigGen(freq=900e6, amp=1,sample_rate=fs, symbol_rate=symb_rate)
+    sig_gen = SigGen(freq=900e6, amp=1, sample_rate = fs, symbol_rate = symb_rate)
     bits = sig_gen.message_to_bits('hello there' * 3)
     print(f'num symbols: {len(bits)//2}')
-    t, qpsk_wave = sig_gen.generate_qpsk(bits)
-    print(f'length of wave: {len(qpsk_wave)}')
+    t, signal = sig_gen.generate_qpsk(bits)
+    print(f'length of wave: {len(signal)}')
     
+    signal, t = integer_delay(100, signal)
     
     #test time correction
-    #delay_sec = (1/fs) * 10 # : 10 sample delay
-    #new_t, new_signal = fractional_delay(t, qpsk_wave, delay_sec, fs)
+    #delay_sec = 0.00432 # some random delay in seconds the fractional delay should be 0.6
+    #t, signal = fractional_delay(t, signal, delay_sec, fs)
     
     #test frequency correction
-    new_signal = qpsk_wave * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
+    new_signal = signal * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
     
     
     #tune to "close to baseband"
     tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
-
+    
     signal_ready = runCorrection(tuned_sig, fs, symb_rate)
-    print(f'symbol length after runCorrection : {len(signal_ready)}') 
+    print(f'Symbol length after runCorrection : {len(signal_ready)}') 
     #convert bits to string
     bits = np.zeros((len(signal_ready), 2), dtype=int)
     for i in range(len(signal_ready)):
