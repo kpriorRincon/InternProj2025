@@ -4,11 +4,15 @@ from Sig_Gen import SigGen
 from Receiver import Receiver
 from scipy import signal
 
-freq_offset = 100
+freq_offset = 80000
 fs=1e6
 symb_rate = 1000
 
 
+def integer_delay(num_samples, signal):
+    signal = np.concatenate([np.zeros(num_samples, dtype=complex), signal])
+    t = np.arange(len(signal))/fs 
+    return signal, t 
 def fractional_delay(t, signal, delay_in_sec, Fs):
     """
     Apply fractional delya using interpolation (sinc-based)
@@ -145,6 +149,7 @@ def main():
     bits = sig_gen.message_to_bits('hello there'*3)
     print(f'num symbols: {len(bits)//2}')
     t, qpsk_wave = sig_gen.generate_qpsk(bits)
+    qpsk_wave, t = integer_delay(10, qpsk_wave) 
     print(len(qpsk_wave))
     #test time correction
     off_sig = frequency_offset(qpsk_wave, t)

@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 2000
+freq_offset = 80000
 fs = 2.88e6
 symb_rate = fs/20
 
@@ -180,15 +180,18 @@ def runCorrection(signal, FS, symbol_rate):
     signal = np.convolve(signal, h, mode = 'full')    
     delay = (301 - 1) // 2 #account for group delay
     signal = signal[delay:delay + og_len]
+    
+
+
+
+
     #correct the group delay
      
     #note at this point we would want to correlate with a signal that has been RC filtered 
     # not RRC filtered because it has been through 2 RRC filters at this point in the chain
 
-    #2. Coarse Freq first?
-    freq_corrected = coarse_freq_recovery(signal)
     #3 Correlation
-    sig_gen = SigGen(0, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
+    sig_gen = SigGen(freq_offset, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
         # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
     start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
                     1, 0, 1, 0, 0, 1, 0, 0,
@@ -233,11 +236,11 @@ def runCorrection(signal, FS, symbol_rate):
     #plt.title('incoming signal (last 350 samples)')
 
     #find start index by convolving signal with preamble
-    start_corr_sig = np.convolve(freq_corrected, np.conj(np.flip(start_waveform)), mode = 'same')
+    start_corr_sig = np.convolve(signal, np.conj(np.flip(start_waveform)), mode = 'same')
     plt.figure()
     plt.title('start correlation')
     plt.plot(np.abs(start_corr_sig))
-    end_corr_signal = np.convolve(freq_corrected, np.conj(np.flip(end_waveform)), mode = 'same')
+    end_corr_signal = np.convolve(signal, np.conj(np.flip(end_waveform)), mode = 'same')
     plt.figure()
     plt.plot(np.abs(end_corr_signal))
     plt.title('end correlation')
@@ -251,13 +254,15 @@ def runCorrection(signal, FS, symbol_rate):
     #the signal will contain the markers at the begining and the end
     print(f'length of signal: {len(signal)}')
 
-    signal = freq_corrected[start:end]
+    signal = signal[start:end]
     print(f'length of signal after trim: {len(signal)}\n signal: {signal}')
     #testing if coarse time correction is good enough
     #down sample because costas expects decimated signal
     #signal = signal[::int(FS/symbol_rate)]
 
 
+    #2. Coarse Freq first?
+    freq_corrected = coarse_freq_recovery(signal)
     # print(f'length of signal: {len(signal)}\n signal: {signal}')
     #4. Time Synch (Muellers)
     # mueller_corrected = mueller(signal, FS/symbol_rate)
@@ -265,7 +270,7 @@ def runCorrection(signal, FS, symbol_rate):
 
 
     # #5. Fine Freq (Costas)
-    signal_ready_for_demod = costas_loop(signal, FS/symbol_rate)
+    signal_ready_for_demod = costas_loop(freq_corrected, FS/symbol_rate)
     
     #decimation has already happened with mueller and muller
     return signal_ready_for_demod[::int(FS/symbol_rate)]
