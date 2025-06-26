@@ -226,23 +226,41 @@ def CAF(incoming_signal,FS,symb_rate):
     best_frequency = freqs[best_correlation_index]
     print(f'The best correlation happens with f offset of: {best_frequency}Hz')
     
-    #create a plot of the CAF
-    #X, Y = np.meshgrid(np.arange(len(correlations[0])), freqs)
-    #Z = np.array(correlations)
-    #max_idx = np.unravel_index(np.argmax(Z), Z.shape) #(row, col) -> (freq_index, delay_index)
-    # print(f'max_idx: {max_idx}')
-    # max_freq = freqs[max_idx[0]]
-    # max_delay = max_idx[1]
+    # create a plot of the CAF
+    X, Y = np.meshgrid(np.arange(len(correlations[0])), freqs)
+    Z = np.array(correlations)
+    max_idx = np.unravel_index(np.argmax(Z), Z.shape) #(row, col) -> (freq_index, delay_index)
+    print(f'max_idx: {max_idx}')
+    max_freq = freqs[max_idx[0]]
+    max_delay = max_idx[1]
 
-    # plt.figure(figsize=(10,6))
-    # plt.pcolormesh(X,Y,Z, shading='auto', cmap='plasma')
-    # plt.xlabel('Delay (samples)')
-    # plt.ylabel('Frequency offset (Hz)')
-    # plt.colorbar(label='Correlation magnitude')
-    # plt.scatter(max_delay, max_freq, color='red', marker='s', s=50, label = 'Peak')
-    # plt.legend()
-    # plt.title('2D Heatmap of Correlation')
-    # plt.show() 
+    plt.figure(figsize=(10,6))
+    plt.pcolormesh(X,Y,Z, shading='auto', cmap='plasma')
+    plt.xlabel('Delay (samples)')
+    plt.ylabel('Frequency offset (Hz)')
+    plt.colorbar(label='Correlation magnitude')
+    plt.scatter(max_delay, max_freq, color='red', marker='s', s=50, label = 'Peak')
+    plt.legend()
+    plt.title('2D Heatmap of Correlation')
+    plt.show() 
+    
+    # Plot each correlation vs delay for each frequency as a colored line
+    plt.figure(figsize=(10, 6))
+    for idx, freq in enumerate(freqs):
+        plt.plot(np.arange(len(correlations[idx])), correlations[idx], label=f'{freq} Hz')
+    plt.xlabel('Delay (samples)')
+    plt.ylabel('Correlation magnitude')
+    plt.title('Correlation vs Delay for Each Frequency')
+    # Optionally, show legend for a subset of frequencies to avoid clutter
+    if len(freqs) <= 20:
+        plt.legend()
+    else:
+        step = max(1, len(freqs)//10)
+        handles, labels = plt.gca().get_legend_handles_labels()
+        plt.legend([handles[i] for i in range(0, len(handles), step)],
+                   [labels[i] for i in range(0, len(labels), step)],
+                   title='Frequency (Hz)')
+    plt.show()
    
      #correct the signal
     t = np.arange(len(incoming_signal))/fs
