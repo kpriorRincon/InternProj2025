@@ -354,11 +354,20 @@ def main():
     
     #test frequency correction
     new_signal = signal * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
-    
+    # THETA = np.random.uniform(-np.pi, np.pi)
+    # print(f'phase offset: {np.rad2deg(THETA)}')
+    # new_signal = signal * np.exp(1j * THETA)
     
     #tune to "close to baseband"
     tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
-    
+    # Add AWGN noise to the tuned signal
+    snr_db = 0  # Signal-to-noise ratio in dB
+    signal_power = np.mean(np.abs(tuned_sig)**2)
+    snr_linear = 10**(snr_db / 10)
+    noise_power = signal_power / snr_linear
+    noise = np.sqrt(noise_power / 2) * (np.random.randn(*tuned_sig.shape) + 1j * np.random.randn(*tuned_sig.shape))
+    tuned_sig = tuned_sig + noise
+
     signal_ready = runCorrection(tuned_sig, fs, symb_rate)
     plt.figure()
     plt.plot(np.real(signal_ready),np.imag(signal_ready), 'o')
