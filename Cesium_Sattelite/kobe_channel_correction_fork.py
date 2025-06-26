@@ -224,13 +224,13 @@ def runCorrection(signal, FS, symbol_rate):
     #end_waveform = np.pad(end_waveform, (0, delay), mode='constant')
     #end_waveform = end_waveform[delay:]
     # now run cross correlation
-    plt.figure()
-    plt.plot(freq_corrected[0:350])
-    plt.title('incoming signal (first 350 smaples)')
+    #plt.figure()
+    #plt.plot(freq_corrected[0:350])
+    #plt.title('incoming signal (first 350 smaples)')
 
-    plt.figure()
-    plt.plot(freq_corrected[-350:])
-    plt.title('incoming signal (last 350 samples)')
+    #plt.figure()
+    #plt.plot(freq_corrected[-350:])
+    #plt.title('incoming signal (last 350 samples)')
 
     #find start index by convolving signal with preamble
     start_corr_sig = np.convolve(freq_corrected, np.conj(np.flip(start_waveform)), mode = 'same')
@@ -249,7 +249,7 @@ def runCorrection(signal, FS, symbol_rate):
 
 
     #the signal will contain the markers at the begining and the end
-    print(f'length of signal: {len(signal)}\n signal: {signal}')
+    print(f'length of signal: {len(signal)}')
 
     signal = freq_corrected[start:end]
     print(f'length of signal after trim: {len(signal)}\n signal: {signal}')
@@ -277,11 +277,11 @@ def main():
     t, signal = sig_gen.generate_qpsk(bits)
     print(f'length of wave: {len(signal)}')
     
-    #signal, t = integer_delay(100, qpsk_wave)
+    signal, t = integer_delay(100, signal)
     
     #test time correction
-    delay_sec = 0.00432 # some random delay in seconds the fractional delay should be 0.6
-    t, signal = fractional_delay(t, signal, delay_sec, fs)
+    #delay_sec = 0.00432 # some random delay in seconds the fractional delay should be 0.6
+    #t, signal = fractional_delay(t, signal, delay_sec, fs)
     
     #test frequency correction
     new_signal = signal * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
