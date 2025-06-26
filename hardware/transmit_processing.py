@@ -118,7 +118,7 @@ class transmit_processing:
                 denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
                 h[i] = numerator / denominator
         return t, h
-    
+
     def work(self, message, beta, N): 
         """
         Execute all transmit processing
@@ -146,5 +146,8 @@ class transmit_processing:
 
         _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
         data = np.convolve(upsampled_symbols, h, 'same')
+        data = data.astype(np.complex64)
+
+        data.tofile("data_for_sighound.bin")
         
         return bits_string, data
