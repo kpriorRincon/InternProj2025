@@ -42,7 +42,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1000, 12.0]
+    coordinate: [784, 12.0]
     rotation: 0
     state: true
 - name: data
@@ -55,18 +55,6 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [320, 12.0]
-    rotation: 0
-    state: true
-- name: freq
-  id: variable
-  parameters:
-    comment: ''
-    value: 905e6
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1208, 12.0]
     rotation: 0
     state: true
 - name: group_delay
@@ -93,30 +81,6 @@ blocks:
     coordinate: [544, 12.0]
     rotation: 0
     state: true
-- name: marker_offset
-  id: variable
-  parameters:
-    comment: ''
-    value: tuple([0]*(int(skip/2)+1))
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [784, 12.0]
-    rotation: 0
-    state: true
-- name: modulated_marker
-  id: variable
-  parameters:
-    comment: ''
-    value: '0'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1080, 12.0]
-    rotation: 0
-    state: true
 - name: num_taps
   id: variable
   parameters:
@@ -141,18 +105,6 @@ blocks:
     coordinate: [168, 12.0]
     rotation: 0
     state: enabled
-- name: skip
-  id: variable
-  parameters:
-    comment: ''
-    value: int((group_delay/2)*(sps/2))
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [936, 12.0]
-    rotation: 0
-    state: true
 - name: sps
   id: variable
   parameters:
@@ -163,6 +115,26 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [256, 12.0]
+    rotation: 0
+    state: true
+- name: analog_random_source_x_0
+  id: analog_random_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    max: '2'
+    maxoutbuf: '0'
+    min: '0'
+    minoutbuf: '0'
+    num_samps: '1000'
+    repeat: 'True'
+    type: int
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [16, 164.0]
     rotation: 0
     state: true
 - name: blocks_file_sink_0
@@ -180,7 +152,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1128, 92.0]
+    coordinate: [1048, 532.0]
     rotation: 0
     state: disabled
 - name: blocks_null_sink_0
@@ -197,7 +169,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1160, 176.0]
+    coordinate: [1048, 496.0]
     rotation: 0
     state: true
 - name: blocks_skiphead_0_0_0_0
@@ -215,7 +187,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [984, 196.0]
+    coordinate: [872, 492.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle_0
@@ -234,7 +206,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [96, 244.0]
+    coordinate: [200, 188.0]
     rotation: 0
     state: true
 - name: blocks_vector_source_x_0
@@ -254,9 +226,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [16, 148.0]
+    coordinate: [16, 292.0]
     rotation: 0
-    state: true
+    state: disabled
 - name: customModule_QPSK_Demodulator_0
   id: customModule_QPSK_Demodulator
   parameters:
@@ -269,7 +241,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [912, 136.0]
+    coordinate: [672, 496.0]
     rotation: 0
     state: true
 - name: customModule_QPSK_Modulator_0
@@ -284,7 +256,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [216, 160.0]
+    coordinate: [392, 192.0]
     rotation: 0
     state: true
 - name: customModule_downsampler_0
@@ -300,7 +272,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [712, 244.0]
+    coordinate: [448, 492.0]
     rotation: 0
     state: enabled
 - name: customModule_upsampler_0
@@ -316,7 +288,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [272, 212.0]
+    coordinate: [576, 188.0]
     rotation: 0
     state: true
 - name: import_0_0
@@ -438,11 +410,15 @@ blocks:
     bus_source: false
     bus_structure: null
 <<<<<<< HEAD
+    coordinate: [600, 564.0]
+=======
+<<<<<<< HEAD
     coordinate: [312, 280.0]
     rotation: 0
     state: enabled
 =======
     coordinate: [904, 336.0]
+>>>>>>> 926537b24ef249125dd83ce9aa4b81d90df4ec75
     rotation: 0
     state: true
 >>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
@@ -552,11 +528,301 @@ blocks:
     bus_source: false
     bus_structure: null
 <<<<<<< HEAD
+    coordinate: [496, 268.0]
+    rotation: 0
+    state: true
+- name: qtgui_const_sink_x_1
+  id: qtgui_const_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: '"blue"'
+    color10: '"red"'
+    color2: '"red"'
+    color3: '"red"'
+    color4: '"red"'
+    color5: '"red"'
+    color6: '"red"'
+    color7: '"red"'
+    color8: '"red"'
+    color9: '"red"'
+    comment: ''
+    grid: 'False'
+    gui_hint: ''
+    label1: ''
+    label10: ''
+    label2: ''
+    label3: ''
+    label4: ''
+    label5: ''
+    label6: ''
+    label7: ''
+    label8: ''
+    label9: ''
+    legend: 'True'
+    marker1: '0'
+    marker10: '0'
+    marker2: '0'
+    marker3: '0'
+    marker4: '0'
+    marker5: '0'
+    marker6: '0'
+    marker7: '0'
+    marker8: '0'
+    marker9: '0'
+    name: '"RF"'
+    nconnections: '1'
+    size: '1024'
+    style1: '0'
+    style10: '0'
+    style2: '0'
+    style3: '0'
+    style4: '0'
+    style5: '0'
+    style6: '0'
+    style7: '0'
+    style8: '0'
+    style9: '0'
+    tr_chan: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    xmax: '2'
+    xmin: '-2'
+    ymax: '2'
+    ymin: '-2'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [912, 284.0]
+    rotation: 0
+    state: true
+- name: qtgui_time_sink_x_0
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'True'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'False'
+    gui_hint: ''
+    label1: Real
+    label10: Signal 10
+    label2: Imaginary
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '"After RRC"'
+    nconnections: '1'
+    size: '500'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '1'
+    ymin: '-1'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [912, 364.0]
+    rotation: 0
+    state: true
+- name: qtgui_time_sink_x_0_0
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'True'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'False'
+    gui_hint: ''
+    label1: Real
+    label10: Signal 10
+    label2: Imaginary
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '"Before RRC"'
+    nconnections: '1'
+    size: '500'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '1'
+    ymin: '-1'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [712, 308.0]
+=======
+<<<<<<< HEAD
     coordinate: [904, 296.0]
     rotation: 0
     state: enabled
 =======
     coordinate: [304, 420.0]
+>>>>>>> 926537b24ef249125dd83ce9aa4b81d90df4ec75
     rotation: 0
     state: true
 >>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
@@ -580,7 +846,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [664, 92.0]
+    coordinate: [200, 452.0]
     rotation: 0
     state: enabled
 - name: root_raised_cosine_filter_1
@@ -603,11 +869,38 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [424, 92.0]
+    coordinate: [792, 148.0]
+    rotation: 0
+    state: true
+- name: virtual_sink_0
+  id: virtual_sink
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: RF
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1040, 188.0]
+    rotation: 0
+    state: true
+- name: virtual_source_0
+  id: virtual_source
+  parameters:
+    alias: ''
+    comment: ''
+    stream_id: RF
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [24, 492.0]
     rotation: 0
     state: true
 
 connections:
+- [analog_random_source_x_0, '0', blocks_throttle_0, '0']
 - [blocks_skiphead_0_0_0_0, '0', blocks_file_sink_0, '0']
 - [blocks_skiphead_0_0_0_0, '0', blocks_null_sink_0, '0']
 - [blocks_throttle_0, '0', customModule_QPSK_Modulator_0, '0']
@@ -622,10 +915,17 @@ connections:
 - [customModule_QPSK_Modulator_0, '0', qtgui_const_sink_x_0_0, '0']
 - [customModule_downsampler_0, '0', customModule_QPSK_Demodulator_0, '0']
 - [customModule_downsampler_0, '0', qtgui_const_sink_x_0, '0']
+<<<<<<< HEAD
+- [customModule_upsampler_0, '0', qtgui_time_sink_x_0_0, '0']
+=======
 >>>>>>> a5db6c7ab499ee4dd8dc0f92c70d5df2ec7ba720
+>>>>>>> 926537b24ef249125dd83ce9aa4b81d90df4ec75
 - [customModule_upsampler_0, '0', root_raised_cosine_filter_1, '0']
 - [root_raised_cosine_filter_0, '0', customModule_downsampler_0, '0']
-- [root_raised_cosine_filter_1, '0', root_raised_cosine_filter_0, '0']
+- [root_raised_cosine_filter_1, '0', qtgui_const_sink_x_1, '0']
+- [root_raised_cosine_filter_1, '0', qtgui_time_sink_x_0, '0']
+- [root_raised_cosine_filter_1, '0', virtual_sink_0, '0']
+- [virtual_source_0, '0', root_raised_cosine_filter_0, '0']
 
 metadata:
   file_format: 1
