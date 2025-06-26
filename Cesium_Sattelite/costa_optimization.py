@@ -4,7 +4,7 @@ import numpy as np
 
 
 fs = 2.88e6
-symb_rate = 1e6/20
+symb_rate = fs/20
 freq_offset = 20e3
 
 def phase_detector_4(sample):
@@ -89,7 +89,8 @@ def main():
 
     print(f"Testing {len(alphas)} alphas and {len(betas)} betas.")
     print(f"Total number of test cases: {len(alphas) * len(betas)}.")
-
+    #print(costas_loop(coarse_fixed_sig, 0.159, 0.00881))
+    
     counter = 0
     for a in alphas:
         for b in betas:
@@ -105,6 +106,7 @@ def main():
                 best_beta = b
                 best_correction = fine_freq
 
+    print(f"Frequency Offset: {fs} Hz")    
     print(f"Best alpha: {best_alpha}")
     print(f"Best beta: {best_beta}")
     print(f"Best Costas Correction {best_correction} Hz")

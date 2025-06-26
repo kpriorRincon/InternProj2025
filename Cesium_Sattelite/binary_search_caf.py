@@ -43,7 +43,7 @@ def binary_search(rx_signal, match_filter, l_freq, r_freq):
     
     elif r_energy < l_energy:
         #print("Should be here")
-        r_freq -= (r_freq - l_freq) // 2
+        r_freq = l_freq + (r_freq - l_freq) // 2
         freq = binary_search(rx_signal, match_filter, l_freq, r_freq)
 
     else:
