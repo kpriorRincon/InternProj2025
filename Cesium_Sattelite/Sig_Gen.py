@@ -18,8 +18,11 @@ def rrc_filter(beta, N, Ts, fs):
         import numpy as np 
 
         # Time vector centered at zero
-        t = np.arange(-N // 2, N // 2) / fs #symmetric and centered N must be odd
-
+        if N % 2 ==0:
+            raise ValueError('N must be odd for symmetric filter')
+        
+        t = np.linspace(-N//2, N//2, N) / fs #symmetric and centered N must be odd
+        #print(len(t))
         h = np.zeros_like(t) # start with zeros for the length of the time vector
 
         for i in range(len(t)):
@@ -40,7 +43,7 @@ def rrc_filter(beta, N, Ts, fs):
         # plt.plot(t, h, '.-')
         # #plt.plot(t, np.convolve(h, h, mode='same'), '.-')
         # plt.show()
-        return t, h
+        return t, h/np.sqrt(np.sum(h**2))
 
 class SigGen:
 

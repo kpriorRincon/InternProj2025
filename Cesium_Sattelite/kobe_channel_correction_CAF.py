@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+import matplotlib.animation as animation
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
 freq_offset = 1000
@@ -239,30 +240,45 @@ def CAF(incoming_signal,FS,symb_rate):
     plt.xlabel('Delay (samples)')
     plt.ylabel('Frequency offset (Hz)')
     plt.colorbar(label='Correlation magnitude')
-    plt.scatter(max_delay, max_freq, color='red', marker='s', s=50, label = 'Peak')
-    plt.legend()
+    plt.scatter(max_delay, max_freq, color='red', marker='s', s=50)
+    plt.annotate('Peak Correlation', xy=(max_delay, max_freq), xytext=(max_delay+20, max_freq+10),color='white', fontsize=12)
     plt.title('2D Heatmap of Correlation')
     plt.show() 
 
     # Plot each correlation vs delay for each frequency as a colored line
-    plt.figure(figsize=(10, 6))
-    color_list = ['r','g','b', 'm', 'c', 'k']
-    for idx, freq in enumerate(freqs):
-        color_for_this_iteration = color_list[idx % 6]
-        plt.plot(np.arange(len(correlations[idx])), correlations[idx], label=f'{freq} Hz', color = color_for_this_iteration, linestyle = ':')
-    plt.xlabel('Delay (samples)')
-    plt.ylabel('Correlation magnitude')
-    plt.title('Correlation vs Delay for Each Frequency')
-    # Optionally, show legend for a subset of frequencies to avoid clutter
-    if len(freqs) <= 20:
-        plt.legend()
-    else:
-        step = max(1, len(freqs)//10)
-        handles, labels = plt.gca().get_legend_handles_labels()
-        plt.legend([handles[i] for i in range(0, len(handles), step)],
-                   [labels[i] for i in range(0, len(labels), step)],
-                   title='Frequency (Hz)')
-    plt.show()
+    # color_list = ['r','g','b', 'm', 'c', 'k']
+    # fig, ax = plt.subplots(figsize = (10, 6))
+    # def animate(idx):
+    #     ax.clear()
+    #     freq = freqs[idx] 
+    #     color = color_list[idx % len(color_list)]
+    #     ax.plot(np.arange(len(correlations[idx])), correlations[idx], label = f'{freq} Hz', color = 'k')
+    #     ax.set_xlabel('Delay (samples)')
+    #     ax.set_ylabel('Correlation magnitude')
+    #     ax.set_title(f'Correlation vs Dely\nFreq: {freq} Hz')
+    #     ax.legend()
+    # ani = animation.FuncAnimation(fig, animate, frames=len(freqs), interval = 300)
+    # ani.save('correlation_animation.gif', writer='pillow', fps =len(freqs)//4)
+    # plt.show()
+    # plt.close()
+
+    # plt.figure(figsize=(10, 6))
+    # for idx, freq in enumerate(freqs):
+    #     color_for_this_iteration = color_list[idx % 6]
+    #     plt.plot(np.arange(len(correlations[idx])), correlations[idx], label=f'{freq} Hz', color = color_for_this_iteration, linestyle = ':')
+    # plt.xlabel('Delay (samples)')
+    # plt.ylabel('Correlation magnitude')
+    # plt.title('Correlation vs Delay for Each Frequency')
+    # # Optionally, show legend for a subset of frequencies to avoid clutter
+    # if len(freqs) <= 20:
+    #     plt.legend()
+    # else:
+    #     step = max(1, len(freqs)//10)
+    #     handles, labels = plt.gca().get_legend_handles_labels()
+    #     plt.legend([handles[i] for i in range(0, len(handles), step)],
+    #                [labels[i] for i in range(0, len(labels), step)],
+    #                title='Frequency (Hz)')
+    # plt.show()
    
      #correct the signal
     t = np.arange(len(incoming_signal))/fs
@@ -275,17 +291,18 @@ def CAF(incoming_signal,FS,symb_rate):
     start_sequence = sig_gen.start_sequence
 
     _, start_waveform = sig_gen.generate_qpsk(start_sequence)
-    start_orig_len = len(start_waveform)
-    start_waveform = np.convolve(start_waveform, h, mode = 'full')    
-    start_waveform = start_waveform[delay: delay + start_orig_len]
+    #enable if you want to match filter with RC version of the signal
+    # start_orig_len = len(start_waveform)
+    # start_waveform = np.convolve(start_waveform, h, mode = 'full')    
+    # start_waveform = start_waveform[delay: delay + start_orig_len]
 
-    # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
+
     end_sequence = sig_gen.end_sequence
-    
     _, end_waveform = sig_gen.generate_qpsk(end_sequence)
-    end_orig_len = len(end_waveform)
-    end_waveform = np.convolve(end_waveform, h, mode = 'full')    
-    end_waveform = end_waveform[delay: delay + end_orig_len]
+    #enable if you want to match filter with RC version of the signal
+    # end_orig_len = len(end_waveform)
+    # end_waveform = np.convolve(end_waveform, h, mode = 'full')    
+    # end_waveform = end_waveform[delay: delay + end_orig_len]
 
     #find start index by convolving signal with preamble
     start_corr_sig = np.convolve(shifted_sig, np.conj(np.flip(start_waveform)), mode = 'same')
@@ -316,26 +333,21 @@ def runCorrection(signal, FS, symbol_rate):
     #1. Coarse Freq Recovery 
     signal = coarse_freq_recovery(signal)    
    
-    #2. Apply RRC to incoming signal 
-    # not RRC filtered because it has been through 2 RRC filters at this point in the chain
-    #note at this point we would want to correlate with a signal that has been RC filtered 
+    #2.Run CAF (matching with RRC version of signal)
+    signal = CAF(signal, FS, symbol_rate) 
+    
+    #3. Fine Frequency Correction
+    signal = costas_loop(signal, FS/symbol_rate)
+    
+    #4. Apply RRC to incoming signal turning the signal into -> raised cosine
+    #applying afterwards because I think the RRC disrupts the function of the fine frequency correction
     og_len = len(signal)
     _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
     signal = np.convolve(signal, h, mode = 'full')    
     delay = (301 - 1) // 2 #account for group delay
     signal = signal[delay:delay + og_len]
-
-
-    #3.Run CAF
-    signal = CAF(signal, FS, symbol_rate) 
-     
-    #4. Fine time correction
-
-     #Fine freq:
-    #5. Fine Frequency Correction
-    signal = costas_loop(signal, FS/symbol_rate)
-
-
+    
+    #5. Fine time correction
     
     return signal[::int(FS/symbol_rate)]
 
@@ -361,7 +373,7 @@ def main():
     #tune to "close to baseband"
     tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
     # Add AWGN noise to the tuned signal
-    snr_db = 0  # Signal-to-noise ratio in dB
+    snr_db = 20  # Signal-to-noise ratio in dB
     signal_power = np.mean(np.abs(tuned_sig)**2)
     snr_linear = 10**(snr_db / 10)
     noise_power = signal_power / snr_linear
