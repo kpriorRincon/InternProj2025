@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 20000
+freq_offset = 20
 fs = 2.88e6
 symb_rate = fs/20
 
@@ -186,8 +186,6 @@ def runCorrection(signal, FS, symbol_rate):
     signal = np.convolve(signal, h, mode = 'full')    
     signal = signal[delay: delay + orig_len]
     
-   
-
     #2. Correlation
     sig_gen = SigGen(0, 1.0, FS, symbol_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
         # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1

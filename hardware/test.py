@@ -18,3 +18,4 @@ print("Message Sent: ", message)
 print("Message Received: ", decoded_message)
 print("Bits Sent: ", bits_out)
 print("Bits Received: ", bits_in)
+
