@@ -108,7 +108,7 @@ class receive_processing:
         Returns:
         - message (str) : Decoded message
         """
-        bits = bits[32:-32] # Take out markers
+        # bits = bits[32:-32] # Take out markers
 
         bits_string = ''.join(str(bit) for bit in bits)
 

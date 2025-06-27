@@ -148,6 +148,9 @@ class transmit_processing:
         data = np.convolve(upsampled_symbols, h, 'same')
         data = data.astype(np.complex64)
 
+        zeros = np.zeros(len(data), dtype=np.complex64)
+        data = np.append(data, zeros)
+
         data.tofile("data_for_sighound.bin")
         
         return bits_string, data
