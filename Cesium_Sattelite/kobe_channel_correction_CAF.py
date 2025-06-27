@@ -40,7 +40,7 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     #filter taps
     N = 301
     #construct filter
-    n = np.arange(-N//2, N//2)
+    n = np.linspace(-N//2, N//2,N)
     h = np.sinc(n-delay_in_samples)
     h *= np.hamming(N) #something like a rectangular window
     h /= np.sum(h) #normalize to get unity gain, we don't want to change the amplitude/power
@@ -152,7 +152,7 @@ def costas_loop(qpsk_wave, sps):
     
 def mueller(samples, sps):
     #interpolate with a factor of 16 for fractional delay
-    samples_interpolated = signal.resample_poly(samples, 16, 1)
+    samples_interpolated = resample_poly(samples, 16, 1)
 
     mu = 0 # initial estimate of phase of sample
     out = np.zeros(len(samples) + 10, dtype=np.complex64)
@@ -178,14 +178,12 @@ def mueller(samples, sps):
 def CAF(incoming_signal,FS,symb_rate):
     import time 
     from mpl_toolkits.mplot3d import Axes3D
-    from scipy.signal import fftconvolve
+    from scipy.signal import fftconvolve,resample_poly
     start_time = time.time()
-    delay = (301 - 1) //2 #group delay of FIR filter is always (N-1)/2 samples N is num taps
-    _, h = rrc_filter(0.4, 301, 1/symb_rate, FS)
     
     #create a list of frequencies 
-    freqs = np.arange(-200, 201, 20)#create a frequency list 1-100
-    print(f'the frequency array: {freqs}') 
+    freqs = np.arange(-200, 201, 2)#create a frequency list 1-100
+    #print(f'the frequency array: {freqs}') 
     '''
     correlations = [
     [...] correlation at -100 Hz
@@ -200,41 +198,44 @@ def CAF(incoming_signal,FS,symb_rate):
     max_correlations = [] #store the max value and index max_val 
     
     #try interpolation before the CAF
-    interpolated_incoming_signal = signal.resample_poly(incoming_signal, 16, 1)     
+    interpolated_incoming_signal = resample_poly(incoming_signal, 16, 1)     
     
     sig_gen = SigGen(0, 1.0, FS, symb_rate) # we create a signal with a certain frequency 
     start_sequence = sig_gen.start_sequence
     _, start_waveform = sig_gen.generate_qpsk(start_sequence)
-    interpolated_start_waveform = signal.resample_poly(start_waveform, 16, 1)
-    t = np.arange(len(interpolated_start_waveform)) / fs 
+    #be sure to interpolate the start marker as well 
+    interpolated_start_waveform = resample_poly(start_waveform, 16, 1)
+    t = np.arange(len(interpolated_start_waveform)) / (FS * 16)
     for freq in freqs:
         template = interpolated_start_waveform * np.exp(1j * 2 * np.pi * t * freq)     
         correlation = np.abs(fftconvolve(interpolated_incoming_signal, np.conj(np.flip(template)), mode = 'same'))
-        #plt.figure()
-        #plt.plot(correlation)
-        #plt.show()  
         correlations.append(correlation) 
         max_val = max(correlation)
         max_correlations.append(max_val)
    
     #now we can interpret which had the highest energy correlation by parsing the _max_correlations
+
     #print(f'max_correlations:{max_correlations}') 
+
     best_correlation_index = max_correlations.index(max(max_correlations))
     print(f'max_correlation_index: {best_correlation_index}') 
     best_frequency = freqs[best_correlation_index]
     print(f'The best correlation happens with f offset of: {best_frequency}Hz')
+    #find the index of the max value of the frequency slice with best correlation  
+    idx = np.argmax(correlations[best_frequency]) - int(32 * (FS * 16)/symb_rate)
+    #This is the og samples delay (will be fractional)
+    delay_og_samples = idx / 16 
     
     # create a plot of the CAF
     X, Y = np.meshgrid(np.arange(len(correlations[0])), freqs)
     Z = np.array(correlations)
     max_idx = np.unravel_index(np.argmax(Z), Z.shape) #(row, col) -> (freq_index, delay_index)
-    print(f'max_idx: {max_idx}')
+    #print(f'max_idx: {max_idx}')
     max_freq = freqs[max_idx[0]]
     max_delay = max_idx[1]
-
     plt.figure(figsize=(10,6))
     plt.pcolormesh(X,Y,Z, shading='auto', cmap='plasma')
-    plt.xlabel('Delay (samples)')
+    plt.xlabel('Delay (fractional samples)')
     plt.ylabel('Frequency offset (Hz)')
     plt.colorbar(label='Correlation magnitude')
     plt.scatter(max_delay, max_freq, color='red', marker='s', s=50)
@@ -277,74 +278,68 @@ def CAF(incoming_signal,FS,symb_rate):
     #                [labels[i] for i in range(0, len(labels), step)],
     #                title='Frequency (Hz)')
     # plt.show()
-   
-     #correct the signal
-    t = np.arange(len(interpolated_incoming_signal))/(fs*16)
-    shifted_sig = interpolated_incoming_signal * np.exp(-1j*2*np.pi*best_frequency*t)
+    
+    #fractionally delay the incoming singal with the amount 
+    print(f'fractional delay accounted for: {delay_og_samples}') 
+    t, signal = fractional_delay(np.arange(len(incoming_signal))/fs, incoming_signal, -delay_og_samples, fs) 
+    #correct the signal in frequency
+    
+    shifted_sig = signal * np.exp(-1j*2*np.pi*best_frequency*t)
     
     #now find start and end with our known markers
-
     end_sequence = sig_gen.end_sequence
     _, end_waveform = sig_gen.generate_qpsk(end_sequence)
-    end_template = signal.resample_poly(end_waveform, 16, 1)
-    #enable if you want to match filter with RC version of the signal
-    # end_orig_len = len(end_waveform)
-    # end_waveform = np.convolve(end_waveform, h, mode = 'full')    
-    # end_waveform = end_waveform[delay: delay + end_orig_len]
 
     #find start index by convolving signal with preamble
-    start_corr_sig = np.convolve(shifted_sig, np.conj(np.flip(interpolated_start_waveform)), mode = 'same')
+    start_corr_sig = np.convolve(shifted_sig, np.conj(np.flip(start_waveform)), mode = 'same')
     # plt.figure()
     # plt.title('start correlation')
     # plt.plot(np.abs(start_corr_sig))
     
     #find the end index 
-    end_corr_signal = np.convolve(shifted_sig, np.conj(np.flip(end_template)), mode = 'same')
+    end_corr_signal = np.convolve(shifted_sig, np.conj(np.flip(end_waveform)), mode = 'same')
     # plt.figure()
     # plt.plot(np.abs(end_corr_signal))
     # plt.title('end correlation')
    
     #get the index
-    start = np.argmax(np.abs(start_corr_sig)) - int((32) * (FS*16/symb_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
-    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS * 16/symb_rate))
+    start = np.argmax(np.abs(start_corr_sig)) - int((32) * (FS / symb_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
+    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS / symb_rate))
     print(f'start: {start}, end: {end}')
 
     sig_ready = shifted_sig[start:end] 
     #since rx = htx, h = rx/tx so we can use our start sequence to correct for phase offset
-    found_h = sig_ready[0 : int( 64 * (fs * 16 / symb_rate))] / interpolated_start_waveform 
+    found_h = sig_ready[0 : int( 64 * (fs / symb_rate))] / start_waveform
     #normalize so theres no amplitude change and take the mean so we get avg phase offset of samples
-    found_h_norm = np.mean(found_h / np.abs(sig_ready[0 : int( 64 * (fs *16 / symb_rate))] / interpolated_start_waveform))
+    found_h_norm = np.mean(found_h / np.abs(sig_ready[0 : int( 64 * (fs / symb_rate))] / start_waveform))
     #debug:
     print(f'found h = {found_h_norm}')
     print(f'angle of h found = {np.rad2deg(np.angle(found_h_norm))}')
 
     sig_ready /= found_h_norm
-    #decimate by 16
-    sig_ready = sig_ready[::16]
     delta = time.time() - start_time
-    print(f'time for function {delta}')
+    print(f'function runtime: {delta}')
     return sig_ready
 
 def runCorrection(signal, FS, symbol_rate):
     from scipy.signal import fftconvolve
+    
     #1. Coarse Freq Recovery 
     signal = coarse_freq_recovery(signal)    
    
-    #2.Run CAF (matching with RRC version of signal)
+    #2.Run CAF (matching with RRC version of signal achieves fine time correction)
     signal = CAF(signal, FS, symbol_rate) 
     
     #3. Fine Frequency Correction
     signal = costas_loop(signal, FS/symbol_rate)
     
-    #4. Apply RRC to incoming signal turning the signal into -> raised cosine
+    #4. Apply RRC to incoming signal turning the signal into -> raised cosine has the property small ISI
     #applying afterwards because I think the RRC disrupts the function of the fine frequency correction
     og_len = len(signal)
     _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
-    signal = np.convolve(signal, h, mode = 'full')    
+    signal = fftconvolve(signal, h, mode = 'full')    
     delay = (301 - 1) // 2 #account for group delay
     signal = signal[delay:delay + og_len]
-    
-    #5. Fine time correction
     
     return signal[::int(FS/symbol_rate)]
 
@@ -358,8 +353,8 @@ def main():
     #signal, t = integer_delay(100, signal)
     
     #test time correction
-    #delay_sec = 0.00232 # some random delay in seconds the fractional delay should be 0.6
-    #t, signal = fractional_delay(t, signal, delay_sec, fs)
+    delay_sec = 0.00232 # some random delay in seconds the fractional delay should be 0.6
+    t, signal = fractional_delay(t, signal, delay_sec, fs)
     
     #test frequency correction
     new_signal = signal * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
@@ -370,7 +365,7 @@ def main():
     #tune to "close to baseband"
     tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
     # Add AWGN noise to the tuned signal
-    snr_db = 20  # Signal-to-noise ratio in dB
+    snr_db = 10  # Signal-to-noise ratio in dB
     signal_power = np.mean(np.abs(tuned_sig)**2)
     snr_linear = 10**(snr_db / 10)
     noise_power = signal_power / snr_linear
