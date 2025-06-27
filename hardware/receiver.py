@@ -1,7 +1,8 @@
 from rtlsdr import *
 import matplotlib.pyplot as plt
 import numpy as np
-import Detector
+import Detector as d
+import receive_processing as rp
 
 # configure RTL-SDR
 sdr = RtlSdr()
@@ -16,9 +17,22 @@ detected = False
 start = 0
 end = N - 1
 sps = 4
+beta = 0.35
+num_taps = 40
+symbol_rate = sdr.sample_rate / sps
+
+# markers
+start_marker = [1, 1, 1, 1, 1, 0, 0, 1,
+                1, 0, 1, 0, 0, 1, 0, 0,
+                0, 0, 1, 0, 1, 0, 1, 1,
+                1, 0, 1, 1, 0, 0, 0, 1]
+end_marker = [0, 0, 1, 0, 0, 1, 1, 0,
+            1, 0, 0, 0, 0, 0, 1, 0,
+            0, 0, 1, 1, 1, 1, 0, 1,
+            0, 0, 0, 1, 0, 0, 1, 0]
 
 # detector object
-detect_obj = Detector.Detector()
+detect_obj = d.Detector(start_marker, end_marker, beta, N, 1 / symbol_rate, sdr.sample_rate)
 
 # create matched filters
 match_start, match_end = detect_obj.matchedFilter(sps)
@@ -27,6 +41,7 @@ match_start, match_end = detect_obj.matchedFilter(sps)
 while detected == False:
     samples = sdr.read_samples(N)
     detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+data = samples[start:end]
 
 print("Signal found...")
 
@@ -42,10 +57,9 @@ print("Processing data...")
 
 # frequency correction
 
-# anti aliasing filter
+# create receive processing object
 
-# decimation
+recieve_obj = rp.receive_processing(sps, sdr.sample_rate)
 
-# demodulation
-
-# read out message
+# process data
+recieve_obj.work(data, beta, num_taps)

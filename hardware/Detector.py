@@ -108,7 +108,7 @@ class Detector:
 
         # if the start index is greater than the end index signal not found, return default values
         if start > end:
-            print("Start index greater than end...\nSignal not found...\nSet to defaults")
+            #print("Start index greater than end...\nSignal not found...\nSet to defaults")
             start = 0
             end = len(samples) - 1
             detected = False
