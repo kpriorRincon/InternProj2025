@@ -1,5 +1,6 @@
 from rtlsdr import *
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import numpy as np
 import scipy.signal as signal
 import Detector as d
@@ -10,7 +11,7 @@ import transmit_processing as tp
 # configure RTL-SDR
 sdr = RtlSdr()
 sdr.sample_rate = 2.4e6 # Hz
-sdr.center_freq = 11e6 # Hz
+sdr.center_freq = 30e6 # Hz
 sdr.freq_correction = 60 # PPM
 sdr.gain = 'auto'
 
@@ -48,23 +49,38 @@ detect_obj = d.Detector(start_symbols, end_symbols, N, 1 / symbol_rate, beta, sd
 # create matched filters
 match_start, match_end = detect_obj.matchedFilter(sps)
 
-# plot settings - MODIFIED
-def update_plot(data):
-    f, t, Sxx = signal.spectrogram(data, fs=sdr.sample_rate)
-    # Convert frequency bins to actual frequencies centered around SDR center frequency
-    f_actual = f - sdr.sample_rate/2 + sdr.center_freq
-    return f_actual, t, Sxx
+# Spectrogram parameters
+fft_size = 2*1024
+hop_size = fft_size // 2
+spec_history = 100  # number of lines in spectrogram
 
-# Initialize plot with proper frequency scaling
-f, t, Sxx_init = update_plot(np.random.randn(N) * 0.01)
-ax = plt.subplot(1,1,1)
-im = ax.imshow(10*np.log10(Sxx_init), aspect='auto', origin='lower', 
-               extent=[t.min(), t.max(), f.min()/1e6, f.max()/1e6])  # Convert to MHz
-plt.colorbar(im, label='Power (dB)')
-plt.xlabel('Time (s)')
-plt.ylabel('Frequency (MHz)')
-plt.title(f'Spectrogram - Center: {sdr.center_freq/1e6:.1f} MHz')
-plt.ion()
+# Prepare plot
+fig, ax = plt.subplots()
+spec_data = np.zeros((spec_history, fft_size // 2))
+img = ax.imshow(spec_data, aspect='auto', origin='lower',
+                extent=[0, sdr.sample_rate / 2 / 1e6, 0, spec_history],
+                cmap='viridis', vmin=-100, vmax=0)
+
+ax.set_xlabel("Frequency (MHz)")
+ax.set_ylabel("Time (frames)")
+ax.set_title("Baseband Spectrogram of RTL-SDR ")
+
+# Update function
+def update(frame):
+    samples = sdr.read_samples(fft_size)
+    windowed = samples * np.hanning(fft_size)
+    spectrum = np.fft.fft(windowed)
+    power = 20 * np.log10(np.abs(spectrum[:fft_size // 2]) + 1e-12)
+
+    global spec_data
+    spec_data = np.roll(spec_data, -1, axis=0)
+    spec_data[-1, :] = power
+    img.set_data(spec_data)
+    return [img]
+
+ani = animation.FuncAnimation(fig, update, interval=50, blit=True)
+plt.tight_layout()
+plt.show()
 
 # Test SDR connection before main loop
 try:
@@ -83,12 +99,7 @@ while detected == False:
     # read samples from RTL-SDR
     samples = sdr.read_samples(N)
     
-    # plot samples - MODIFIED
-    f, t, Sxx = update_plot(samples)
-    im.set_data(10*np.log10(Sxx))
-    im.set_extent([t.min(), t.max(), f.min()/1e6, f.max()/1e6])  # Update extent
-    plt.draw()
-    plt.pause(0.01)
+    # plot samples
     
     # run detection
     detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
