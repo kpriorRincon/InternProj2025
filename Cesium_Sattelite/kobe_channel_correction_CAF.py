@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+import matplotlib.animation as animation
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
-freq_offset = 2005
+freq_offset = 20000
 fs = 2.88e6
 symb_rate = fs/20
 
@@ -121,8 +122,8 @@ def costas_loop(qpsk_wave, sps):
     phase = 0
     freq = 0 # derivative of phase; rate of change of phase (radians/sample)
     #Following params determine feedback loop speed
-    alpha = 0.0001 # immediate phase correction based on current error
-    beta = 0.00000007#  tracks accumalated phase error
+    alpha = 0.001 # immediate phase correction based on current error
+    beta = 5e-7#  tracks accumalated phase error
     out = np.zeros(N, dtype = complex)
     freq_log = []
     
@@ -175,13 +176,15 @@ def mueller(samples, sps):
     return samples # the output signal (will have sps = 1)
 
 def CAF(incoming_signal,FS,symb_rate):
-    
+    import time 
     from mpl_toolkits.mplot3d import Axes3D
+    from scipy.signal import fftconvolve
+    start_time = time.time()
     delay = (301 - 1) //2 #group delay of FIR filter is always (N-1)/2 samples N is num taps
     _, h = rrc_filter(0.4, 301, 1/symb_rate, FS)
     
     #create a list of frequencies 
-    freqs = np.arange(-300, 301, .5)#create a frequency list 1-100
+    freqs = np.arange(-200, 201, 20)#create a frequency list 1-100
     print(f'the frequency array: {freqs}') 
     '''
     correlations = [
@@ -196,22 +199,17 @@ def CAF(incoming_signal,FS,symb_rate):
     correlations = [] #create a correlation array that will store different correlations
     max_correlations = [] #store the max value and index max_val 
     
+    #try interpolation before the CAF
+    interpolated_incoming_signal = signal.resample_poly(incoming_signal, 16, 1)     
+    
+    sig_gen = SigGen(0, 1.0, FS, symb_rate) # we create a signal with a certain frequency 
+    start_sequence = sig_gen.start_sequence
+    _, start_waveform = sig_gen.generate_qpsk(start_sequence)
+    interpolated_start_waveform = signal.resample_poly(start_waveform, 16, 1)
+    t = np.arange(len(interpolated_start_waveform)) / fs 
     for freq in freqs:
-        
-        #create a template at each frequency
-        sig_gen = SigGen(freq, 1.0, FS, symb_rate) # we create a signal with a certain frequency 
-        # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
-        start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
-                    1, 0, 1, 0, 0, 1, 0, 0,
-                    0, 0, 1, 0, 1, 0, 1, 1,
-                    1, 0, 1, 1, 0, 0, 0, 1]
-        _, start_waveform = sig_gen.generate_qpsk(start_sequence)
-
-        #then apply RRC to make a full RC filter to compare agianst
-        og_len = len(start_waveform)
-        start_waveform = np.convolve(start_waveform, h, mode = 'full')
-        start_waveform = start_waveform[delay:delay + og_len]
-        correlation = np.abs(np.convolve(incoming_signal, np.conj(np.flip(start_waveform)), mode = 'same'))
+        template = interpolated_start_waveform * np.exp(1j * 2 * np.pi * t * freq)     
+        correlation = np.abs(fftconvolve(interpolated_incoming_signal, np.conj(np.flip(template)), mode = 'same'))
         #plt.figure()
         #plt.plot(correlation)
         #plt.show()  
@@ -226,98 +224,129 @@ def CAF(incoming_signal,FS,symb_rate):
     best_frequency = freqs[best_correlation_index]
     print(f'The best correlation happens with f offset of: {best_frequency}Hz')
     
-    #create a plot of the CAF
+    # create a plot of the CAF
     X, Y = np.meshgrid(np.arange(len(correlations[0])), freqs)
     Z = np.array(correlations)
     max_idx = np.unravel_index(np.argmax(Z), Z.shape) #(row, col) -> (freq_index, delay_index)
     print(f'max_idx: {max_idx}')
     max_freq = freqs[max_idx[0]]
     max_delay = max_idx[1]
-    max_corr = Z[max_idx]
+
     plt.figure(figsize=(10,6))
     plt.pcolormesh(X,Y,Z, shading='auto', cmap='plasma')
     plt.xlabel('Delay (samples)')
     plt.ylabel('Frequency offset (Hz)')
     plt.colorbar(label='Correlation magnitude')
-    plt.scatter(max_delay, max_freq, color='red', marker='s', s=100, label = 'Peak')
-    plt.legend()
+    plt.scatter(max_delay, max_freq, color='red', marker='s', s=50)
+    plt.annotate('Peak Correlation', xy = (max_delay, max_freq), 
+    xytext = (max_delay+20, max_freq+10), color = 'white', fontsize = 12)
     plt.title('2D Heatmap of Correlation')
     plt.show() 
+
+    # Plot each correlation vs delay for each frequency as a colored line
+    # color_list = ['r','g','b', 'm', 'c', 'k']
+    # fig, ax = plt.subplots(figsize = (10, 6))
+    # def animate(idx):
+    #     ax.clear()
+    #     freq = freqs[idx] 
+    #     color = color_list[idx % len(color_list)]
+    #     ax.plot(np.arange(len(correlations[idx])), correlations[idx], label = f'{freq} Hz', color = 'k')
+    #     ax.set_xlabel('Delay (samples)')
+    #     ax.set_ylabel('Correlation magnitude')
+    #     ax.set_title(f'Correlation vs Dely\nFreq: {freq} Hz')
+    #     ax.legend()
+    # ani = animation.FuncAnimation(fig, animate, frames=len(freqs), interval = 300)
+    # ani.save('correlation_animation.gif', writer='pillow', fps =len(freqs)//4)
+    # plt.show()
+    # plt.close()
+
+    # plt.figure(figsize=(10, 6))
+    # for idx, freq in enumerate(freqs):
+    #     color_for_this_iteration = color_list[idx % 6]
+    #     plt.plot(np.arange(len(correlations[idx])), correlations[idx], label=f'{freq} Hz', color = color_for_this_iteration, linestyle = ':')
+    # plt.xlabel('Delay (samples)')
+    # plt.ylabel('Correlation magnitude')
+    # plt.title('Correlation vs Delay for Each Frequency')
+    # # Optionally, show legend for a subset of frequencies to avoid clutter
+    # if len(freqs) <= 20:
+    #     plt.legend()
+    # else:
+    #     step = max(1, len(freqs)//10)
+    #     handles, labels = plt.gca().get_legend_handles_labels()
+    #     plt.legend([handles[i] for i in range(0, len(handles), step)],
+    #                [labels[i] for i in range(0, len(labels), step)],
+    #                title='Frequency (Hz)')
+    # plt.show()
    
      #correct the signal
-    t = np.arange(len(incoming_signal))/fs
-    shifted_sig = incoming_signal*np.exp(-1j*2*np.pi*best_frequency*t)
+    t = np.arange(len(interpolated_incoming_signal))/(fs*16)
+    shifted_sig = interpolated_incoming_signal * np.exp(-1j*2*np.pi*best_frequency*t)
     
     #now find start and end with our known markers
-   
-    sig_gen = SigGen(0, 1.0, FS, symb_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
-    # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
-    start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
-                    1, 0, 1, 0, 0, 1, 0, 0,
-                    0, 0, 1, 0, 1, 0, 1, 1,
-                    1, 0, 1, 1, 0, 0, 0, 1]
-    _, start_waveform = sig_gen.generate_qpsk(start_sequence)
-    start_orig_len = len(start_waveform)
-    start_waveform = np.convolve(start_waveform, h, mode = 'full')    
-    start_waveform = start_waveform[delay: delay + start_orig_len]
 
-    # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
-    end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
-                    1, 0, 0, 0, 0, 0, 1, 0, 
-                    0, 0, 1, 1, 1, 1, 0, 1, 
-                    0, 0, 0, 1, 0, 0, 1, 0]
-    
+    end_sequence = sig_gen.end_sequence
     _, end_waveform = sig_gen.generate_qpsk(end_sequence)
-    end_orig_len = len(end_waveform)
-    end_waveform = np.convolve(end_waveform, h, mode = 'full')    
-    end_waveform = end_waveform[delay: delay + end_orig_len]
+    end_template = signal.resample_poly(end_waveform, 16, 1)
+    #enable if you want to match filter with RC version of the signal
+    # end_orig_len = len(end_waveform)
+    # end_waveform = np.convolve(end_waveform, h, mode = 'full')    
+    # end_waveform = end_waveform[delay: delay + end_orig_len]
 
     #find start index by convolving signal with preamble
-    start_corr_sig = np.convolve(shifted_sig, np.conj(np.flip(start_waveform)), mode = 'same')
-    plt.figure()
-    plt.title('start correlation')
-    plt.plot(np.abs(start_corr_sig))
+    start_corr_sig = np.convolve(shifted_sig, np.conj(np.flip(interpolated_start_waveform)), mode = 'same')
+    # plt.figure()
+    # plt.title('start correlation')
+    # plt.plot(np.abs(start_corr_sig))
     
     #find the end index 
-    end_corr_signal = np.convolve(shifted_sig, np.conj(np.flip(end_waveform)), mode = 'same')
-    plt.figure()
-    plt.plot(np.abs(end_corr_signal))
-    plt.title('end correlation')
+    end_corr_signal = np.convolve(shifted_sig, np.conj(np.flip(end_template)), mode = 'same')
+    # plt.figure()
+    # plt.plot(np.abs(end_corr_signal))
+    # plt.title('end correlation')
    
     #get the index
-    start = np.argmax(np.abs(start_corr_sig)) - int((8) * (FS/symb_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
-    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS/symb_rate))
+    start = np.argmax(np.abs(start_corr_sig)) - int((32) * (FS*16/symb_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
+    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS * 16/symb_rate))
     print(f'start: {start}, end: {end}')
 
-
     sig_ready = shifted_sig[start:end] 
+    #since rx = htx, h = rx/tx so we can use our start sequence to correct for phase offset
+    found_h = sig_ready[0 : int( 64 * (fs * 16 / symb_rate))] / interpolated_start_waveform 
+    #normalize so theres no amplitude change and take the mean so we get avg phase offset of samples
+    found_h_norm = np.mean(found_h / np.abs(sig_ready[0 : int( 64 * (fs *16 / symb_rate))] / interpolated_start_waveform))
+    #debug:
+    print(f'found h = {found_h_norm}')
+    print(f'angle of h found = {np.rad2deg(np.angle(found_h_norm))}')
 
-
+    sig_ready /= found_h_norm
+    #decimate by 16
+    sig_ready = sig_ready[::16]
+    delta = time.time() - start_time
+    print(f'time for function {delta}')
     return sig_ready
 
 def runCorrection(signal, FS, symbol_rate):
     from scipy.signal import fftconvolve
     #1. Coarse Freq Recovery 
     signal = coarse_freq_recovery(signal)    
+   
+    #2.Run CAF (matching with RRC version of signal)
+    signal = CAF(signal, FS, symbol_rate) 
     
-    #2. Apply RRC to incoming signal 
-    # not RRC filtered because it has been through 2 RRC filters at this point in the chain
-    #note at this point we would want to correlate with a signal that has been RC filtered 
+    #3. Fine Frequency Correction
+    signal = costas_loop(signal, FS/symbol_rate)
+    
+    #4. Apply RRC to incoming signal turning the signal into -> raised cosine
+    #applying afterwards because I think the RRC disrupts the function of the fine frequency correction
     og_len = len(signal)
     _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
     signal = np.convolve(signal, h, mode = 'full')    
     delay = (301 - 1) // 2 #account for group delay
     signal = signal[delay:delay + og_len]
-  
-    #3.Run CAF
-    signal = CAF(signal, FS, symbol_rate) 
-     
-    #4. Fine time correction
-
-    #5. Fine Frequency Correction
-    sig_ready = costas_loop(signal, FS/symbol_rate)
     
-    return sig_ready[::int(FS/symbol_rate)]
+    #5. Fine time correction
+    
+    return signal[::int(FS/symbol_rate)]
 
 def main():
     sig_gen = SigGen(freq=900e6, amp=1, sample_rate = fs, symbol_rate = symb_rate)
@@ -326,22 +355,32 @@ def main():
     t, signal = sig_gen.generate_qpsk(bits)
     print(f'length of wave: {len(signal)}')
     
-    signal, t = integer_delay(100, signal)
+    #signal, t = integer_delay(100, signal)
     
     #test time correction
-    #delay_sec = 0.00432 # some random delay in seconds the fractional delay should be 0.6
+    #delay_sec = 0.00232 # some random delay in seconds the fractional delay should be 0.6
     #t, signal = fractional_delay(t, signal, delay_sec, fs)
     
     #test frequency correction
     new_signal = signal * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
-    
+    THETA = np.random.uniform(-np.pi, np.pi)
+    print(f'phase offset: {np.rad2deg(THETA)}')
+    new_signal = new_signal * np.exp(1j * THETA)
     
     #tune to "close to baseband"
     tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
-    
+    # Add AWGN noise to the tuned signal
+    snr_db = 20  # Signal-to-noise ratio in dB
+    signal_power = np.mean(np.abs(tuned_sig)**2)
+    snr_linear = 10**(snr_db / 10)
+    noise_power = signal_power / snr_linear
+    noise = np.sqrt(noise_power / 2) * (np.random.randn(*tuned_sig.shape) + 1j * np.random.randn(*tuned_sig.shape))
+    tuned_sig = tuned_sig + noise
+
     signal_ready = runCorrection(tuned_sig, fs, symb_rate)
     plt.figure()
-    plt.plot(np.real(signal_ready),np.imag(signal_ready), 'o')
+    #outlier point 
+    plt.plot(np.real(signal_ready[1:]),np.imag(signal_ready[1:]), 'o')
     plt.show() 
     print(f'Symbol length after runCorrection : {len(signal_ready)}') 
     #convert bits to string
@@ -364,7 +403,7 @@ def main():
     print(f' the bits are {bits}')
 
     #bits to message:
-    bits = bits[32:-32]
+    bits = bits[128:-32]
     bits = ''.join(str(bit) for bit in bits)
     # convert the bits into a string
     decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
