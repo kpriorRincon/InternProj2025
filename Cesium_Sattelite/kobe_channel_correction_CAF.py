@@ -183,7 +183,7 @@ def CAF(incoming_signal,FS,symb_rate):
     
     #create a list of frequencies 
     freqs = np.arange(-200, 201, 2)#create a frequency list 1-100
-    print(f'the frequency array: {freqs}') 
+    #print(f'the frequency array: {freqs}') 
     '''
     correlations = [
     [...] correlation at -100 Hz
@@ -203,26 +203,26 @@ def CAF(incoming_signal,FS,symb_rate):
     sig_gen = SigGen(0, 1.0, FS, symb_rate) # we create a signal with a certain frequency 
     start_sequence = sig_gen.start_sequence
     _, start_waveform = sig_gen.generate_qpsk(start_sequence)
+    #be sure to interpolate the start marker as well 
     interpolated_start_waveform = resample_poly(start_waveform, 16, 1)
     t = np.arange(len(interpolated_start_waveform)) / (FS * 16)
     for freq in freqs:
         template = interpolated_start_waveform * np.exp(1j * 2 * np.pi * t * freq)     
         correlation = np.abs(fftconvolve(interpolated_incoming_signal, np.conj(np.flip(template)), mode = 'same'))
-        #plt.figure()
-        #plt.plot(correlation)
-        #plt.show()  
         correlations.append(correlation) 
         max_val = max(correlation)
         max_correlations.append(max_val)
    
     #now we can interpret which had the highest energy correlation by parsing the _max_correlations
+
     #print(f'max_correlations:{max_correlations}') 
+
     best_correlation_index = max_correlations.index(max(max_correlations))
     print(f'max_correlation_index: {best_correlation_index}') 
     best_frequency = freqs[best_correlation_index]
     print(f'The best correlation happens with f offset of: {best_frequency}Hz')
     #find the index of the max value of the frequency slice with best correlation  
-    idx = np.argmax(correlations[best_frequency])- int(32 * (FS * 16)/symb_rate)
+    idx = np.argmax(correlations[best_frequency]) - int(32 * (FS * 16)/symb_rate)
     #This is the og samples delay (will be fractional)
     delay_og_samples = idx / 16 
     
@@ -230,7 +230,7 @@ def CAF(incoming_signal,FS,symb_rate):
     X, Y = np.meshgrid(np.arange(len(correlations[0])), freqs)
     Z = np.array(correlations)
     max_idx = np.unravel_index(np.argmax(Z), Z.shape) #(row, col) -> (freq_index, delay_index)
-    print(f'max_idx: {max_idx}')
+    #print(f'max_idx: {max_idx}')
     max_freq = freqs[max_idx[0]]
     max_delay = max_idx[1]
     plt.figure(figsize=(10,6))
@@ -280,6 +280,7 @@ def CAF(incoming_signal,FS,symb_rate):
     # plt.show()
     
     #fractionally delay the incoming singal with the amount 
+    print(f'fractional delay accounted for: {delay_og_samples}') 
     t, signal = fractional_delay(np.arange(len(incoming_signal))/fs, incoming_signal, -delay_og_samples, fs) 
     #correct the signal in frequency
     
@@ -326,21 +327,19 @@ def runCorrection(signal, FS, symbol_rate):
     #1. Coarse Freq Recovery 
     signal = coarse_freq_recovery(signal)    
    
-    #2.Run CAF (matching with RRC version of signal)
+    #2.Run CAF (matching with RRC version of signal achieves fine time correction)
     signal = CAF(signal, FS, symbol_rate) 
     
     #3. Fine Frequency Correction
     signal = costas_loop(signal, FS/symbol_rate)
     
-    #4. Apply RRC to incoming signal turning the signal into -> raised cosine
+    #4. Apply RRC to incoming signal turning the signal into -> raised cosine has the property small ISI
     #applying afterwards because I think the RRC disrupts the function of the fine frequency correction
     og_len = len(signal)
     _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
     signal = fftconvolve(signal, h, mode = 'full')    
     delay = (301 - 1) // 2 #account for group delay
     signal = signal[delay:delay + og_len]
-    
-    #5. Fine time correction
     
     return signal[::int(FS/symbol_rate)]
 
@@ -366,7 +365,7 @@ def main():
     #tune to "close to baseband"
     tuned_sig = new_signal * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
     # Add AWGN noise to the tuned signal
-    snr_db = 20  # Signal-to-noise ratio in dB
+    snr_db = 10  # Signal-to-noise ratio in dB
     signal_power = np.mean(np.abs(tuned_sig)**2)
     snr_linear = 10**(snr_db / 10)
     noise_power = signal_power / snr_linear
