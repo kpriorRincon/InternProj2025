@@ -306,7 +306,7 @@ def CAF(incoming_signal,FS,symb_rate):
    
     #get the index
     start = np.argmax(np.abs(start_corr_sig)) - int((32) * (FS*16/symb_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
-    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS*16/symb_rate))
+    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS * 16/symb_rate))
     print(f'start: {start}, end: {end}')
 
     sig_ready = shifted_sig[start:end] 
