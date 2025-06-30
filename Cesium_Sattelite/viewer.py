@@ -41,8 +41,9 @@ time_crossing = None
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
 recovered_message = None # this will be set in the simulation page when we recover the message
-gain_dB_repeater = None
-
+required_rep_power = None # this will be set in the simulation page when we calculate the required repeater power  
+txFreq = None
+bits = None
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
     global count
@@ -299,7 +300,7 @@ def Cesium_page():
         def start_simulation():
             '''This function runs when the start simulation button is clicked 
             and runs handlers to produce plots for each page as necessary'''
-            
+            global txFreq, required_rep_power, bits
             doppler_container.clear()
             # pass all the arguments from inputs
             mes = message.value
@@ -408,16 +409,16 @@ def Cesium_page():
             # So: amp^2 * alpha_up = required_tx_power  =>  amp = sqrt(required_tx_power / alpha_up)
             
             tx_amp = np.sqrt(required_tx_power) #we want the amplitude
-            sig_gen = SigGen.SigGen(txFreq, amp=tx_amp)
+            sig_gen = SigGen.SigGen(txFreq, amp = tx_amp)
 
-            bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
+            bits = sig_gen.message_to_bits(mes) #note that this will add prefix and postfix to the bits associated wtih the message
 
             t, qpsk_signal = sig_gen.generate_qpsk(bits)
 
             sig_gen.handler(t) # run the sig gen handler
 
             #check if we scaled the power of the signal correctly
-            print(f'does: {np.mean(np.abs(qpsk_signal)**2)} = {required_tx_power}')
+            print(f'does: {np.mean(np.abs(qpsk_signal) ** 2)} = {required_tx_power}')
 
             #define channel up
             channel_up = Channel.Channel(qpsk_signal, h_up, noise, f_delta_up, up = True)
@@ -428,13 +429,11 @@ def Cesium_page():
             
             #amplify and upconvert:
             #we want the outgoing power to reach the required power
-            Pcurr = np.mean(np.abs(qpsk_signal_after_channel)**2)
-            gain = np.sqrt(required_rep_power / Pcurr)#this gain is used to get the power of the signal to desired power
+            Pcurr = np.mean(np.abs(qpsk_signal_after_channel) ** 2)
+            gain = np.sqrt(required_rep_power / Pcurr) #this gain is used to get the power of the signal to desired power
             
-            global gain_dB_repeater
-            gain_dB_repeater = 10 * np.log10(gain) # convert to dB
 
-            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * t) * qpsk_signal #TODO fix later
+            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * new_t) * qpsk_signal_after_channel 
             
             #generate a plot of the tuned fft of the qpsk_signal_after_channel for the repeater page
             repeated_qpsk_signal_tuned = repeated_qpsk_signal
@@ -556,10 +555,8 @@ def Cesium_page():
         @ui.page('/repeater')
         def repeater_page():            
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the repeater simulation step.')
-            ui.label(f'The repeater must apply a gain of {gain_dB_repeater:.2f} dB to the incoming signal to achieve the desired SNR at the receiver.').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
-                ui.image('media/repeater_fft.png').style('width: 40%;').force_reload()
+            ui.label(f'The repeater will retransmit at {required_rep_power} W').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+            ui.label(f'The repeater will retransmit at a frequency of {txFreq + 10e6} Hz').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
         @ui.page('/channel2')
         def channel2_page():
