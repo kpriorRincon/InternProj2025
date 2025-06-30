@@ -41,7 +41,7 @@ time_crossing = None
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
 recovered_message = None # this will be set in the simulation page when we recover the message
-
+gain_dB_repeater = None
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
     global count
@@ -181,7 +181,7 @@ def Cesium_page():
                 if sat.name == name:
                     sat_for_sim = sat
                     break
-            time_crossing = data['time'] #get the time of closest approach
+            time_crossing = data['time'] #get the time of closest approach 
             ui.navigate.to('/simulation_page')
             return
         
@@ -218,6 +218,7 @@ def Cesium_page():
         html_directory = os.path.dirname(__file__) #get the directory you're in
         # add the files available
         app.add_static_files('/static', html_directory)
+
     #cesium page take up the right 70 percent of the page
     ui.html(
         f'''
@@ -237,7 +238,7 @@ def Cesium_page():
         # we will navigate to here whenever a row is clicked of a specific satellite
 
         dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo = timezone.utc) # convert the string to a readable time object 
-
+    
         time_crossing_skyfield = ts.from_datetime(dt_crossing)
         
         #the object sat_for_sim: GCRS coords
@@ -426,19 +427,24 @@ def Cesium_page():
             #amplify and upconvert:
             #we want the outgoing power to reach the required power
             Pcurr = np.mean(np.abs(qpsk_signal_after_channel)**2)
-            gain = np.sqrt(required_rep_power/Pcurr)#this gain is used to get the power of the signal to desired power
-            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * new_t) * qpsk_signal_after_channel
+            gain = np.sqrt(required_rep_power / Pcurr)#this gain is used to get the power of the signal to desired power
+            
+            global gain_dB_repeater
+            gain_dB_repeater = 10 * np.log10(gain) # convert to dB
+
+            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * t) * qpsk_signal #TODO fix later
+            
             #generate a plot of the tuned fft of the qpsk_signal_after_channel for the repeater page
-            repeated_qpsk_signal_tuned = repeated_qpsk_signal * np.exp(-1j * 2 * np.pi * txFreq * new_t)
+            repeated_qpsk_signal_tuned = repeated_qpsk_signal
             N = len(repeated_qpsk_signal_tuned)
             fft_repeated = np.fft.fftshift(np.fft.fft(repeated_qpsk_signal_tuned))
-            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / SAMPLE_RATE))
+            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / SAMPLE_RATE)) + txFreq + 10e6 # shift the frequencies to center around txFreq
 
             plt.figure(figsize=(10, 6))
-            plt.plot(freqs_repeated, 20 * np.log10(np.abs(fft_repeated)))
+            plt.plot(freqs_repeated/1e6, 20 * np.log10(np.abs(fft_repeated)))
             plt.xlabel("Frequency (MHz)")
             plt.ylabel("Magnitude (dB)")
-            plt.title("FFT of Repeated Signal (Tuned to Transmit Frequency)")
+            plt.title("FFT of Repeated Signal")
             plt.grid(True)
             plt.tight_layout()
             plt.savefig('media/repeater_fft.png', dpi=300)
@@ -464,7 +470,6 @@ def Cesium_page():
             global recovered_message 
             recovered_message = channel_handler(tuned_signal) # this will generate the plots we want to display on the receiver page
             #### -------------------------------------
-
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
             return
@@ -517,6 +522,7 @@ def Cesium_page():
                 ui.image('media/tx_pulse_shaped_fft.png').style('width: 50%').force_reload()
                 #show the constellation plot
                 ui.image('media/tx_constellation.png').style('width: 50%').force_reload()
+        
         @ui.page('/channel1')
         def channel1_page():
             # ui.button('Back', on_click=ui.navigate.back)
@@ -546,10 +552,10 @@ def Cesium_page():
                 # ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
 
         @ui.page('/repeater')
-        def repeater_page():
-            # ui.button('Back', on_click=ui.navigate.back)
+        def repeater_page():            
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the repeater simulation step.')
+            ui.label(f'The repeater must apply a gain of {gain_dB_repeater:.2f} dB to the incoming signal to achieve the desired SNR at the receiver.').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
                 ui.image('media/repeater_fft.png').style('width: 40%;').force_reload()
 
@@ -584,18 +590,11 @@ def Cesium_page():
                 
                 # constellation plot of the incoming signal and fft
                 with ui.row().style('width:100%'):
-                       # constellation plot of outgoing signal
-                    ui.image('media/channel_down_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
-                    # fft outgoing
-                    ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
-                
-                # constellation plot of the incoming signal and fft after LPF
-                # with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                #     ui.image('media/receiver_constellation_lpf.png').style('width: 40%').force_reload()
+                    ui.image('media/rx_incoming.png').style('width: 40%').force_reload()
 
                 # constellation plot of the incoming signal and fft after corse frequency correction
-                # with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                #      ui.image('media/receiver_constellation_coarse_freq.png').style('width: 40').force_reload()
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                     ui.image('media/coarse_correction.png').style('width: 40%').force_reload()
 
                 #binary search CAF convergence
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
@@ -611,9 +610,13 @@ def Cesium_page():
                     ui.image('media/end_correlation.png').style('width: 40%').force_reload()
                
                 # show fine frequency correction constellation and fft
-                # with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                #     ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%').force_reload()
 
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/fine_correction.png').style('width: 40%').force_reload()
+
+                # show the final constellation plot after all corrections
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/clean_signal.png').style('width: 40%').force_reload()
                 # show the final recovered bits 
                 
                 #show the final recovered message 
