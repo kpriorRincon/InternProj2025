@@ -112,7 +112,7 @@ class receive_processing:
         - message (str) : Decoded message
         """
 
-        bits = bits[128:-128] # Take out markers
+        # bits = bits[128:-128] # Take out markers
 
         bits_string = ''.join(str(bit) for bit in bits)
 
@@ -134,8 +134,8 @@ class receive_processing:
         - message : Decoded message
         """
 
-        index = len(data) // 2
-        data = data[:index]
+        # index = len(data) // 2
+        # data = data[:index]
 
         symbol_rate = self.sample_rate / self.sps
         Ts = 1 / symbol_rate
