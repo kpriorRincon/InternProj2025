@@ -407,8 +407,6 @@ def main():
     bits = sig_gen.message_to_bits('hello there' * 3)
     t, qpsk_wave = sig_gen.generate_qpsk(bits)   
 
-    qpsk_wave = qpsk_wave * np.exp(1j * 2 * np.pi * 10e6 * t)
-
     print(f"Length of TX Signal: {len(qpsk_wave)}")
     # Integer time delay
     #qpsk_wave, t = integer_delay(qpsk_wave, 100)
