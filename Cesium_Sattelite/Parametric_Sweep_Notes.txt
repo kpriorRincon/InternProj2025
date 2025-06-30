@@ -21,7 +21,6 @@ Best Costas Correction -66.30340905280946 Hz
 Total correction: 20000.028034191026 Hz
 Minimum error: 0.028034191025653854 Hz
 
-<<<<<<< HEAD:Cesium_Sattelite/Parametric_Sweep_Notes
 Sample Rate: 2.88 MHz
 Frequency Offset: 20000 Hz
 Coarse Frequency Correction: 20127.388535031816 Hz
@@ -33,8 +32,6 @@ Best beta: 0.00286
 Best Costas Correction -127.4148945308421 Hz
 Total correction: 19999.973640500975 Hz
 Minimum error: 0.026359499024692923 Hz
-=======
 
 kobe_channel_correction_CAF.py
 order of operations: coarse freq, caf, fine freq
->>>>>>> 131ea15 (test coefficients):Cesium_Sattelite/Parametric_Sweep_Notes.txt

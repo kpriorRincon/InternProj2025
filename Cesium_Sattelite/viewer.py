@@ -17,7 +17,7 @@ from get_TLE import get_up_to_date_TLE
 import Sig_Gen as SigGen
 import Channel as Channel
 from config import *
-# from binary_search_caf import handler
+from binary_search_caf import channel_handler
 
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
@@ -40,7 +40,7 @@ sat_for_sim = None # To start until we're ready to use it
 time_crossing = None
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
-
+recovered_message = None # this will be set in the simulation page when we recover the message
 
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
@@ -461,6 +461,8 @@ def Cesium_page():
             #Very first step tune to what we THINK is baseband
             tuned_signal = repeated_signal_after_channel * np.exp(-1j * 2 * np.pi * (txFreq + 10e6) * new_t2)
             # run the handler for channel_correction
+            global recovered_message 
+            recovered_message = channel_handler(tuned_signal) # this will generate the plots we want to display on the receiver page
             #### -------------------------------------
 
             # channel_down = Channel.Channel()
@@ -580,6 +582,7 @@ def Cesium_page():
             ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the receiver simulation step.')
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                
                 # constellation plot of the incoming signal and fft
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
                     ui.image('media/receiver_constellation.png').style('width: 40%;').force_reload()
@@ -587,19 +590,25 @@ def Cesium_page():
                 # constellation plot of the incoming signal and fft after LPF
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
                     ui.image('media/receiver_constellation_lpf.png').style('width: 40%')
+
                 # constellation plot of the incoming signal and fft after corse frequency correction
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
                      ui.image('media/receiver_constellation_coarse_freq.png').style('width: 40')
+
                 #binary search CAF convergence
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
                     ui.image('media/receiver_caf_convergence.png').style('width: 40%')
+
                 # show phase correction
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
                     ui.image('media/receiver_phase_correction.png').style('width: 40%')
+
                 # show fine frequency correction constellation and fft
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
                     ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%')
+
                 # show the final recovered bits 
 
                 #show the final recovered message 
+                ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 ui.run()

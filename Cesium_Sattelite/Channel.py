@@ -227,11 +227,12 @@ class Channel:
         plt.close()
 
 
-        #plot fft of the baseband outgoing singla
+        #plot fft of the baseband outgoing signal
         tuned_outgoing_signal = self.outgoing_signal * np.exp(-1j * 2 * np.pi * tune_frequency * new_t)
+        
         N = len(new_t)
-        Fs = 1 / (new_t[1] - new_t[0])
-        f = np.fft.fftshift(np.fft.fftfreq(N, d=1/Fs))
+        Fs = int(1 / (new_t[1] - new_t[0]))
+        f = np.fft.fftshift(np.fft.fftfreq(N, d = 1 /Fs))
         plt.figure(figsize=(10, 6))
         S_out = np.fft.fft(tuned_outgoing_signal)
         S_out_mag_db = 20 * np.log10(np.abs(S_out))
