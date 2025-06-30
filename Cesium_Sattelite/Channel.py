@@ -95,7 +95,7 @@ class Channel:
         AWGN = np.random.normal(0, noise_std, len(delayed_signal)) + 1j * np.random.normal(0, noise_std, len(delayed_signal))
         signal_noisy = delayed_signal + AWGN
 
-        self.outgoing_signal = delayed_signal
+        self.outgoing_signal = signal_noisy
         
         return new_t, delayed_signal
     
