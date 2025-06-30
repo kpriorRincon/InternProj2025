@@ -10,8 +10,8 @@ import transmit_processing as tp
 
 # configure RTL-SDR
 sdr = RtlSdr()
-sdr.sample_rate = 2.88e6 # Hz
-sdr.center_freq = 905e6 # Hz
+sdr.sample_rate = 2.4e6 # Hz
+sdr.center_freq = 30e6 # Hz
 sdr.freq_correction = 60 # PPM
 sdr.gain = 'auto'
 
@@ -19,11 +19,11 @@ sdr.gain = 'auto'
 time.sleep(1)
 
 # settings to run detector
-N = 1024
 detected = False
+sps = 10
+N = sps * 1024
 start = 0
 end = N - 1
-sps = 4
 beta = 0.35
 num_taps = 40
 symbol_rate = sdr.sample_rate / sps
@@ -43,25 +43,14 @@ transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
 start_symbols = transmit_obj.qpsk_mapping(start_marker)
 end_symbols = transmit_obj.qpsk_mapping(end_marker)
 
-start_symbols = transmit_obj.insert_zeros(sps, start_symbols)
-end_symbols = transmit_obj.insert_zeros(sps, end_symbols)
-
-Ts = 1 / symbol_rate
-
-_, h = transmit_obj.rrc_filter(beta, N, Ts, sdr.sample_rate)
-start_data = np.convolve(start_symbols, h, 'same')
-start_data = start_data.astype(np.complex64)
-end_data = np.convolve(end_symbols, h, 'same')
-end_data = end_data.astype(np.complex64)
-
 # detector object
-detect_obj = d.Detector(start_data, end_data, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=2)
+detect_obj = d.Detector(start_symbols, end_symbols, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=2)
 
 # create matched filters
 match_start, match_end = detect_obj.matchedFilter(sps)
 
 # Spectrogram parameters
-fft_size = 2*1024
+fft_size = N
 hop_size = fft_size // 2
 spec_history = 100  # number of lines in spectrogram
 
@@ -117,11 +106,6 @@ while detected == False:
 
 data = samples[start:end]
 print(f"Signal found after {count} cycles")
-
-plt.plot(range(len(data)), 20*np.log10(np.abs(data)), label = "correlated signal")
-plt.title("Selected Signal")
-plt.legend()
-plt.grid()
 
 # plot handling
 plt.ioff()

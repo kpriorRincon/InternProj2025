@@ -97,13 +97,13 @@ class Detector:
         detected = False
         
         # find the correlated signal
-        cor_start = sig.fftconvolve(samples, np.conj(np.flip(match_start)), mode='same')
+        cor_start = sig.fftconvolve(samples**4, np.conj(match_start)**4, mode='same')
         cor_start = (cor_start - np.min(cor_start)) / (np.max(np.abs(cor_start)) - np.min(cor_start))
-        cor_end = sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same')
+        cor_end = sig.fftconvolve(samples**4, np.conj(match_end)**4, mode='same')
         cor_end = (cor_end - np.min(cor_end)) / (np.max(np.abs(cor_end)) - np.min(cor_end))
 
         # get start and end indices
-        start = np.argmax(np.abs(cor_start))    # go back 16 symbols e.g. 32 bits
+        start = np.argmax(np.abs(cor_start)) - len(match_start) * int(self.sps / 1 / self.Ts)    # go back 16 symbols e.g. 32 bits
         end = np.argmax(np.abs(cor_end))
 
         print("Start index: ", start)
