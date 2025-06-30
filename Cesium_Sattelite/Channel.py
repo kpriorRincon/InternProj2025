@@ -207,9 +207,10 @@ class Channel:
         plt.figure(figsize=(6, 6))
         symbol_indices = np.arange(0, len(tuned_signal), int(samples_per_symbol))
         # print(f'the symbol incidies: {symbol_indices}')
-        plt.scatter(np.real(tuned_signal), np.imag(tuned_signal), color='blue', s=10, label='Oversampled')
+        plt.plot(np.real(tuned_signal), np.imag(tuned_signal), 'b-', label='Oversampled', zorder = 1)
         #this should be where the symbols actually are
-        plt.scatter(np.real(tuned_signal[symbol_indices]), np.imag(tuned_signal[symbol_indices]), color='red', s=30, label='Symbol Samples')
+        
+        plt.scatter(np.real(tuned_signal[symbol_indices]), np.imag(tuned_signal[symbol_indices]), color='red', s=30, label='Symbol Samples', zorder = 2)
         plt.xlabel('In-Phase')
         plt.ylabel('Quadrature')
         plt.title('Constellation of Tuned Incoming Signal')
@@ -244,8 +245,8 @@ class Channel:
         # Plot constellation of the tuned outgoing signal
         plt.figure(figsize=(6, 6))
         symbol_indices = np.arange(0, len(tuned_outgoing_signal), int(samples_per_symbol))
-        plt.scatter(np.real(tuned_outgoing_signal), np.imag(tuned_outgoing_signal), color='blue', s=10, label='Oversampled')
-        plt.scatter(np.real(tuned_outgoing_signal[symbol_indices]), np.imag(tuned_outgoing_signal[symbol_indices]), color='red', s=30, label='Interpreted Symbol Samples')
+        plt.plot(np.real(tuned_outgoing_signal), np.imag(tuned_outgoing_signal), 'b-',zorder = 1, label='Oversampled')
+        plt.scatter(np.real(tuned_outgoing_signal[symbol_indices]), np.imag(tuned_outgoing_signal[symbol_indices]), color='red', s=30, label='Interpreted Symbol Samples', zorder =2)
         plt.xlabel('In-Phase')
         plt.ylabel('Quadrature')
         plt.title('Constellation of Tuned Outgoing Signal')
