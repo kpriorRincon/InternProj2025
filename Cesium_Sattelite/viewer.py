@@ -435,7 +435,7 @@ def Cesium_page():
             freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / SAMPLE_RATE))
 
             plt.figure(figsize=(10, 6))
-            plt.plot(freqs_repeated / 1e6, 20 * np.log10(np.abs(fft_repeated)))
+            plt.plot(freqs_repeated, 20 * np.log10(np.abs(fft_repeated)))
             plt.xlabel("Frequency (MHz)")
             plt.ylabel("Magnitude (dB)")
             plt.title("FFT of Repeated Signal (Tuned to Transmit Frequency)")
@@ -504,7 +504,7 @@ def Cesium_page():
             
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
                 #bit sequence with prefix/postifx labeled
-
+                #TODO
                 #show upsampled bits sub plot one on top of the other real and imaginary
                 ui.image('media/tx_upsampled_bits.png').style('width: 50%').force_reload()
                 ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
@@ -583,28 +583,35 @@ def Cesium_page():
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
                 
                 # constellation plot of the incoming signal and fft
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_constellation.png').style('width: 40%;').force_reload()
+                with ui.row().style('width:100%'):
+                       # constellation plot of outgoing signal
+                    ui.image('media/channel_down_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
+                    # fft outgoing
+                    ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
                 
                 # constellation plot of the incoming signal and fft after LPF
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_constellation_lpf.png').style('width: 40%')
+                    ui.image('media/receiver_constellation_lpf.png').style('width: 40%').force_reload()
 
                 # constellation plot of the incoming signal and fft after corse frequency correction
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                     ui.image('media/receiver_constellation_coarse_freq.png').style('width: 40')
+                     ui.image('media/receiver_constellation_coarse_freq.png').style('width: 40').force_reload()
 
                 #binary search CAF convergence
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_caf_convergence.png').style('width: 40%')
+                    ui.image('media/binary_search_convergence.png').style('width: 40%').force_reload()
 
                 # show phase correction
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_phase_correction.png').style('width: 40%')
+                    ui.image('media/phase_offset.png').style('width: 40%').force_reload()
 
+                # show start and end correlation
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/start_correlation.png').style('width: 40%').force_reload()
+                    ui.image('media/end_correlation.png').style('width: 40%').force_reload()
                 # show fine frequency correction constellation and fft
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%')
+                    ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%').force_reload()
 
                 # show the final recovered bits 
                 
