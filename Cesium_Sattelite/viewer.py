@@ -16,7 +16,7 @@ from get_TLE import get_up_to_date_TLE
 # importing classes
 import Sig_Gen as SigGen
 import Channel as Channel
-import 
+from config import *
 from binary_search_caf import handler
 
 from satellite_czml import satellite_czml
@@ -401,10 +401,7 @@ def Cesium_page():
 
             #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
             
-            #the required transmit power from tx to rep and rep to rec will be used to determine the amplitude of the outgoing waves 
-            Fs = 40e6 #sample rate 40 MHz
-            symb_rate = 2e6 #20 times less than the sample rate
-
+ 
             #decide the amplitude of the signal so that by the time it gets to the repeater it's very
             # Calculate amplitude scaling so that the QPSK signal has required_tx_power at the repeater
             # QPSK average power is proportional to amp^2 (assuming unit average symbol energy)
@@ -412,7 +409,7 @@ def Cesium_page():
             # So: amp^2 * alpha_up = required_tx_power  =>  amp = sqrt(required_tx_power / alpha_up)
             
             tx_amp = np.sqrt(required_tx_power) #we want the amplitude
-            sig_gen = SigGen.SigGen(txFreq, amp=tx_amp, sample_rate=Fs, symbol_rate=symb_rate)
+            sig_gen = SigGen.SigGen(txFreq, amp=tx_amp)
 
             bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
 
@@ -420,8 +417,7 @@ def Cesium_page():
 
             sig_gen.handler(t) # run the sig gen handler
 
-            #scale the power of the signal 
-
+            #check if we scaled the power of the signal correctly
             print(f'does: {np.mean(np.abs(qpsk_signal)**2)} = {required_tx_power}')
 
             #define channel up
@@ -429,7 +425,7 @@ def Cesium_page():
             #apply the channel: 
             new_t, qpsk_signal_after_channel = channel_up.apply_channel(t, time_delay_up)
             #run the channel_up_handler:
-            channel_up.handler(t, new_t, txFreq, Fs/symb_rate) #generate all the plots we want to display
+            channel_up.handler(t, new_t, txFreq, SAMPLE_RATE/SYMB_RATE) #generate all the plots we want to display
             
             #amplify and upconvert:
             #we want the outgoing power to reach the required power
@@ -440,7 +436,7 @@ def Cesium_page():
             repeated_qpsk_signal_tuned = repeated_qpsk_signal * np.exp(-1j * 2 * np.pi * txFreq * new_t)
             N = len(repeated_qpsk_signal_tuned)
             fft_repeated = np.fft.fftshift(np.fft.fft(repeated_qpsk_signal_tuned))
-            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d=1/Fs))
+            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d=1/SAMPLE_RATE))
 
             plt.figure(figsize=(10, 6))
             plt.plot(freqs_repeated / 1e6, 20 * np.log10(np.abs(fft_repeated)))
@@ -462,15 +458,13 @@ def Cesium_page():
             # This signal is what gets fed into the reciever
             new_t2,repeated_signal_after_channel = channel_down.apply_channel(new_t, time_delay_down)
 
-            channel_down.handler(new_t, new_t2, txFreq + 10e6, Fs / symb_rate) #tune to tx + 10 MHz
+            channel_down.handler(new_t, new_t2, txFreq + 10e6, SAMPLE_RATE / SYMB_RATE) #tune to tx + 10 MHz
             
             ###-----------------------------------
             ##TODO add channel correction here 
-            
             #Very first step tune to what we THINK is baseband
             tuned_signal = repeated_signal_after_channel * np.exp(-1j * 2 * np.pi * (txFreq + 10e6) * new_t2)
-            # signal_ready_for_demod = channel_correction.runCorrection(tuned_signal)
-        
+            # run the handler for channel_correction
             #### -------------------------------------
 
             # channel_down = Channel.Channel()
