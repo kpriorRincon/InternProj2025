@@ -1,10 +1,43 @@
 import numpy as np
 
 class transmit_processing:
-
+    
     def __init__(self, sps, sample_rate):
-         self.sps = sps
-         self.sample_rate = sample_rate
+        self.sps = sps
+        self.sample_rate = sample_rate
+        self.start_sequence = [1, 1, 1, 1, 1, 1, 1, 0,
+                               0, 0, 1, 1, 1, 0, 1, 1,
+                               0, 0, 0, 1, 0, 1, 0, 0,
+                               1, 0, 1, 1, 1, 1, 1, 0,
+                               1, 0, 1, 0, 1, 0, 0, 0,
+                               0, 1, 0, 1, 1, 0, 1, 1,
+                               1, 1, 0, 0, 1, 1, 1, 0,
+                               0, 1, 0, 1, 0, 1, 1, 0,
+                               0, 1, 1, 0, 0, 0, 0, 0,
+                               1, 1, 0, 1, 1, 0, 1, 0,
+                               1, 1, 1, 0, 1, 0, 0, 0,
+                               1, 1, 0, 0, 1, 0, 0, 0,
+                               1, 0, 0, 0, 0, 0, 0, 1,
+                               0, 0, 1, 0, 0, 1, 1, 0,
+                               1, 0, 0, 1, 1, 1, 1, 0,
+                               1, 1, 1, 0, 0, 0, 0, 1]
+        self.end_sequence = [1, 1, 1, 0, 0, 0, 0, 1,
+                             1, 1, 1, 0, 0, 1, 1, 0,
+                             1, 0, 1, 0, 1, 0, 0, 1,
+                             1, 0, 1, 0, 1, 0, 0, 0,
+                             1, 1, 1, 1, 0, 1, 1, 1,
+                             0, 1, 0, 0, 1, 0, 1, 1,
+                             1, 1, 1, 1, 1, 1, 0, 1,
+                             0, 0, 1, 1, 0, 1, 0, 1,
+                             1, 1, 1, 1, 1, 1, 0, 1,
+                             1, 0, 1, 0, 1, 0, 1, 0,
+                             0, 1, 1, 1, 0, 0, 0, 0,
+                             1, 1, 1, 0, 0, 0, 1, 0,
+                             0, 1, 0, 1, 0, 0, 1, 1,
+                             0, 1, 1, 1, 0, 1, 0, 1,
+                             0, 1, 0, 1, 0, 1, 1, 0,
+                             0, 0, 1, 1, 0, 1, 0, 1]
+
 
     # function that converts a message to its bit sequence
     def message_to_bits(self, message):
@@ -17,21 +50,12 @@ class transmit_processing:
         Returns:
         - bit_sequence : Bit sequence as a list
         """
-        start_sequence = [1, 1, 1, 1, 1, 0, 0, 1,
-                            1, 0, 1, 0, 0, 1, 0, 0,
-                            0, 0, 1, 0, 1, 0, 1, 1,
-                            1, 0, 1, 1, 0, 0, 0, 1]
-
-        end_sequence = [0, 0, 1, 0, 0, 1, 1, 0,
-                        1, 0, 0, 0, 0, 0, 1, 0,
-                        0, 0, 1, 1, 1, 1, 0, 1,
-                        0, 0, 0, 1, 0, 0, 1, 0]
-
+ 
         # convert message to binary
         message_binary = ''.join(format(ord(char), '08b') for char in message)
 
         # add start and end markers to the bitstream
-        message_binary = ''.join(str(bit) for bit in start_sequence) + message_binary + ''.join(str(bit) for bit in end_sequence)
+        message_binary = ''.join(str(bit) for bit in self.start_sequence) + message_binary + ''.join(str(bit) for bit in self.end_sequence)
     
         # coverts bit sequence from a string to a list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
@@ -49,6 +73,7 @@ class transmit_processing:
         Returns:
         - symbols : QPSK mapped symbols 
         """
+
         num_bits = len(bits)
         num_symbols = num_bits // 2
 
@@ -80,6 +105,7 @@ class transmit_processing:
         Returns:
         - upsampled_symbols : Zero-padded symbols
         """
+
         num_symbols = len(symbols)
         upsampled_symbols = np.zeros(num_symbols * sps, dtype=np.complex64)
         upsampled_symbols[::sps] = symbols
@@ -101,6 +127,7 @@ class transmit_processing:
         - time : The time vector of the impulse response
         - h : The impulse response of the RRC filter in the time domain
         """
+
         t = np.arange(-N // 2, N // 2 + 1) / fs 
 
         h = np.zeros_like(t) 
@@ -118,6 +145,43 @@ class transmit_processing:
                 denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
                 h[i] = numerator / denominator
         return t, h
+    
+    # function that modulates the start and end markers of the signal 
+    def modulated_markers(self, beta, N):
+        """
+        Modulate start and end sequences
+
+        Parameters:
+        - beta : Roll-off factor (0 < beta <= 1)
+        - N : Total number of taps in the filter (the filter span)
+
+        Returns:
+        - start_data : Modulated start sequence
+        - end_data : Modulated end sequence
+        """ 
+     
+        start_sequence = ''.join(str(bit) for bit in self.start_sequence)
+        end_sequence =  ''.join(str(bit) for bit in self.end_sequence)
+
+        start_sequence = [int(bit) for bit in start_sequence.strip()]
+        end_sequence = [int(bit) for bit in end_sequence.strip()]
+
+        start_symbols = self.qpsk_mapping(start_sequence)
+        end_symbols = self.qpsk_mapping(end_sequence)
+
+        upsampled_start_symbols = self.insert_zeros(self.sps, start_symbols)
+        upsampled_end_symbols = self.insert_zeros(self.sps, end_symbols)
+		
+        symbol_rate = self.sample_rate / self.sps
+        Ts = 1 / symbol_rate
+
+        _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
+        start_data = np.convolve(upsampled_start_symbols, h, 'same')
+        start_data = start_data.astype(np.complex64)
+        end_data = np.convolve(upsampled_end_symbols, h, 'same')
+        end_data = end_data.astype(np.complex64)
+
+        return start_data, end_data
 
     def work(self, message, beta, N): 
         """
@@ -153,4 +217,4 @@ class transmit_processing:
 
         data.tofile("data_for_sighound.bin")
         
-        return bits_string, data
+        return bits_string, data		

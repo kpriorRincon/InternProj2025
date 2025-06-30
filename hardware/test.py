@@ -14,6 +14,8 @@ bits_out, data = transmit_processing.work(message, beta, N)
 
 bits_in, decoded_message = receive_processing.work(data, beta, N)
 
+start_data, end_data = transmit_processing.modulated_markers(beta, N)
+
 print("Message Sent: ", message)
 print("Message Received: ", decoded_message)
 print("Bits Sent: ", bits_out)
