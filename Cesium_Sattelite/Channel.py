@@ -212,7 +212,7 @@ class Channel:
         # Plot constellation of the tuned incoming signal
         plt.figure(figsize=(6, 6))
         symbol_indices = np.arange(0, len(tuned_signal), int(samples_per_symbol))
-        print(f'the symbol incidies: {symbol_indices}')
+        # print(f'the symbol incidies: {symbol_indices}')
         plt.scatter(np.real(tuned_signal), np.imag(tuned_signal), color='blue', s=10, label='Oversampled')
         #this should be where the symbols actually are
         plt.scatter(np.real(tuned_signal[symbol_indices]), np.imag(tuned_signal[symbol_indices]), color='red', s=30, label='Symbol Samples')

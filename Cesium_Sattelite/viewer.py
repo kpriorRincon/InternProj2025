@@ -498,7 +498,7 @@ def Cesium_page():
         # Placeholder pages for each simulation step
         @ui.page('/transmitter')
         def transmitter_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the transmitter simulation step.')
             
@@ -519,7 +519,7 @@ def Cesium_page():
                 ui.image('media/tx_constellation.png').style('width: 50%').force_reload()
         @ui.page('/channel1')
         def channel1_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
 
@@ -547,7 +547,7 @@ def Cesium_page():
 
         @ui.page('/repeater')
         def repeater_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the repeater simulation step.')
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
@@ -555,7 +555,7 @@ def Cesium_page():
 
         @ui.page('/channel2')
         def channel2_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
@@ -576,9 +576,8 @@ def Cesium_page():
                     ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
 
         @ui.page('/receiver')
-
         def receiver_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the receiver simulation step.')
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
@@ -608,7 +607,7 @@ def Cesium_page():
                     ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%')
 
                 # show the final recovered bits 
-
+                
                 #show the final recovered message 
                 ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 ui.run()
