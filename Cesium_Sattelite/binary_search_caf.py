@@ -272,7 +272,7 @@ def main():
     _, h = rrc_filter(0.4, 301, 1/symb_rate, fs)
     delay = (301 - 1) // 2 
     signal_ready = np.convolve(caf_fixed_sig, h, mode = 'full')    
-    signal_ready = signal_ready[delay: delay + len(caf_fixed_sig)]
+    signal_ready = signal_ready[delay: delay + len(final_fixed_sig)]
 
     signal_ready = signal_ready[::int(fs/symb_rate)]
 
