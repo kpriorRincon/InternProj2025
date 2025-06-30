@@ -9,7 +9,7 @@ freq_offset = 20000
 time_delay = 0.00232
 max_freq = 200
 min_freq = -200
-snr_db = 10
+snr_db = 20
 
 def integer_delay(signal, num_samples):
     '''Apply an integer delay by padding the front of the signal with zeros'''
@@ -108,6 +108,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
 
     if DEBUG:
         plt.plot(np.real(fixed_qpsk[1:]),np.imag(fixed_qpsk[1:]), 'o')
+        plt.title('Coarse Frequency Synchronization')
         plt.savefig('media/coarse_correction.png')
         plt.close()
         
@@ -152,12 +153,24 @@ def costas_loop(qpsk_wave):
     #finds the frequency at the end when it converged
     print(f'Costas Converged Frequency Offset: {freq_log[-1]}')
 
+    t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
+    fixed_qpsk = qpsk_wave * np.exp(-1j * 2 * np.pi * freq_log[-1] * t)
+
     if DEBUG:
         plt.plot(freq_log,'.-')
-        plt.title('freq converge')
-        plt.clf()
-    t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
-    return qpsk_wave * np.exp(-1j * 2 * np.pi * freq_log[-1] * t)
+        plt.title('Costas Loop Frequency Convergence')
+        plt.savefig('media/costas_convergence.png')
+        plt.close()
+
+        
+        plt.plot(np.real(fixed_qpsk[1:-1]),np.imag(fixed_qpsk[1:-1]), 'b-')
+        plt.plot(np.real(fixed_qpsk[1:-1:int(SAMPLE_RATE/SYMB_RATE)]),np.imag(fixed_qpsk[1:-1:int(SAMPLE_RATE/SYMB_RATE)]), 'ro')
+
+        plt.title('Fine Frequency Synchronization (Costas Loop)')
+        plt.savefig('media/fine_correction.png')
+        plt.close()
+
+    return fixed_qpsk
     
 
 def mixing(signal, f, ip_val=1):
@@ -268,6 +281,9 @@ def cross_corr_caf(rx_signal):
 
     deci_signal /= h_norm
 
+    t = np.arange(len(deci_signal)) / SAMPLE_RATE
+    fixed_signal = deci_signal * np.exp(-1j * 2 * np.pi * freq_found * t)
+
     if DEBUG:
         # Plotting the unit circle
         # Calculate phase in degrees and radians
@@ -320,11 +336,15 @@ def cross_corr_caf(rx_signal):
         # Add legend and title
         ax.set_title('Phase Offset Detected')
 
-        plt.savefig('media/phase_offset.png')
+        plt.savefig('media/phase_offset_unit.png')
         plt.close()
         
-    t = np.arange(len(deci_signal)) / SAMPLE_RATE
-    fixed_signal = deci_signal * np.exp(-1j * 2 * np.pi * freq_found * t)
+        plt.plot(np.real(fixed_signal[1:]),np.imag(fixed_signal[1:]), 'o')
+        plt.title('IQ Plot after Phase Correction')
+        plt.savefig('media/phase_corrected_signal.png')
+        plt.close()
+        
+    
 
     return fixed_signal
 
@@ -406,6 +426,11 @@ def main():
     # Demodulate qpsk and display message
     message = demodulator(signal_ready)
     
+    if DEBUG:
+        plt.plot(np.real(signal_ready[1:]),np.imag(signal_ready[1:]), 'b.-')
+        plt.title('Final IQ Plot')
+        plt.savefig('media/clean_signal.png')
+        plt.close()
     #message = channel_handler(qpsk_base)
     print(f"The decoded message = {message}")
 
