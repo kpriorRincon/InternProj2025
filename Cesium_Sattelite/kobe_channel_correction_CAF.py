@@ -215,6 +215,8 @@ def CAF(incoming_signal,FS,symb_rate):
    
     #now we can interpret which had the highest energy correlation by parsing the _max_correlations
 
+    delta = time.time() - start_time
+    print(f'function runtime: {delta}')
     #print(f'max_correlations:{max_correlations}') 
 
     best_correlation_index = max_correlations.index(max(max_correlations))
@@ -317,8 +319,7 @@ def CAF(incoming_signal,FS,symb_rate):
     print(f'angle of h found = {np.rad2deg(np.angle(found_h_norm))}')
 
     sig_ready /= found_h_norm
-    delta = time.time() - start_time
-    print(f'function runtime: {delta}')
+    
     return sig_ready
 
 def runCorrection(signal, FS, symbol_rate):

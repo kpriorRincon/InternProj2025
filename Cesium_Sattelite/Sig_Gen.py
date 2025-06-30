@@ -1,4 +1,5 @@
 #helper function:
+from config import *
 
 def rrc_filter(beta, N, Ts, fs):
         """
@@ -47,11 +48,11 @@ def rrc_filter(beta, N, Ts, fs):
 
 class SigGen:
 
-    def __init__(self, freq=1.0, amp=1.0, sample_rate=40e6, symbol_rate=2e6):
+    def __init__(self, freq=1.0, amp=1.0):
         import numpy as np
         self.freq = freq  # Frequency in Hz
-        self.sample_rate = sample_rate  # sample rate in samples per second
-        self.symbol_rate = symbol_rate  # Symbol rate in symbols per second
+        self.sample_rate = SAMPLE_RATE  # sample rate in samples per second
+        self.symbol_rate = SYMB_RATE  # Symbol rate in symbols per second
         self.amp = amp    # Amplitude
         self.upsampled_symbols = None
         self.pulse_shaped_symbols = None
@@ -64,15 +65,7 @@ class SigGen:
             (1, 0): (1 - 1j) / np.sqrt(2)
         } 
         
-        self.start_sequence =[1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
-            0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1,
-            0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1,
-            0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1]
-        
-        self.end_sequence = [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0,
-            1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0,
-            1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0,
-            1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1]
+
         
     def generate_qpsk(self, bits):
         """
@@ -112,12 +105,12 @@ class SigGen:
         
         # Root raised cosine filter implementation
         beta = 0.4
-        _, pulse_shape = rrc_filter(beta, 301, 1/self.symbol_rate, self.sample_rate)
+        _, pulse_shape = rrc_filter(beta, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
         #print(f"Length of filter {len(pulse_shape)}")
 
         #print(len(upsampled_symbols))
         signal = np.convolve(upsampled_symbols, pulse_shape, mode='full')
-        delay = (301 - 1) // 2 
+        delay = (NUMTAPS - 1) // 2 
 
         signal = signal[delay: delay + len(upsampled_symbols)]
         #signal = np.pad(signal, (0, delay), mode='constant')
@@ -152,8 +145,8 @@ class SigGen:
         message_binary = ''.join(format(ord(x), '08b') for x in message)
 
         # Add start and end sequences to the message binary
-        message_binary = ''.join(str(bit) for bit in self.start_sequence) + \
-            message_binary + ''.join(str(bit) for bit in self.end_sequence)
+        message_binary = ''.join(str(bit) for bit in START_MARKER) + \
+            message_binary + ''.join(str(bit) for bit in END_MARKER)
         # print(message_binary)
         # Convert string input to list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
@@ -201,7 +194,7 @@ class SigGen:
         
         #pulse shaping impulse response:
         plt.figure(figsize=(5,5))
-        pulse_t,pulse_shape = rrc_filter(0.4, 301, 1/self.symbol_rate, self.sample_rate)
+        pulse_t,pulse_shape = rrc_filter(0.4, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
         plt.plot(pulse_t, pulse_shape, 'o')
         plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
