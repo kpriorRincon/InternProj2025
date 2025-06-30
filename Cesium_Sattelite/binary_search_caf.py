@@ -82,7 +82,7 @@ def lowpass_filter(raw_signal):
         return filtered_sig
 
 def RRC_filter(signal):
-    _, h = rrc_filter(0.4, NUMTAPS, 1/SYMB_RATE, SAMPLE_RATE)
+    _, h = rrc_filter(BETA, NUMTAPS, 1/SYMB_RATE, SAMPLE_RATE)
     delay = (NUMTAPS - 1) // 2 
     rrc_signal = fftconvolve(signal, h, mode = 'full')    
     rrc_signal = rrc_signal[delay: delay + len(signal)]

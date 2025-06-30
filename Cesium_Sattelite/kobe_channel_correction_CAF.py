@@ -312,7 +312,7 @@ def runCorrection(signal, FS, symbol_rate):
     #4. Apply RRC to incoming signal turning the signal into -> raised cosine has the property small ISI
     #applying afterwards because I think the RRC disrupts the function of the fine frequency correction
     og_len = len(signal)
-    _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
+    _, h = rrc_filter(BETA, 301, 1/symbol_rate, FS)
     signal = fftconvolve(signal, h, mode = 'full')    
     delay = (301 - 1) // 2 #account for group delay
     signal = signal[delay:delay + og_len]
