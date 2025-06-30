@@ -42,6 +42,7 @@ time_crossing = None
 text_box_container = ui.column().style('order: 2; width: 80%')
 recovered_message = None # this will be set in the simulation page when we recover the message
 gain_dB_repeater = None
+
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
     global count
@@ -298,6 +299,7 @@ def Cesium_page():
         def start_simulation():
             '''This function runs when the start simulation button is clicked 
             and runs handlers to produce plots for each page as necessary'''
+            
             doppler_container.clear()
             # pass all the arguments from inputs
             mes = message.value
