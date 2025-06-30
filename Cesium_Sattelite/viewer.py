@@ -16,7 +16,7 @@ from get_TLE import get_up_to_date_TLE
 # importing classes
 import Sig_Gen as SigGen
 import Channel as Channel
-import channel_correction
+from binary_search_caf import handler
 
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
@@ -464,7 +464,7 @@ def Cesium_page():
             channel_down.handler(new_t, new_t2, txFreq + 10e6, Fs / symb_rate) #tune to tx + 10 MHz
             
             ###-----------------------------------
-            ##we need to functionalize this block later TODO 
+            ##TODO add channel correction here 
             
             #Very first step tune to what we THINK is baseband
             tuned_signal = repeated_signal_after_channel * np.exp(-1j * 2 * np.pi * (txFreq + 10e6) * new_t2)
@@ -588,12 +588,27 @@ def Cesium_page():
             ui.button('Back', on_click=ui.navigate.back)
             ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the receiver simulation step.')
-            #Could show steps of the demodulation
-            #other half of the rrc applice
-            #applying matched filter
-            #applying course freqeuncy correction
-            #applying time synch
-            #applying fine frequency detection: something with constellation plots
-            #demodulation
-            #bits hopefully
+            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                # constellation plot of the incoming signal and fft
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/receiver_constellation.png').style('width: 40%;').force_reload()
+                
+                # constellation plot of the incoming signal and fft after LPF
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/receiver_constellation_lpf.png').style('width: 40%')
+                # constellation plot of the incoming signal and fft after corse frequency correction
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                     ui.image('media/receiver_constellation_coarse_freq.png').style('width: 40')
+                #binary search CAF convergence
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/receiver_caf_convergence.png').style('width: 40%')
+                # show phase correction
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/receiver_phase_correction.png').style('width: 40%')
+                # show fine frequency correction constellation and fft
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%')
+                # show the final recovered bits 
+
+                #show the final recovered message 
 ui.run()
