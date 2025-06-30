@@ -1,46 +1,30 @@
 import numpy as np
+import scipy.signal as signal
 
 class transmit_processing:
     
     def __init__(self, sps, sample_rate):
         self.sps = sps
         self.sample_rate = sample_rate
-        self.start_sequence = [1, 1, 1, 1, 1, 1, 1, 0,
-                               0, 0, 1, 1, 1, 0, 1, 1,
-                               0, 0, 0, 1, 0, 1, 0, 0,
-                               1, 0, 1, 1, 1, 1, 1, 0,
-                               1, 0, 1, 0, 1, 0, 0, 0,
-                               0, 1, 0, 1, 1, 0, 1, 1,
-                               1, 1, 0, 0, 1, 1, 1, 0,
-                               0, 1, 0, 1, 0, 1, 1, 0,
-                               0, 1, 1, 0, 0, 0, 0, 0,
-                               1, 1, 0, 1, 1, 0, 1, 0,
-                               1, 1, 1, 0, 1, 0, 0, 0,
-                               1, 1, 0, 0, 1, 0, 0, 0,
-                               1, 0, 0, 0, 0, 0, 0, 1,
-                               0, 0, 1, 0, 0, 1, 1, 0,
-                               1, 0, 0, 1, 1, 1, 1, 0,
-                               1, 1, 1, 0, 0, 0, 0, 1]
-        self.end_sequence = [1, 1, 1, 0, 0, 0, 0, 1,
-                             1, 1, 1, 0, 0, 1, 1, 0,
-                             1, 0, 1, 0, 1, 0, 0, 1,
-                             1, 0, 1, 0, 1, 0, 0, 0,
-                             1, 1, 1, 1, 0, 1, 1, 1,
-                             0, 1, 0, 0, 1, 0, 1, 1,
-                             1, 1, 1, 1, 1, 1, 0, 1,
-                             0, 0, 1, 1, 0, 1, 0, 1,
-                             1, 1, 1, 1, 1, 1, 0, 1,
-                             1, 0, 1, 0, 1, 0, 1, 0,
-                             0, 1, 1, 1, 0, 0, 0, 0,
-                             1, 1, 1, 0, 0, 0, 1, 0,
-                             0, 1, 0, 1, 0, 0, 1, 1,
-                             0, 1, 1, 1, 0, 1, 0, 1,
-                             0, 1, 0, 1, 0, 1, 1, 0,
-                             0, 0, 1, 1, 0, 1, 0, 1]
+        
+    def generate_markers(self):
+        """
+        Generates start and end markers for the signal
 
+        Returns:
+        - start_sequence : start marker
+        - end_sequence : end marker
+        """
 
+        random_sequence = signal.max_len_seq(11)[0]
+        idx = len(random_sequence) - 1 
+        start_sequence = random_sequence[:idx]
+        end_sequence = random_sequence[idx:-1]
+
+        return start_sequence, end_sequence
+        
     # function that converts a message to its bit sequence
-    def message_to_bits(self, message):
+    def message_to_bits(self, message, start_sequence, end_sequence):
         """
         Convert a string message to a bitstream 
 
@@ -55,7 +39,7 @@ class transmit_processing:
         message_binary = ''.join(format(ord(char), '08b') for char in message)
 
         # add start and end markers to the bitstream
-        message_binary = ''.join(str(bit) for bit in self.start_sequence) + message_binary + ''.join(str(bit) for bit in self.end_sequence)
+        message_binary = ''.join(str(bit) for bit in start_sequence) + message_binary + ''.join(str(bit) for bit in end_sequence)
     
         # coverts bit sequence from a string to a list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
@@ -147,7 +131,7 @@ class transmit_processing:
         return t, h
     
     # function that modulates the start and end markers of the signal 
-    def modulated_markers(self, beta, N):
+    def modulated_markers(self, beta, N, start_sequence, end_sequence):
         """
         Modulate start and end sequences
 
@@ -160,8 +144,8 @@ class transmit_processing:
         - end_data : Modulated end sequence
         """ 
      
-        start_sequence = ''.join(str(bit) for bit in self.start_sequence)
-        end_sequence =  ''.join(str(bit) for bit in self.end_sequence)
+        start_sequence = ''.join(str(bit) for bit in start_sequence)
+        end_sequence =  ''.join(str(bit) for bit in end_sequence)
 
         start_sequence = [int(bit) for bit in start_sequence.strip()]
         end_sequence = [int(bit) for bit in end_sequence.strip()]
@@ -196,8 +180,9 @@ class transmit_processing:
         - bits : Modulated bits
         - data : IQ data to be sent to transmitter
         """
+        start_sequence, end_sequence = self.generate_markers()
 
-        bits = self.message_to_bits(message)
+        bits = self.message_to_bits(message, start_sequence, end_sequence)
 
         bits_string = ''.join(str(b) for b in bits)
 
@@ -212,7 +197,7 @@ class transmit_processing:
         data = np.convolve(upsampled_symbols, h, 'same')
         data = data.astype(np.complex64)
 
-        zeros = np.zeros(len(data), dtype=np.complex64)
+        zeros = np.zeros(len(data)*3, dtype=np.complex64)
         data = np.append(data, zeros)
 
         data.tofile("data_for_sighound.bin")
