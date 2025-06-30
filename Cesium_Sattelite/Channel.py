@@ -95,7 +95,7 @@ class Channel:
         AWGN = np.random.normal(0, noise_std, len(delayed_signal)) + 1j * np.random.normal(0, noise_std, len(delayed_signal))
         signal_noisy = delayed_signal + AWGN
 
-        self.outgoing_signal = delayed_signal
+        self.outgoing_signal = signal_noisy
         
         return new_t, delayed_signal
     
@@ -212,7 +212,7 @@ class Channel:
         # Plot constellation of the tuned incoming signal
         plt.figure(figsize=(6, 6))
         symbol_indices = np.arange(0, len(tuned_signal), int(samples_per_symbol))
-        print(f'the symbol incidies: {symbol_indices}')
+        # print(f'the symbol incidies: {symbol_indices}')
         plt.scatter(np.real(tuned_signal), np.imag(tuned_signal), color='blue', s=10, label='Oversampled')
         #this should be where the symbols actually are
         plt.scatter(np.real(tuned_signal[symbol_indices]), np.imag(tuned_signal[symbol_indices]), color='red', s=30, label='Symbol Samples')
@@ -227,11 +227,12 @@ class Channel:
         plt.close()
 
 
-        #plot fft of the baseband outgoing singla
+        #plot fft of the baseband outgoing signal
         tuned_outgoing_signal = self.outgoing_signal * np.exp(-1j * 2 * np.pi * tune_frequency * new_t)
+        
         N = len(new_t)
-        Fs = 1 / (new_t[1] - new_t[0])
-        f = np.fft.fftshift(np.fft.fftfreq(N, d=1/Fs))
+        Fs = int(1 / (new_t[1] - new_t[0]))
+        f = np.fft.fftshift(np.fft.fftfreq(N, d = 1 /Fs))
         plt.figure(figsize=(10, 6))
         S_out = np.fft.fft(tuned_outgoing_signal)
         S_out_mag_db = 20 * np.log10(np.abs(S_out))

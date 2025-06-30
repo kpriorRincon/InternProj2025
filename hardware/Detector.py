@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal as sig
+import matplotlib.pyplot as plt
 
 class Detector:
     def __init__(self, marker_start, marker_end, N, Ts, beta=0.35, fs=2.4e6, sps=2):
@@ -119,7 +120,7 @@ class Detector:
         M = len(training_samples)
         print(f"Training samples length: {M}")
         if M > 0:
-            P_fa = 0.01 # probability of false alarm
+            P_fa = 0.2 # probability of false alarm
             alpha = M*(P_fa**(-1/M) - 1)
             Pn = np.mean(np.abs(training_samples))
             self.threshold = Pn * alpha
@@ -130,6 +131,13 @@ class Detector:
             # if the maximum energy of the correlated signal is greater than the threshold update end index
             if max(np.abs(cor_end)) > self.threshold:
                 detected = True
+                plt.plot(range(len(cor_start)), 20*np.log10(cor_start), label='Start Correlation')
+                plt.plot(range(len(cor_start)), 20*np.log10(cor_end), label='End Correlation')
+                plt.grid()
+                plt.legend()
+                plt.title('Correlation of the Matched Filters')
+                plt.axhline(y = 20*np.log10(self.threshold), linestyle = '--')
+                plt.show()
 
         # if the start index is greater than the end index signal not found, return default values
         if start > end:
