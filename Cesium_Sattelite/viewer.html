@@ -48,7 +48,8 @@
 
           // Separate current position holder for this satellite
           let currentPos = null;
-
+          
+          // I would like to be able to draw lines when a sattelite crosses close enough to the rx and tx to say we're transmitting
           // CallbackProperty for this satellite's Tx line
           viewer.entities.add({
             polyline: {
@@ -60,7 +61,7 @@
               material: Cesium.Color.RED.withAlpha(0.7)
             }
           });
-
+          
           // CallbackProperty for this satellite's Rx line
           viewer.entities.add({
             polyline: {
@@ -72,7 +73,7 @@
               material: Cesium.Color.BLUE.withAlpha(0.7)
             }
           });
-
+          
           // Update currentPos on each clock tick
           viewer.clock.onTick.addEventListener((clock) => {
             const time = clock.currentTime;
@@ -141,7 +142,6 @@
       }
     });
 
-    // I would like to be able to draw lines when a sattelite crosses close enough to the rx and tx to say we're transmitting
 
   </script>
 </body>

@@ -186,12 +186,12 @@ def CAF(incoming_signal,FS,symb_rate):
     #print(f'the frequency array: {freqs}') 
     '''
     correlations = [
-    [...] correlation at -100 Hz
-    [...] correlation at -99 Hz
+    [...] correlation at -200 Hz
+    [...] correlation at -199 Hz
     .
     .
-    [...] correlation at 99 Hz
-    [...] correlation at 100 Hz
+    [...] correlation at 199 Hz
+    [...] correlation at 200 Hz
     ]
     '''
     correlations = [] #create a correlation array that will store different correlations
@@ -304,7 +304,7 @@ def CAF(incoming_signal,FS,symb_rate):
    
     #get the index
     start = np.argmax(np.abs(start_corr_sig)) - int((32) * (FS / symb_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
-    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS / symb_rate))
+    end = np.argmax(np.abs(end_corr_signal)) + int((32) * (FS / symb_rate))
     print(f'start: {start}, end: {end}')
 
     sig_ready = shifted_sig[start:end] 
@@ -398,7 +398,7 @@ def main():
     print(f' the bits are {bits}')
 
     #bits to message:
-    bits = bits[128:-32]
+    bits = bits[128:-128]
     bits = ''.join(str(bit) for bit in bits)
     # convert the bits into a string
     decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
