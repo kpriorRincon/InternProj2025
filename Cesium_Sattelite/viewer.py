@@ -556,7 +556,7 @@ def Cesium_page():
         def repeater_page():            
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
             ui.label(f'The repeater will retransmit at {required_rep_power} W').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
-            ui.label(f'The repeater will retransmit at a frequency of {txFreq + 10e6} Hz').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+            ui.label(f'The repeater takes in the signal and sends it back out, upconverted 10 MHz').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
         @ui.page('/channel2')
         def channel2_page():
@@ -617,7 +617,7 @@ def Cesium_page():
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
                     ui.image('media/clean_signal.png').style('width: 40%').force_reload()
                 # show the final recovered bits 
-                
+                #TODO
                 #show the final recovered message 
                 ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 ui.run()
