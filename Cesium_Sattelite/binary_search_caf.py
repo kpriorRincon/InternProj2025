@@ -81,6 +81,17 @@ def lowpass_filter(raw_signal):
 
         return filtered_sig
 
+def RRC_filter(signal):
+    _, h = rrc_filter(0.4, NUMTAPS, 1/SYMB_RATE, SAMPLE_RATE)
+    delay = (NUMTAPS - 1) // 2 
+    rrc_signal = fftconvolve(signal, h, mode = 'full')    
+    rrc_signal = rrc_signal[delay: delay + len(signal)]
+
+    return rrc_signal
+
+def decimate(signal, step):
+    return signal[::int(step)]
+
 def coarse_freq_recovery(qpsk_wave, order=4):
 
 
@@ -96,8 +107,6 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
     return fixed_qpsk
-
-
 
 def phase_detector_4(sample):
     if sample.real > 0:
@@ -270,6 +279,19 @@ def demodulator(qpsk_sig):
     
     decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
     return decoded_string
+
+def channel_handler(rx_signal):
+    
+    filtered_sig = lowpass_filter(rx_signal)
+    coarse_fixed = coarse_freq_recovery(filtered_sig)
+    caf_fixed = cross_corr_caf(coarse_fixed)
+    costas_fixed = costas_loop(caf_fixed)
+    rrc_signal = RRC_filter(costas_fixed)
+    signal_ready = decimate(rrc_signal, int(SAMPLE_RATE/SYMB_RATE))
+    decoded_message = demodulator(signal_ready)
+
+    return decoded_message
+
 def main():
     #Generate QPSK at Carrier Frequency
     sig_gen = SigGen(freq=900e6, amp=1)
@@ -291,7 +313,7 @@ def main():
 
     #Tune down to baseband
     qpsk_base = post_channel_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
-
+    """
     lpf_signal = lowpass_filter(qpsk_base)
     
     coarse_fixed_sig = coarse_freq_recovery(lpf_signal)
@@ -312,16 +334,14 @@ def main():
 
 
     # Pass through RRC filter
-    _, h = rrc_filter(0.4, NUMTAPS, 1/SYMB_RATE, SAMPLE_RATE)
-    delay = (NUMTAPS - 1) // 2 
-    signal_ready = fftconvolve(final_fixed_sig, h, mode = 'full')    
-    signal_ready = signal_ready[delay: delay + len(final_fixed_sig)]
+    rc_signal = RRC_filter(final_fixed_sig)
 
     # Decimate
-    signal_ready = signal_ready[::int(SAMPLE_RATE/SYMB_RATE)]
-
+    signal_ready = decimate(rc_signal, int(SAMPLE_RATE/SYMB_RATE))
     # Demodulate qpsk and display message
     message = demodulator(signal_ready)
+    """
+    message = channel_handler(qpsk_base)
     print(f"The decoded message = {message}")
 
 if __name__ == "__main__":
