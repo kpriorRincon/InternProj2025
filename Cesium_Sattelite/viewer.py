@@ -17,7 +17,7 @@ from get_TLE import get_up_to_date_TLE
 import Sig_Gen as SigGen
 import Channel as Channel
 from config import *
-from binary_search_caf import handler
+from binary_search_caf import channel_handler
 
 from satellite_czml import satellite_czml
 '''note ctrl click satellite_czml then comment out satellites = {} because it isn't instance specific then
@@ -40,7 +40,7 @@ sat_for_sim = None # To start until we're ready to use it
 time_crossing = None
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
-
+recovered_message = None # this will be set in the simulation page when we recover the message
 
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
@@ -355,9 +355,7 @@ def Cesium_page():
                 ui.label(f'Time delay up: {time_delay_up:.7f} s').style(label_style)
 
                 time_delay_down = np.linalg.norm(rx_r - sat_r) / c 
-                total_time_delay = time_delay_up + time_delay_down
                 ui.label(f'Time delay down: {time_delay_down:.7f} s').style(label_style)
-                
 
                 #channel model:
                 #antenna gain
@@ -366,7 +364,7 @@ def Cesium_page():
                 gain_sat = 10**(10/10) # 10 dB # helical
                 
                 #attenuation friis calculation
-                alpha_up = gain_tx * gain_sat * (lambda_up/(4*np.pi*np.linalg.norm(sat_r-tx_r)))**2 # path loss attenuation
+                alpha_up = gain_tx * gain_sat * (lambda_up / (4 * np.pi * np.linalg.norm(sat_r - tx_r))) ** 2 # path loss attenuation
                 
                 #pick theta uniformly at random from 0 to 360 degrees 
                 THETA = np.random.uniform(0, 2*np.pi)
@@ -400,8 +398,6 @@ def Cesium_page():
 
 
             #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
-            
- 
             #decide the amplitude of the signal so that by the time it gets to the repeater it's very
             # Calculate amplitude scaling so that the QPSK signal has required_tx_power at the repeater
             # QPSK average power is proportional to amp^2 (assuming unit average symbol energy)
@@ -425,7 +421,7 @@ def Cesium_page():
             #apply the channel: 
             new_t, qpsk_signal_after_channel = channel_up.apply_channel(t, time_delay_up)
             #run the channel_up_handler:
-            channel_up.handler(t, new_t, txFreq, SAMPLE_RATE/SYMB_RATE) #generate all the plots we want to display
+            channel_up.handler(t, new_t, txFreq, SAMPLE_RATE / SYMB_RATE) #generate all the plots we want to display
             
             #amplify and upconvert:
             #we want the outgoing power to reach the required power
@@ -436,10 +432,10 @@ def Cesium_page():
             repeated_qpsk_signal_tuned = repeated_qpsk_signal * np.exp(-1j * 2 * np.pi * txFreq * new_t)
             N = len(repeated_qpsk_signal_tuned)
             fft_repeated = np.fft.fftshift(np.fft.fft(repeated_qpsk_signal_tuned))
-            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d=1/SAMPLE_RATE))
+            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / SAMPLE_RATE))
 
             plt.figure(figsize=(10, 6))
-            plt.plot(freqs_repeated / 1e6, 20 * np.log10(np.abs(fft_repeated)))
+            plt.plot(freqs_repeated, 20 * np.log10(np.abs(fft_repeated)))
             plt.xlabel("Frequency (MHz)")
             plt.ylabel("Magnitude (dB)")
             plt.title("FFT of Repeated Signal (Tuned to Transmit Frequency)")
@@ -465,6 +461,8 @@ def Cesium_page():
             #Very first step tune to what we THINK is baseband
             tuned_signal = repeated_signal_after_channel * np.exp(-1j * 2 * np.pi * (txFreq + 10e6) * new_t2)
             # run the handler for channel_correction
+            global recovered_message 
+            recovered_message = channel_handler(tuned_signal) # this will generate the plots we want to display on the receiver page
             #### -------------------------------------
 
             # channel_down = Channel.Channel()
@@ -500,13 +498,13 @@ def Cesium_page():
         # Placeholder pages for each simulation step
         @ui.page('/transmitter')
         def transmitter_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the transmitter simulation step.')
             
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
                 #bit sequence with prefix/postifx labeled
-
+                #TODO
                 #show upsampled bits sub plot one on top of the other real and imaginary
                 ui.image('media/tx_upsampled_bits.png').style('width: 50%').force_reload()
                 ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
@@ -521,7 +519,7 @@ def Cesium_page():
                 ui.image('media/tx_constellation.png').style('width: 50%').force_reload()
         @ui.page('/channel1')
         def channel1_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
 
@@ -549,7 +547,7 @@ def Cesium_page():
 
         @ui.page('/repeater')
         def repeater_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the repeater simulation step.')
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
@@ -557,7 +555,7 @@ def Cesium_page():
 
         @ui.page('/channel2')
         def channel2_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
@@ -578,32 +576,42 @@ def Cesium_page():
                     ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
 
         @ui.page('/receiver')
-
         def receiver_page():
-            ui.button('Back', on_click=ui.navigate.back)
+            # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the receiver simulation step.')
             with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+                
                 # constellation plot of the incoming signal and fft
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
                     ui.image('media/receiver_constellation.png').style('width: 40%;').force_reload()
                 
                 # constellation plot of the incoming signal and fft after LPF
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_constellation_lpf.png').style('width: 40%')
+                    ui.image('media/receiver_constellation_lpf.png').style('width: 40%').force_reload()
+
                 # constellation plot of the incoming signal and fft after corse frequency correction
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                     ui.image('media/receiver_constellation_coarse_freq.png').style('width: 40')
+                     ui.image('media/receiver_constellation_coarse_freq.png').style('width: 40').force_reload()
+
                 #binary search CAF convergence
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_caf_convergence.png').style('width: 40%')
+                    ui.image('media/receiver_caf_convergence.png').style('width: 40%').force_reload()
+
                 # show phase correction
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_phase_correction.png').style('width: 40%')
+                    ui.image('media/receiver_phase_correction.png').style('width: 40%').force_reload()
+
+                # show start and end correlation
+                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
+                    ui.image('media/receiver_correlation_start_end.png').style('width: 40%').force_reload()
+
                 # show fine frequency correction constellation and fft
                 with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%')
-                # show the final recovered bits 
+                    ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%').force_reload()
 
+                # show the final recovered bits 
+                
                 #show the final recovered message 
+                ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 ui.run()
