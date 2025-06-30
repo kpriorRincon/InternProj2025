@@ -4,10 +4,10 @@ from mpl_toolkits import mplot3d
 import matplotlib.animation as animation
 from Sig_Gen import SigGen, rrc_filter
 from scipy import signal
+from config import *
 freq_offset = 20000
-fs = 2.88e6
-symb_rate = fs/20
-
+fs = SAMPLE_RATE
+symb_rate = SYMB_RATE
 def integer_delay(num_samples, signal):
     '''Apply an integer delay by padding the front of the signal with zeros'''
     signal = np.concatenate([np.zeros(num_samples, dtype=complex), signal])
@@ -38,7 +38,7 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
         signal = np.concatenate([np.zeros(integer_delay, dtype=complex), signal])
     
     #filter taps
-    N = 301
+    N = NUMTAPS
     #construct filter
     n = np.linspace(-N//2, N//2,N)
     h = np.sinc(n-delay_in_samples)
@@ -150,31 +150,6 @@ def costas_loop(qpsk_wave, sps):
     t = np.arange(len(qpsk_wave)) / fs
     return qpsk_wave * np.exp(-1j * 2 * np.pi * freq_log[-1] * t)
     
-def mueller(samples, sps):
-    #interpolate with a factor of 16 for fractional delay
-    samples_interpolated = resample_poly(samples, 16, 1)
-
-    mu = 0 # initial estimate of phase of sample
-    out = np.zeros(len(samples) + 10, dtype=np.complex64)
-    out_rail = np.zeros(len(samples) + 10, dtype=np.complex64) # stores values, each iteration we need the previous 2 values plus current value
-    i_in = 0 # input samples index
-    i_out = 2 # output index (let first two outputs be 0)
-    
-    while i_out < len(samples) and i_in+16 < len(samples):
-        out[i_out] = samples_interpolated[i_in*16 + int(mu*16)]        
-        out_rail[i_out] = int(np.real(out[i_out]) > 0) + 1j*int(np.imag(out[i_out]) > 0)
-        x = (out_rail[i_out] - out_rail[i_out-2]) * np.conj(out[i_out-1])
-        y = (out[i_out] - out[i_out-2]) * np.conj(out_rail[i_out-1])
-        mm_val = np.real(y - x)
-        mu += sps + 0.3*mm_val
-        i_in += int(np.floor(mu)) # round down to nearest int since we are using it as an index
-        mu = mu - np.floor(mu) # remove the integer part of mu
-        i_out += 1 # increment output index
-
-    out = out[2:i_out] # remove the first two, and anything after i_out (that was never filled out)
-    samples = out # only include this line if you want to connect this code snippet with the Costas Loop later on
-    return samples # the output signal (will have sps = 1)
-
 def CAF(incoming_signal,FS,symb_rate):
     import time 
     from mpl_toolkits.mplot3d import Axes3D
@@ -200,8 +175,8 @@ def CAF(incoming_signal,FS,symb_rate):
     #try interpolation before the CAF
     interpolated_incoming_signal = resample_poly(incoming_signal, 16, 1)     
     
-    sig_gen = SigGen(0, 1.0, FS, symb_rate) # we create a signal with a certain frequency 
-    start_sequence = sig_gen.start_sequence
+    sig_gen = SigGen(0, 1.0) # we create a signal with a certain frequency 
+    start_sequence = START_MARKER
     _, start_waveform = sig_gen.generate_qpsk(start_sequence)
     #be sure to interpolate the start marker as well 
     interpolated_start_waveform = resample_poly(start_waveform, 16, 1)
@@ -289,7 +264,7 @@ def CAF(incoming_signal,FS,symb_rate):
     shifted_sig = signal * np.exp(-1j*2*np.pi*best_frequency*t)
     
     #now find start and end with our known markers
-    end_sequence = sig_gen.end_sequence
+    end_sequence = END_MARKER
     _, end_waveform = sig_gen.generate_qpsk(end_sequence)
 
     #find start index by convolving signal with preamble
@@ -337,7 +312,7 @@ def runCorrection(signal, FS, symbol_rate):
     #4. Apply RRC to incoming signal turning the signal into -> raised cosine has the property small ISI
     #applying afterwards because I think the RRC disrupts the function of the fine frequency correction
     og_len = len(signal)
-    _, h = rrc_filter(0.4, 301, 1/symbol_rate, FS)
+    _, h = rrc_filter(BETA, 301, 1/symbol_rate, FS)
     signal = fftconvolve(signal, h, mode = 'full')    
     delay = (301 - 1) // 2 #account for group delay
     signal = signal[delay:delay + og_len]
@@ -345,7 +320,7 @@ def runCorrection(signal, FS, symbol_rate):
     return signal[::int(FS/symbol_rate)]
 
 def main():
-    sig_gen = SigGen(freq=900e6, amp=1, sample_rate = fs, symbol_rate = symb_rate)
+    sig_gen = SigGen(freq=900e6, amp=1)
     bits = sig_gen.message_to_bits('hello there ' * 3)
     print(f'num symbols: {len(bits)//2}')
     t, signal = sig_gen.generate_qpsk(bits)

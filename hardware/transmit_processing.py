@@ -17,7 +17,7 @@ class transmit_processing:
         """
 
         random_sequence = signal.max_len_seq(11)[0]
-        idx = len(random_sequence) - 1 
+        idx = (len(random_sequence) - 1) // 2
         start_sequence = random_sequence[:idx]
         end_sequence = random_sequence[idx:-1]
 

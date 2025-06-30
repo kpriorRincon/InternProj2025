@@ -82,7 +82,7 @@ def lowpass_filter(raw_signal):
         return filtered_sig
 
 def RRC_filter(signal):
-    _, h = rrc_filter(0.4, NUMTAPS, 1/SYMB_RATE, SAMPLE_RATE)
+    _, h = rrc_filter(BETA, NUMTAPS, 1/SYMB_RATE, SAMPLE_RATE)
     delay = (NUMTAPS - 1) // 2 
     rrc_signal = fftconvolve(signal, h, mode = 'full')    
     rrc_signal = rrc_signal[delay: delay + len(signal)]
@@ -107,7 +107,10 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
     if DEBUG:
-        plt.plot(np.real(fixed_qpsk[1:]),np.imag(fixed_qpsk[1:]), 'o')
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(fixed_qpsk[1:]), np.imag(fixed_qpsk[1:]), 'b-', zorder = 1, label = 'oversampled signal')
+        plt.scatter(np.real(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
+        plt.legend()
         plt.title('Coarse Frequency Synchronization')
         plt.savefig('media/coarse_correction.png')
         plt.close()
@@ -375,6 +378,18 @@ def demodulator(qpsk_sig):
     return decoded_string
 
 def channel_handler(rx_signal):
+    if DEBUG:
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(rx_signal[1:]), np.imag(rx_signal[1:]), 'b-', zorder = 1, label = 'oversampled signal')
+        plt.scatter(np.real(rx_signal[1::int(SAMPLE_RATE/SYMB_RATE)]), np.imag(rx_signal[1::int(SAMPLE_RATE/SYMB_RATE)]), c='r',s = 30, zorder = 2, label = 'decimated signal')
+        plt.legend()
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.grid(True)
+        plt.axis('equal')
+        plt.title('Incoming IQ Plot')
+        plt.savefig('media/rx_incoming.png')
+        plt.close()
 
     filtered_sig = lowpass_filter(rx_signal)
     coarse_fixed = coarse_freq_recovery(filtered_sig)
@@ -432,6 +447,10 @@ def main():
     if DEBUG:
         plt.plot(np.real(signal_ready[1:]),np.imag(signal_ready[1:]), 'b.-')
         plt.title('Final IQ Plot')
+        plt.grid(True)
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.axis('equal')
         plt.savefig('media/clean_signal.png')
         plt.close()
     #message = channel_handler(qpsk_base)
