@@ -90,13 +90,13 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
             None # parent
         )
         self.qtgui_time_sink_x_0.set_update_time(0.10)
-        self.qtgui_time_sink_x_0.set_y_axis(-1, 1)
+        self.qtgui_time_sink_x_0.set_y_axis(-1.5, 1.5)
 
         self.qtgui_time_sink_x_0.set_y_label('Amplitude', "")
 
         self.qtgui_time_sink_x_0.enable_tags(True)
         self.qtgui_time_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
-        self.qtgui_time_sink_x_0.enable_autoscale(True)
+        self.qtgui_time_sink_x_0.enable_autoscale(False)
         self.qtgui_time_sink_x_0.enable_grid(False)
         self.qtgui_time_sink_x_0.enable_axis_labels(True)
         self.qtgui_time_sink_x_0.enable_control_panel(False)

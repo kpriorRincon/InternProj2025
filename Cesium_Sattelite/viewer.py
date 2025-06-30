@@ -510,7 +510,7 @@ def Cesium_page():
                 ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
                 ui.image('media/tx_upsampled_bits_fft.png').style('width: 50%').force_reload()
                 ui.label('These upsampled bits are pulse shaped with the following filter:').style('font-size: 1.5em; font-weight: bold;')
-                ui.image('media/tx_rrc.png').style('width: 30%') #don't need to force reload because it doesn't change between siulations
+                ui.image('media/tx_rrc.png').style('width: 30%').force_reload() #don't need to force reload because it doesn't change between siulations
                 #show the pulse shaping Re/Im
                 ui.image('media/tx_pulse_shaped_bits.png').style('width: 50%').force_reload()
                 #show the baseband FFT

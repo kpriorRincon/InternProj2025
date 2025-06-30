@@ -194,13 +194,14 @@ class SigGen:
         
         #pulse shaping impulse response:
         plt.figure(figsize=(5,5))
-        pulse_t,pulse_shape = rrc_filter(0.4, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
+        pulse_t,pulse_shape = rrc_filter(BETA, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
         plt.plot(pulse_t, pulse_shape, 'o')
         plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
         plt.title("RRC Filter Impulse Response")
         plt.tight_layout()
         plt.savefig('media/tx_rrc.png', dpi = 300)
+        plt.close()
         #Pulse Shaped bits
         plt.figure(figsize = (10,6))
         plt.subplot(2, 1, 1)
