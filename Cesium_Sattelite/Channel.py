@@ -1,3 +1,4 @@
+from config import *
 #helper function
 def fractional_delay(t, signal, delay_in_sec, Fs):
     """
@@ -19,35 +20,30 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     #Fs * delay_in_sec # samples/seconds * seconds = samples
     
     #pad with zeros for the integer_delay
-    delayed = np.concatenate([np.zeros(integer_delay), signal])
+    if integer_delay > 0:
+        signal = np.concatenate([np.zeros(integer_delay, dtype=complex), signal])
+    
     #filter taps
-    N = 301
+    N = NUMTAPS
     #construct filter
-    n = np.arange(-N//2, N//2)
+    n = np.linspace(-N//2, N//2,N)
     h = np.sinc(n-delay_in_samples)
     h *= np.hamming(N) #something like a rectangular window
     h /= np.sum(h) #normalize to get unity gain, we don't want to change the amplitude/power
 
-    #apply filter: same
-    new_signal = np.convolve(delayed, h, mode='same')
 
-    #cut out Group delay from FIR filter
-    delay = (N - 1) // 2 # group delay of FIR filter is always (N - 1) / 2 samples, N is filter length (of taps)
-    padded_signal = np.pad(new_signal, (0, delay), mode='constant')
-    new_signal = padded_signal[delay:]  # Shift back by delay
+    #apply filter: same time-aligned output with the same size as the input
+    new_signal = np.convolve(signal, h, mode='full')
+    delay = (N - 1) // 2
+    new_signal = new_signal[delay:delay+len(signal)]
+
+    #debug
+    # if len(new_signal) == len(signal):
+    #     print('signal lengths are the same: with mode = full and trimming')
 
     #create a new time vector with the correcct size
-    new_t = t[0] + np.arange(len(new_signal)) / Fs # t[0] might be 0 but if it isn't the rest of the time vector will be offset by this amount
+    new_t = np.arange(len(new_signal)) / Fs #longer time vector because the signal is delayed and padded in the front 
     
-    #debug---------------------
-    # import matplotlib.pyplot as plt
-    # plt.figure()
-    # plt.plot(t,np.real(signal),label='OG')
-    # plt.plot(new_t, np.real(new_signal), label='Delayed')
-    # plt.legend()
-    # plt.grid()
-    # plt.show()
-    #end debug-------------------
     return new_t, new_signal
 
 
@@ -77,7 +73,7 @@ class Channel:
         convert x(t) --> hx(t - T) +n(T) from channel effects
         """
         import numpy as np
-        Fs = 1 / (t[1] - t[0]) #extract the sample rate from time vector
+        Fs = int (1 / (t[1] - t[0])) #extract the sample rate from time vector
 
         # Apply Doppler shift
         doppler = np.exp(1j * 2 * np.pi * self.freq_shift * t)
@@ -90,9 +86,7 @@ class Channel:
         new_t, delayed_signal = fractional_delay(t, signal_channel, time_delay, Fs)
         
         #apply noise after delay
-        # Generate complex AWGN
-        noise_std = np.sqrt(self.noise_power / 2)
-        AWGN = np.random.normal(0, noise_std, len(delayed_signal)) + 1j * np.random.normal(0, noise_std, len(delayed_signal))
+        AWGN = np.sqrt(self.noise_power / 2) * (np.random.randn(*delayed_signal.shape) + 1j * np.random.randn(*delayed_signal.shape))
         signal_noisy = delayed_signal + AWGN
 
         self.outgoing_signal = delayed_signal
@@ -192,19 +186,19 @@ class Channel:
         plt.savefig(f'media/channel_{direction}_h_phase.png', dpi=300)
         plt.close()
 
-        tuned_signal = self.incoming_signal * np.exp(-1j * 2 * np.pi * tune_frequency * t )# we want to tune down to baseband
+        tuned_signal = self.incoming_signal * np.exp(-1j * 2 * np.pi * tune_frequency * t)# we want to tune down to baseband
         #plot fft of the baseband incoming signal
         plt.figure(figsize=(10, 6))
         S = np.fft.fft(tuned_signal)
         S_mag_db = 20 * np.log10(np.abs(S))
         N = len(t)
         Fs = 1 / (t[1] - t[0])
-        f = np.fft.fftshift(np.fft.fftfreq(N, d=1/Fs))
-        plt.plot(f, np.fft.fftshift(S_mag_db))
+        f = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / Fs))
+        plt.plot(f/1e6, np.fft.fftshift(S_mag_db))
+        plt.xlim(-Fs/6e6, Fs/6e6)
         plt.title('Frequency Domain of Tuned Incoming Signal (Baseband)')
-        plt.xlabel('Frequency (Hz)')
+        plt.xlabel('Frequency (MHz)')
         plt.ylabel('Magnitude (dB)')
-        plt.xlim(-Fs/6, Fs/6)
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_incoming_tuned_fft.png', dpi=300)
         plt.close()
@@ -212,7 +206,7 @@ class Channel:
         # Plot constellation of the tuned incoming signal
         plt.figure(figsize=(6, 6))
         symbol_indices = np.arange(0, len(tuned_signal), int(samples_per_symbol))
-        print(f'the symbol incidies: {symbol_indices}')
+        # print(f'the symbol incidies: {symbol_indices}')
         plt.scatter(np.real(tuned_signal), np.imag(tuned_signal), color='blue', s=10, label='Oversampled')
         #this should be where the symbols actually are
         plt.scatter(np.real(tuned_signal[symbol_indices]), np.imag(tuned_signal[symbol_indices]), color='red', s=30, label='Symbol Samples')
@@ -227,11 +221,13 @@ class Channel:
         plt.close()
 
 
-        #plot fft of the baseband outgoing singla
+        #plot fft of the baseband outgoing signal
         tuned_outgoing_signal = self.outgoing_signal * np.exp(-1j * 2 * np.pi * tune_frequency * new_t)
+        
+        plt.figure(figsize=(10, 6))
         N = len(new_t)
-        Fs = 1 / (new_t[1] - new_t[0])
-        f = np.fft.fftshift(np.fft.fftfreq(N, d=1/Fs))
+        Fs = int(1 / (new_t[1] - new_t[0]))
+        f = np.fft.fftshift(np.fft.fftfreq(N, d = 1 /Fs))
         plt.figure(figsize=(10, 6))
         S_out = np.fft.fft(tuned_outgoing_signal)
         S_out_mag_db = 20 * np.log10(np.abs(S_out))
@@ -239,10 +235,11 @@ class Channel:
         plt.title('Frequency Domain of Tuned Outgoing Signal (Baseband)')
         plt.xlabel('Frequency (MHz)')
         plt.ylabel('Magnitude (dB)')
-        plt.xlim(-Fs/6, Fs/6)
+        plt.xlim(-Fs/6e6, Fs/6e6)
         plt.tight_layout()
         plt.savefig(f'media/channel_{direction}_outgoing_tuned_fft.png', dpi=300)
         plt.close()
+        
 
         # Plot constellation of the tuned outgoing signal
         plt.figure(figsize=(6, 6))

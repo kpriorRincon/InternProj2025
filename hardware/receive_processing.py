@@ -21,6 +21,7 @@ class receive_processing:
         - time : The time vector of the impulse response
         - h : The impulse response of the RRC filter in the time domain
         """
+
         t = np.arange(-N // 2, N // 2 + 1) / fs 
 
         h = np.zeros_like(t) 
@@ -51,6 +52,7 @@ class receive_processing:
         Returns:
         - symbols : Decimated data - the symbols to be demodulated
         """
+
         symbols = data[::sps]
 
         return symbols
@@ -65,7 +67,8 @@ class receive_processing:
 
         Returns:
         - bits : Demodulated bit sequence 
-        """
+        """ 
+
         num_symbols = len(symbols)
         num_bits = num_symbols * 2
 
@@ -108,7 +111,8 @@ class receive_processing:
         Returns:
         - message (str) : Decoded message
         """
-        # bits = bits[32:-32] # Take out markers
+
+        # bits = bits[128:-128] # Take out markers
 
         bits_string = ''.join(str(bit) for bit in bits)
 
@@ -129,6 +133,10 @@ class receive_processing:
         - bits : Demodulated bits
         - message : Decoded message
         """
+
+        # index = len(data) // 2
+        # data = data[:index]
+
         symbol_rate = self.sample_rate / self.sps
         Ts = 1 / symbol_rate
 
