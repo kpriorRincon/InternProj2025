@@ -23,6 +23,8 @@ from satellite_czml import satellite_czml
 at the beginning of __init__() add self.satellites = {}
 at the top of the class from datetime import datetime, timedelta, timezone
 also replace all instances of datetime.utcnow() with datetime.now(timezone.utc)'''
+#downgrade pygeoif: pip install pygeoif==0.7.0
+
 from skyfield.api import load, wgs84, EarthSatellite
 saved_tles = get_up_to_date_TLE()  # get the most up to date TLE
 # define the position of the transmitter and receiver

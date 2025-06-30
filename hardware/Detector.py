@@ -2,14 +2,15 @@ import numpy as np
 import scipy.signal as sig
 
 class Detector:
-    def __init__(self, marker_start, marker_end, beta, N, Ts, fs):
+    def __init__(self, marker_start, marker_end, N, Ts, beta=0.35, fs=2.4e6, sps=2):
         self.marker_start = marker_start
         self.marker_end = marker_end
         self.beta = beta
         self.N = N
         self.Ts = Ts
         self.fs = fs
-        self.threshold = 0
+        self.threshold = 8
+        self.sps = sps
 
     def rrc_filter(self, beta, N, Ts, fs):
         """
@@ -55,10 +56,10 @@ class Detector:
         - metch_end: returns the matched filter for the end sequence
         """
         # upsample
-        L = sps - 1
-        up_start = np.zeros(0, len(self.marker_start)*sps)
+        L = sps
+        up_start = np.zeros(len(self.marker_start)*sps)
         up_start[::L] = self.marker_start
-        up_end = np.zeros(0, len(self.marker_end)*sps)
+        up_end = np.zeros(len(self.marker_end)*sps)  # Fixed this line
         up_end[::L] = self.marker_end
 
         # filter coefficients
@@ -85,25 +86,49 @@ class Detector:
         - start: start index of the message
         - end: end index of the message
         """
+        print("Length of samples: ", len(samples))
+        # normalize the samples
+        samples = (samples - np.min(samples)) / (np.max(np.abs(samples)) - np.min(samples))
+
         # default returns 
         start = 0
         end = len(samples) - 1
         detected = False
         
-        # updated best guess for the power threshold 
-        self.threshold = (self.threshold + np.sum(np.abs(samples)) / len(samples)) / 2
-
         # find the correlated signal
         cor_start = sig.fftconvolve(samples, np.conj(np.flip(match_start)), mode='same')
+        cor_start = (cor_start - np.min(cor_start)) / (np.max(np.abs(cor_start)) - np.min(cor_start))
+        cor_end = sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same')
+        cor_end = (cor_end - np.min(cor_end)) / (np.max(np.abs(cor_end)) - np.min(cor_end))
+
+        # get start and end indices
+        start = np.argmax(np.abs(cor_start))    # go back 16 symbols e.g. 32 bits
+        end = np.argmax(np.abs(cor_end))
+
+        print("Start index: ", start)
+        print("End index: ", end)
         
+        # select training samples
+        samples1 = samples[0:start - 16]
+        print("Sampes1 length:", len(samples1))
+        samples2 = samples[start + 16:]
+        print("Sampes2 length:", len(samples2))
+        training_samples = np.concatenate([samples1, samples2])
+
+        # calculate the threshold
+        M = len(training_samples)
+        print(f"Training samples length: {M}")
+        if M > 0:
+            P_fa = 0.01 # probability of false alarm
+            alpha = M*(P_fa**(-1/M) - 1)
+            Pn = np.mean(np.abs(training_samples))
+            self.threshold = Pn * alpha
+
         # if the maximum energy of the correlated signal is greater than the threshold update start index
+        print(f"Max correlation value: {max(np.abs(cor_start))}, Threshold: {self.threshold}")
         if max(np.abs(cor_start)) > self.threshold:
-            cor_end = sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same')
-            start = np.argmax(cor_start) - self.sps*16
-            
             # if the maximum energy of the correlated signal is greater than the threshold update end index
             if max(np.abs(cor_end)) > self.threshold:
-                end = np.argmax(cor_end)
                 detected = True
 
         # if the start index is greater than the end index signal not found, return default values

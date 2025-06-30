@@ -186,12 +186,12 @@ def CAF(incoming_signal,FS,symb_rate):
     #print(f'the frequency array: {freqs}') 
     '''
     correlations = [
-    [...] correlation at -100 Hz
-    [...] correlation at -99 Hz
+    [...] correlation at -200 Hz
+    [...] correlation at -199 Hz
     .
     .
-    [...] correlation at 99 Hz
-    [...] correlation at 100 Hz
+    [...] correlation at 199 Hz
+    [...] correlation at 200 Hz
     ]
     '''
     correlations = [] #create a correlation array that will store different correlations
