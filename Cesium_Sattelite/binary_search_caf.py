@@ -106,6 +106,11 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
+    if DEBUG:
+        plt.plot(np.real(fixed_qpsk[1:]),np.imag(fixed_qpsk[1:]), 'o')
+        plt.savefig('media/coarse_correction.png')
+        plt.close()
+        
     return fixed_qpsk
 
 def phase_detector_4(sample):
@@ -147,9 +152,10 @@ def costas_loop(qpsk_wave):
     #finds the frequency at the end when it converged
     print(f'Costas Converged Frequency Offset: {freq_log[-1]}')
 
-    plt.plot(freq_log,'.-')
-    plt.title('freq converge')
-    plt.show()
+    if DEBUG:
+        plt.plot(freq_log,'.-')
+        plt.title('freq converge')
+        plt.clf()
     t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
     return qpsk_wave * np.exp(-1j * 2 * np.pi * freq_log[-1] * t)
     
@@ -214,16 +220,28 @@ def cross_corr_caf(rx_signal):
     print(f"Total time for binary search: {time.time() - strt} s.")
     print(f"Binary Search CAF: {freq_found}")
 
+    if DEBUG:
+        # Binary search CAF convergence plot
+        plt.plot(range(len(visited_freqs)), visited_freqs, marker='o')
+        plt.xlabel("Iteration")
+        plt.ylabel("Frequency Offset (Hz or bins)")
+        plt.title("Binary Search Convergence on Frequency Offset")
+        plt.grid(True)
+        plt.savefig('media/binary_search_convergence.png')
+        plt.clf()
+
     #Correlate one last time to get index
     up_mixed_filter = mixing(ip_filter, freq_found, INTERPOLATION_VAL)
     start_map = fftconvolve(ip_signal, np.conj(np.flip(up_mixed_filter)), mode = 'same')
     start_idx = np.argmax(np.abs(start_map)) - int((32) * (SAMPLE_RATE * INTERPOLATION_VAL / SYMB_RATE))
 
     if DEBUG:
-        plt.figure()
+        # Start marker correlation graph
         plt.title('start correlation')
         plt.plot(np.abs(start_map))
-        plt.show()
+        plt.savefig('media/start_correlation.png')
+        plt.close()
+
     #Correlate with end marker match filter for end idx
     _, end_filter = sig_gen.generate_qpsk(END_MARKER)
     ip_end_filter = resample_poly(end_filter, INTERPOLATION_VAL, 1)
@@ -232,11 +250,12 @@ def cross_corr_caf(rx_signal):
     end_idx = np.argmax(np.abs(end_map)) + int((32) * (SAMPLE_RATE * INTERPOLATION_VAL / SYMB_RATE))
 
     if DEBUG:
-        plt.figure()
+        # End marker correlation graph
         plt.title('ends correlation')
         plt.plot(np.abs(end_map))
-        plt.show()
-    
+        plt.savefig('media/end_correlation.png')
+        plt.close()
+
     # Reslice signal
     print(f"Start: {start_idx} End: {end_idx}")
     deci_signal = ip_signal[start_idx: end_idx:16]   
@@ -249,6 +268,61 @@ def cross_corr_caf(rx_signal):
 
     deci_signal /= h_norm
 
+    if DEBUG:
+        # Plotting the unit circle
+        # Calculate phase in degrees and radians
+        phase_rad = np.angle(h_norm)
+        phase_deg = np.rad2deg(phase_rad)
+        print(f'Phase offset found: {phase_deg:.2f} degrees')
+
+        point = h_norm / np.abs(h_norm)
+
+        # Create unit circle plot
+        fig, ax = plt.subplots(figsize=(6,6))
+        circle = plt.Circle((0, 0), 1, color='lightgray', fill=False, linestyle='--')
+        ax.add_artist(circle)
+
+        # Plot the point
+        ax.plot(point.real, point.imag, 'bo', label='h_norm')
+
+        # Draw the curved red arc from angle 0 to phase_rad
+        theta = np.linspace(0, phase_rad, 100)
+        x_arc = np.cos(theta)
+        y_arc = np.sin(theta)
+        ax.plot(x_arc, y_arc, 'r-', linewidth=2, label='Phase arc')
+
+        # Dashed red line from center to point
+        ax.plot([0, point.real], [0, point.imag], 'r--', linewidth=1)
+
+        # Plot x-axis line in light gray for reference
+        ax.plot([0, 1], [0, 0], color='gray', linestyle='--')
+
+        # Annotation box text
+        annot_text = f'Phase: {phase_deg:.1f}°\nValue: {point.real:.2f} + {point.imag:.2f}j'
+
+        # Annotate near the point with an arrow
+        ax.annotate(
+            annot_text,
+            xy=(point.real, point.imag),
+            xytext=(point.real + 0.1, point.imag + 0.1),  # offset text a bit
+            bbox=dict(boxstyle='round,pad=0.3', fc='yellow', alpha=0.7),
+            arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2')
+        )
+
+        # Setup plot limits and labels
+        ax.set_xlim(-1.1, 1.3)
+        ax.set_ylim(-1.1, 1.3)
+        ax.set_aspect('equal')
+        ax.axhline(0, color='black', linewidth=0.5)
+        ax.axvline(0, color='black', linewidth=0.5)
+        ax.grid(True, linestyle='--', alpha=0.5)
+
+        # Add legend and title
+        ax.set_title('Phase Offset Detected')
+
+        plt.savefig('media/phase_offset.png')
+        plt.close()
+        
     t = np.arange(len(deci_signal)) / SAMPLE_RATE
     fixed_signal = deci_signal * np.exp(-1j * 2 * np.pi * freq_found * t)
 
@@ -281,7 +355,7 @@ def demodulator(qpsk_sig):
     return decoded_string
 
 def channel_handler(rx_signal):
-    
+
     filtered_sig = lowpass_filter(rx_signal)
     coarse_fixed = coarse_freq_recovery(filtered_sig)
     caf_fixed = cross_corr_caf(coarse_fixed)
@@ -313,7 +387,7 @@ def main():
 
     #Tune down to baseband
     qpsk_base = post_channel_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
-    """
+    
     lpf_signal = lowpass_filter(qpsk_base)
     
     coarse_fixed_sig = coarse_freq_recovery(lpf_signal)
@@ -321,17 +395,8 @@ def main():
     # Run CAF and return frequency offset found with highest correlation
     caf_fixed_sig = cross_corr_caf(coarse_fixed_sig)
 
-    # Plotting binary search and convergence to freq offset
-    plt.plot(range(len(visited_freqs)), visited_freqs, marker='o')
-    plt.xlabel("Iteration")
-    plt.ylabel("Frequency Offset (Hz or bins)")
-    plt.title("Binary Search Convergence on Frequency Offset")
-    plt.grid(True)
-    plt.show()
-
     #Down convert with offset
     final_fixed_sig = costas_loop(caf_fixed_sig)
-
 
     # Pass through RRC filter
     rc_signal = RRC_filter(final_fixed_sig)
@@ -340,8 +405,8 @@ def main():
     signal_ready = decimate(rc_signal, int(SAMPLE_RATE/SYMB_RATE))
     # Demodulate qpsk and display message
     message = demodulator(signal_ready)
-    """
-    message = channel_handler(qpsk_base)
+    
+    #message = channel_handler(qpsk_base)
     print(f"The decoded message = {message}")
 
 if __name__ == "__main__":
