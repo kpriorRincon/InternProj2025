@@ -10,8 +10,8 @@ import transmit_processing as tp
 
 # configure RTL-SDR
 sdr = RtlSdr()
-sdr.sample_rate = 2.4e6 # Hz
-sdr.center_freq = 30e6 # Hz
+sdr.sample_rate = 2.88e6 # Hz
+sdr.center_freq = 905e6 # Hz
 sdr.freq_correction = 60 # PPM
 sdr.gain = 'auto'
 
@@ -21,7 +21,7 @@ time.sleep(1)
 # settings to run detector
 detected = False
 sps = 4
-N = 10 * 1024
+N = 30 * 1024
 start = 0
 end = N - 1
 beta = 0.35
@@ -30,7 +30,7 @@ symbol_rate = sdr.sample_rate / sps
 
 transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
 start_marker, end_marker = transmit_obj.generate_markers()
-match_start, match_end = transmit_obj.modulated_markers(beta, N, start_marker, end_marker) 
+match_start, match_end = transmit_obj.modulated_markers(beta, num_taps, start_marker, end_marker) 
 
 # detector object
 detect_obj = d.Detector(start_marker, end_marker, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
@@ -83,10 +83,13 @@ while detected == False:
     count += 1
     
     # read samples from RTL-SDR
+    samples = None
     samples = sdr.read_samples(N)
-    
+      
     # plot samples
-    
+    #plt.plot(np.real(samples[0:499]))
+    #plt.plot(np.imag(samples[0:499]))
+    #plt.show()
     # run detection
     detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
