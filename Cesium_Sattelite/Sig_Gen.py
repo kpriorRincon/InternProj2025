@@ -81,7 +81,7 @@ class SigGen:
             np.ndarray: QPSK waveform.
         """
         import numpy as np
-        from scipy.signal import resample_poly
+        from scipy.signal import resample_poly, fftconvolve
         # Convert bits to symbols
         if len(bits) % 2 != 0:
             raise ValueError("Bit sequence must have an even length.")
@@ -109,7 +109,7 @@ class SigGen:
         #print(f"Length of filter {len(pulse_shape)}")
 
         #print(len(upsampled_symbols))
-        signal = np.convolve(upsampled_symbols, pulse_shape, mode='full')
+        signal = fftconvolve(upsampled_symbols, pulse_shape, mode='full')
         delay = (NUMTAPS - 1) // 2 
 
         signal = signal[delay: delay + len(upsampled_symbols)]
@@ -164,11 +164,15 @@ class SigGen:
         plt.figure(figsize=(10, 6))
         plt.subplot(2, 1, 1)
         plt.plot(t, np.real(self.upsampled_symbols), 'b.-', label='Real')
+        plt.xlabel("Time (s)")
+        plt.ylabel("Amplitude")
         plt.legend() 
         plt.title('Upsampled Bits I (Real Part)')
 
         plt.subplot(2, 1, 2)
         plt.plot(t, np.imag(self.upsampled_symbols), 'r.-', label='Imaginary')
+        plt.xlabel("Time (s)")
+        plt.ylabel("Amplitude")
         plt.legend()
         plt.title('Upsampled Bits Q (Imaginary Part)')
 
@@ -217,6 +221,8 @@ class SigGen:
 
         plt.legend()
         plt.title('Pulse Shaped I (Real Part)')
+        plt.xlabel("Time (s)")
+        plt.ylabel("Amplitude")
         plt.subplot(2,1,2)
         plt.plot(t, np.imag(self.pulse_shaped_symbols), 'r.-', label = 'Imaginary')
         plt.stem(
@@ -229,6 +235,8 @@ class SigGen:
         )
         plt.legend()
         plt.title('Pulse Shaped Q (Imaginary Part)')
+        plt.xlabel("Time (s)")
+        plt.ylabel("Amplitude")
         plt.tight_layout()
         plt.savefig('media/tx_pulse_shaped_bits.png', dpi=300)
         plt.close()

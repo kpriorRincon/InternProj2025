@@ -107,7 +107,10 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
     if DEBUG:
-        plt.plot(np.real(fixed_qpsk[1:]),np.imag(fixed_qpsk[1:]), 'o')
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(fixed_qpsk[1:]), np.imag(fixed_qpsk[1:]), 'b-', zorder = 1, label = 'oversampled signal')
+        plt.scatter(np.real(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
+        plt.legend()
         plt.title('Coarse Frequency Synchronization')
         plt.savefig('media/coarse_correction.png')
         plt.close()
@@ -290,62 +293,31 @@ def cross_corr_caf(rx_signal):
         phase_rad = np.angle(h_norm)
         phase_deg = np.rad2deg(phase_rad)
         print(f'Phase offset found: {phase_deg:.2f} degrees')
-
-        point = h_norm / np.abs(h_norm)
-
-        # Create unit circle plot
-        fig, ax = plt.subplots(figsize=(6,6))
+        phase = np.angle(h_norm)
+        plt.figure(figsize=(5, 5))
+        # Plot the unit circle
         circle = plt.Circle((0, 0), 1, color='lightgray', fill=False, linestyle='--')
-        ax.add_artist(circle)
+        plt.gca().add_artist(circle)
 
-        # Plot the point
-        ax.plot(point.real, point.imag, 'bo', label='h_norm')
+        # Plot the arc from 0 to phase
+        arc_theta = np.linspace(0, phase, 100)
+        plt.plot(np.cos(arc_theta), np.sin(arc_theta), color='orange', linewidth=2, label='Phase Arc')
 
-        # Draw the curved red arc from angle 0 to phase_rad
-        theta = np.linspace(0, phase_rad, 100)
-        x_arc = np.cos(theta)
-        y_arc = np.sin(theta)
-        ax.plot(x_arc, y_arc, 'r-', linewidth=2, label='Phase arc')
+        # Plot the vector for h
+        plt.plot([0, np.real(h_norm)], [0, np.imag(h_norm)], marker='o', color='b', label='h normalized')
 
-        # Dashed red line from center to point
-        ax.plot([0, point.real], [0, point.imag], 'r--', linewidth=1)
-
-        # Plot x-axis line in light gray for reference
-        ax.plot([0, 1], [0, 0], color='gray', linestyle='--')
-
-        # Annotation box text
-        annot_text = f'Phase: {phase_deg:.1f}°\nValue: {point.real:.2f} + {point.imag:.2f}j'
-
-        # Annotate near the point with an arrow
-        ax.annotate(
-            annot_text,
-            xy=(point.real, point.imag),
-            xytext=(point.real + 0.1, point.imag + 0.1),  # offset text a bit
-            bbox=dict(boxstyle='round,pad=0.3', fc='yellow', alpha=0.7),
-            arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2')
-        )
-
-        # Setup plot limits and labels
-        ax.set_xlim(-1.1, 1.3)
-        ax.set_ylim(-1.1, 1.3)
-        ax.set_aspect('equal')
-        ax.axhline(0, color='black', linewidth=0.5)
-        ax.axvline(0, color='black', linewidth=0.5)
-        ax.grid(True, linestyle='--', alpha=0.5)
-
-        # Add legend and title
-        ax.set_title('Phase Offset Detected')
-
-        plt.savefig('media/phase_offset_unit.png')
-        plt.close()
-        
+        plt.xlim(-1.1, 1.1)
+        plt.ylim(-1.1, 1.1)
+        plt.xlabel('Real')
+        plt.ylabel('Imaginary')
+        plt.title(f'Detected Phase offset: {np.degrees(phase):.2f}°')
+        plt.grid(True)
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.legend()
+        plt.tight_layout()
         plt.plot(np.real(fixed_signal[1:]),np.imag(fixed_signal[1:]), 'o')
-        plt.title('IQ Plot after Phase Correction')
-        plt.savefig('media/phase_corrected_signal.png')
+        plt.savefig('media/phase_offset.png', dpi = 300)
         plt.close()
-        
-    
-
     return fixed_signal
 
 def demodulator(qpsk_sig):
@@ -375,6 +347,18 @@ def demodulator(qpsk_sig):
     return decoded_string
 
 def channel_handler(rx_signal):
+    if DEBUG:
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(rx_signal[1:]), np.imag(rx_signal[1:]), 'b-', zorder = 1, label = 'oversampled signal')
+        plt.scatter(np.real(rx_signal[1::int(SAMPLE_RATE/SYMB_RATE)]), np.imag(rx_signal[1::int(SAMPLE_RATE/SYMB_RATE)]), c='r',s = 30, zorder = 2, label = 'decimated signal')
+        plt.legend()
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.grid(True)
+        plt.axis('equal')
+        plt.title('Incoming IQ Plot')
+        plt.savefig('media/rx_incoming.png')
+        plt.close()
 
     filtered_sig = lowpass_filter(rx_signal)
     coarse_fixed = coarse_freq_recovery(filtered_sig)
@@ -383,14 +367,25 @@ def channel_handler(rx_signal):
     rrc_signal = RRC_filter(costas_fixed)
     signal_ready = decimate(rrc_signal, int(SAMPLE_RATE/SYMB_RATE))
     decoded_message = demodulator(signal_ready)
-
+    if DEBUG:
+            plt.figure(figsize=(6, 6))
+            plt.plot(np.real(signal_ready[1:]), np.imag(signal_ready[1:]), 'o')
+            plt.title('Final IQ Plot')
+            plt.grid(True)
+            plt.xlabel('In-Phase (I)')
+            plt.ylabel('Quadrature (Q)')
+            plt.axis('equal')
+            plt.tight_layout()
+            plt.savefig('media/clean_signal.png')
+            plt.close()
     return decoded_message
 
 def main():
     #Generate QPSK at Carrier Frequency
     sig_gen = SigGen(freq=900e6, amp=1)
     bits = sig_gen.message_to_bits('hello there' * 3)
-    t, qpsk_wave = sig_gen.generate_qpsk(bits)    
+    t, qpsk_wave = sig_gen.generate_qpsk(bits)   
+
     print(f"Length of TX Signal: {len(qpsk_wave)}")
     # Integer time delay
     #qpsk_wave, t = integer_delay(qpsk_wave, 100)
@@ -427,10 +422,17 @@ def main():
     message = demodulator(signal_ready)
     
     if DEBUG:
-        plt.plot(np.real(signal_ready[1:]),np.imag(signal_ready[1:]), 'b.-')
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(signal_ready[1:]), np.imag(signal_ready[1:]), 'o')
         plt.title('Final IQ Plot')
+        plt.grid(True)
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.axis('equal')
+        plt.tight_layout()
         plt.savefig('media/clean_signal.png')
         plt.close()
+
     #message = channel_handler(qpsk_base)
     print(f"The decoded message = {message}")
 
