@@ -367,7 +367,17 @@ def channel_handler(rx_signal):
     rrc_signal = RRC_filter(costas_fixed)
     signal_ready = decimate(rrc_signal, int(SAMPLE_RATE/SYMB_RATE))
     decoded_message = demodulator(signal_ready)
-
+    if DEBUG:
+            plt.figure(figsize=(6, 6))
+            plt.plot(np.real(signal_ready[1:]), np.imag(signal_ready[1:]), 'o')
+            plt.title('Final IQ Plot')
+            plt.grid(True)
+            plt.xlabel('In-Phase (I)')
+            plt.ylabel('Quadrature (Q)')
+            plt.axis('equal')
+            plt.tight_layout()
+            plt.savefig('media/clean_signal.png')
+            plt.close()
     return decoded_message
 
 def main():

@@ -57,7 +57,7 @@ ui.add_css('''
     border-radius: 8px; /* optional: rounded corners */
 }
 .thumbnail:hover {
-    transform: scale(4.08);
+    transform: scale(2.0);
     z-index: 10;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
@@ -74,14 +74,9 @@ ui.add_css('''
 ''', shared=True)
 
 def zoomable_image(src):
-    #input file path to the image
+    # input file path to the image
     # returns an image that can be zoomed in on hover
-    # Display a thumbnail image that expands to full size in a dialog when clicked
-    def show_full_image():
-        with ui.dialog().props('maximized').open():
-            ui.image(src).style('width: 90vw; height: auto; max-height: 90vh; object-fit: contain;')
-
-    return ui.image(src).classes('thumbnail').force_reload().on_click(show_full_image)
+    return ui.image(src).classes('thumbnail').force_reload()
 
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
