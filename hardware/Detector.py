@@ -13,66 +13,6 @@ class Detector:
         self.threshold = 8
         self.sps = sps
 
-    def rrc_filter(self, beta, N, Ts, fs):
-        """
-        Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response
-
-        Parameters:
-        - beta : Roll-off factor (0 < beta <= 1)
-        - N : Total number of taps in the filter (the filter span)
-        - Ts : Symbol period 
-        - fs : Sampling frequency/rate (Hz)
-
-        Returns:
-        - time : The time vector of the impulse response
-        - h : The impulse response of the RRC filter in the time domain
-        """
-        t = np.arange(-N // 2, N // 2 + 1) / fs 
-
-        h = np.zeros_like(t) 
-
-        for i in range(len(t)):
-            if t[i] == 0.0:
-                h[i] = (1.0 + beta * (4/np.pi - 1))
-            elif abs(t[i]) == Ts / (4 * beta):
-                h[i] = (beta / np.sqrt(2)) * (
-                    ((1 + 2/np.pi) * np.sin(np.pi / (4 * beta))) +
-                    ((1 - 2/np.pi) * np.cos(np.pi / (4 * beta)))
-                )
-            else:
-                numerator = np.sin(np.pi * t[i] * (1 - beta) / Ts) + 4 * beta * t[i] / Ts * np.cos(np.pi * t[i] * (1 + beta) / Ts)
-                denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
-                h[i] = numerator / denominator
-        return t, h
-
-    def matchedFilter(self, sps):
-        """
-        Generate the matched filter for correlation detection
-
-        Parameters:
-        - sps: samples per symbol
-
-        Returns:
-        - match_start: returns the matched filter for the start sequence
-        - metch_end: returns the matched filter for the end sequence
-        """
-        # upsample
-        L = sps
-        up_start = np.zeros(len(self.marker_start)*sps)
-        up_start[::L] = self.marker_start
-        up_end = np.zeros(len(self.marker_end)*sps)  # Fixed this line
-        up_end[::L] = self.marker_end
-
-        # filter coefficients
-        
-        _, h = self.rrc_filter(self.beta, self.N, self.Ts, self.fs)
-
-        # pulse shape
-        match_start = sig.fftconvolve(h, up_start)
-        match_end = sig.fftconvolve(h , up_end)
-
-        return match_start, match_end
-    
     def detector(self, samples, match_start, match_end):
         """
         Detects the sent signal amongst noise
@@ -165,7 +105,7 @@ class Detector:
                 plt.show()
 
         # if the start index is greater than the end index signal not found, return default values
-        if start > end or start < 0 or end > len(samples) or (end - start) > 2 * len(match_start):
+        if start_idx > end_idx or start < 0 or end > len(samples) or (end - start) > 2 * len(match_start):
             print("Start index greater than end...\nSignal not found...\nSet to defaults")
             start = 0
             end = len(samples) - 1
