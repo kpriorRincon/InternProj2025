@@ -112,7 +112,7 @@ class transmit_processing:
         - h : The impulse response of the RRC filter in the time domain
         """
 
-        t = np.arange(-N // 2, N // 2 + 1) / fs 
+        t = np.linspace(-N//2, N//2, N) / fs 
 
         h = np.zeros_like(t) 
 
@@ -128,7 +128,7 @@ class transmit_processing:
                 numerator = np.sin(np.pi * t[i] * (1 - beta) / Ts) + 4 * beta * t[i] / Ts * np.cos(np.pi * t[i] * (1 + beta) / Ts)
                 denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
                 h[i] = numerator / denominator
-        return t, h
+        return t, h/np.sqrt(np.sum(h**2))  # Normalize to get unity gain
     
     # function that modulates the start and end markers of the signal 
     def modulated_markers(self, beta, N, start_sequence, end_sequence):
