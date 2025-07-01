@@ -45,6 +45,9 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     h *= np.hamming(N) #something like a rectangular window
     h /= np.sum(h) #normalize to get unity gain, we don't want to change the amplitude/power
 
+    plt.plot(h, '.-', label='filter taps')
+    plt.title(f'Filter Taps for Fractional Delay = {fractional_delay:.2f} samples')
+    plt.show()
 
     #apply filter: same time-aligned output with the same size as the input
     new_signal = np.convolve(signal, h, mode='full')
@@ -180,6 +183,38 @@ def CAF(incoming_signal,FS,symb_rate):
     _, start_waveform = sig_gen.generate_qpsk(start_sequence)
     #be sure to interpolate the start marker as well 
     interpolated_start_waveform = resample_poly(start_waveform, 16, 1)
+
+    #create plots of each start_waveform and interpolated_start_waveform
+    # Define the time frame to plot (e.g., first 100 original samples)
+    num_samples = 10
+    interp_samples = num_samples * 16
+
+    #plt subplot to show both original and interpolated start waveforms
+    plt.figure(figsize=(12, 8))
+    
+    plt.subplot(2, 1, 1)
+    # Top subplot: original start waveform
+    first_t = np.arange(num_samples) / (FS)  # Adjust time vector for original samples
+    plt.plot(first_t, np.real(start_waveform[num_samples:2*num_samples]), '.-', label='Real part')
+    plt.plot(first_t, np.imag(start_waveform[num_samples:2*num_samples]), '.-', label='Imaginary part')
+    plt.title('Original Waveform')
+    plt.xlabel('Seconds')
+    plt.ylabel('Amplitude')
+    plt.legend()
+
+    # Bottom subplot: interpolated start waveform
+    plt.subplot(2, 1, 2)
+    other_t = np.arange(interp_samples) / (FS * 16)  # Adjust time vector for interpolation
+    plt.plot(other_t, np.real(interpolated_start_waveform[interp_samples:2*interp_samples]), '.-', label='Real part')
+    plt.plot(other_t, np.imag(interpolated_start_waveform[interp_samples:2*interp_samples]), '.-', label='Imaginary part')
+    plt.title('Interpolated Waveform')
+    plt.xlabel('Seconds')
+    plt.ylabel('Amplitude')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
     t = np.arange(len(interpolated_start_waveform)) / (FS * 16)
     for freq in freqs:
         template = interpolated_start_waveform * np.exp(1j * 2 * np.pi * t * freq)     
