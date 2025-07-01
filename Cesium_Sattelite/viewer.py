@@ -8,6 +8,7 @@
 from nicegui import ui, app
 import os
 import time
+import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timezone, timedelta
@@ -44,6 +45,44 @@ recovered_message = None # this will be set in the simulation page when we recov
 required_rep_power = None # this will be set in the simulation page when we calculate the required repeater power  
 txFreq = None
 bits = None
+
+# Enhanced CSS for hover zoom effect in flex containers
+ui.add_head_html('''
+.thumbnail {
+    width: 350px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: pointer;
+    z-index: 1;
+    border-radius: 8px; /* optional: rounded corners */
+}
+
+.thumbnail:hover {
+    position: fixed !important; /* force fixed positioning */
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(1.5) !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+    z-index: 9999 !important; /* ensure it's on top */
+    border-radius: 12px; /* slightly more rounded when enlarged */
+}
+
+.flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 90%;
+    padding: 20px; /* add some padding to prevent edge clipping */
+}
+''', shared=True)
+
+def zoomable_image(src):
+    #input file path to the image
+    # returns an image that can be zoomed in on hover
+    return ui.image(src).classes('thumbnail').force_reload()
+
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
     global count
@@ -122,6 +161,7 @@ ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 
 @ui.page('/Cesium_page')
 def Cesium_page():
+    ui.add_head_html('''<script>document.title = 'Satellite View';</script>''')
     global count, tx_pos, rx_pos
     # start of Cesium page
 
@@ -232,6 +272,8 @@ def Cesium_page():
 
     @ui.page('/simulation_page')
     def simulation_page(): 
+        ui.add_head_html('''<script>document.title = 'Simulation';</script>''')
+
         #When the user clicks the start simulation button run the following
 
         global time_crossing, sat_for_sim
@@ -288,7 +330,7 @@ def Cesium_page():
         ui.label('Noise Floor (dBm)').style(
             'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
         )
-        noise_power = ui.slider(min=-120,max = -60, step=1).props('label-always').style('width: 10%')
+        noise_power = ui.slider(min= -120, max = -60, step = 1).props('label-always').style('width: 10%')
         
         ui.label('Desired SNR set to 20(dB)').style(
             'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
@@ -297,10 +339,17 @@ def Cesium_page():
         doppler_container =  ui.column() # store labels in this doppler container so we can easily clear them when the start_simulation button is pressed again
         
         #need to debug from here down:
-        def start_simulation():
+
+        #define the loading bar (initially hidden)
+        progress_bar = ui.linear_progress(show_value=False).props('indeterminate color="primary"').style('margin-top:10px; order: 2;').classes('w-64')
+        #hide right away
+        progress_bar.visible = False
+        async def start_simulation():
             '''This function runs when the start simulation button is clicked 
             and runs handlers to produce plots for each page as necessary'''
             global txFreq, required_rep_power, bits
+            progress_bar.visible = True # show the progress bar
+            await asyncio.sleep(0.1) # give the UI time to update
             doppler_container.clear()
             # pass all the arguments from inputs
             mes = message.value
@@ -473,9 +522,11 @@ def Cesium_page():
             #### -------------------------------------
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
+            #hide the loading bar
+            progress_bar.visible = False
             return
         
-        ui.button('start simulation', on_click=start_simulation)
+        ui.button('Start Simulation', on_click=start_simulation)
         
         # Transmitter image (clickable)
         with ui.link(target='/transmitter', new_tab = True).style('width: 10vw; position: fixed; bottom: 2vh; left: 36vw; z-index: 1000; cursor: pointer;'):
@@ -504,28 +555,37 @@ def Cesium_page():
         # Placeholder pages for each simulation step
         @ui.page('/transmitter')
         def transmitter_page():
+            ui.add_head_html('''<script>document.title = 'Transmitter';</script>''')
+
             # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the transmitter simulation step.')
-            
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+           
+                
+            with ui.element('div').classes('flex-container'):
                 #bit sequence with prefix/postifx labeled
                 #TODO
+
                 #show upsampled bits sub plot one on top of the other real and imaginary
-                ui.image('media/tx_upsampled_bits.png').style('width: 50%').force_reload()
-                ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
-                ui.image('media/tx_upsampled_bits_fft.png').style('width: 50%').force_reload()
-                ui.label('These upsampled bits are pulse shaped with the following filter:').style('font-size: 1.5em; font-weight: bold;')
-                ui.image('media/tx_rrc.png').style('width: 30%').force_reload() #don't need to force reload because it doesn't change between siulations
+                zoomable_image('media/tx_upsampled_bits.png')
+                # ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
+                zoomable_image('media/tx_upsampled_bits_fft.png')
+                # ui.label('These upsampled bits are pulse shaped with the following filter:').style('font-size: 1.5em; font-weight: bold;')
+                zoomable_image('media/tx_rrc.png')
+                
                 #show the pulse shaping Re/Im
-                ui.image('media/tx_pulse_shaped_bits.png').style('width: 50%').force_reload()
+                zoomable_image('media/tx_pulse_shaped_bits.png')
+                
                 #show the baseband FFT
-                ui.image('media/tx_pulse_shaped_fft.png').style('width: 50%').force_reload()
+                zoomable_image('media/tx_pulse_shaped_fft.png')
+                
                 #show the constellation plot
-                ui.image('media/tx_constellation.png').style('width: 50%').force_reload()
+                zoomable_image('media/tx_constellation.png')
         
         @ui.page('/channel1')
         def channel1_page():
+            ui.add_head_html('''<script>document.title = 'Channel Up';</script>''')
+
             # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the first channel simulation step.')
@@ -553,13 +613,16 @@ def Cesium_page():
                 # ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
 
         @ui.page('/repeater')
-        def repeater_page():            
+        def repeater_page():     
+            ui.add_head_html('''<script>document.title = 'Repeater';</script>''')
             ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
             ui.label(f'The repeater will retransmit at {required_rep_power} W').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
             ui.label(f'The repeater takes in the signal and sends it back out, upconverted 10 MHz').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
         @ui.page('/channel2')
         def channel2_page():
+            ui.add_head_html('''<script>document.title = 'Channel Down';</script>''')
+
             # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the second channel simulation step.')
@@ -582,6 +645,8 @@ def Cesium_page():
 
         @ui.page('/receiver')
         def receiver_page():
+            ui.add_head_html('''<script>document.title = 'Receiver';</script>''')
+
             # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the receiver simulation step.')

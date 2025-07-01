@@ -81,7 +81,7 @@ class SigGen:
             np.ndarray: QPSK waveform.
         """
         import numpy as np
-        from scipy.signal import resample_poly
+        from scipy.signal import resample_poly, fftconvolve
         # Convert bits to symbols
         if len(bits) % 2 != 0:
             raise ValueError("Bit sequence must have an even length.")
@@ -109,7 +109,7 @@ class SigGen:
         #print(f"Length of filter {len(pulse_shape)}")
 
         #print(len(upsampled_symbols))
-        signal = np.convolve(upsampled_symbols, pulse_shape, mode='full')
+        signal = fftconvolve(upsampled_symbols, pulse_shape, mode='full')
         delay = (NUMTAPS - 1) // 2 
 
         signal = signal[delay: delay + len(upsampled_symbols)]
