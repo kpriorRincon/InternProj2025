@@ -412,14 +412,17 @@ def main():
     message = demodulator(signal_ready)
     
     if DEBUG:
-        plt.plot(np.real(signal_ready[1:]),np.imag(signal_ready[1:]), 'b.-')
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(signal_ready[1:]), np.imag(signal_ready[1:]), 'o')
         plt.title('Final IQ Plot')
         plt.grid(True)
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.axis('equal')
+        plt.tight_layout()
         plt.savefig('media/clean_signal.png')
         plt.close()
+
     #message = channel_handler(qpsk_base)
     print(f"The decoded message = {message}")
 

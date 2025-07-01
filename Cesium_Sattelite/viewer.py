@@ -76,7 +76,12 @@ ui.add_css('''
 def zoomable_image(src):
     #input file path to the image
     # returns an image that can be zoomed in on hover
-    return ui.image(src).classes('thumbnail').force_reload()
+    # Display a thumbnail image that expands to full size in a dialog when clicked
+    def show_full_image():
+        with ui.dialog().props('maximized').open():
+            ui.image(src).style('width: 90vw; height: auto; max-height: 90vh; object-fit: contain;')
+
+    return ui.image(src).classes('thumbnail').force_reload().on_click(show_full_image)
 
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
@@ -555,8 +560,6 @@ def Cesium_page():
             # ui.button('Back', on_click=ui.navigate.back)
             ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
             ui.label('This is a placeholder for the transmitter simulation step.')
-           
-                
             with ui.element('div').classes('flex-container'):
                 #bit sequence with prefix/postifx labeled
                 #TODO
