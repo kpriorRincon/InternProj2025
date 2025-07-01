@@ -111,6 +111,8 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.plot(np.real(fixed_qpsk[1:]), np.imag(fixed_qpsk[1:]), 'b-', zorder = 1, label = 'oversampled signal')
         plt.scatter(np.real(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
         plt.legend()
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
         plt.title('Coarse Frequency Synchronization')
         plt.savefig('media/coarse_correction.png')
         plt.close()
@@ -160,15 +162,18 @@ def costas_loop(qpsk_wave):
     fixed_qpsk = qpsk_wave * np.exp(-1j * 2 * np.pi * freq_log[-1] * t)
 
     if DEBUG:
+        plt.figure(figsize=(10, 6))
         plt.plot(freq_log,'.-')
         plt.title('Costas Loop Frequency Convergence')
         plt.savefig('media/costas_convergence.png')
         plt.close()
 
-        
+        plt.figure(figsize=(6, 6))
         plt.plot(np.real(fixed_qpsk[1:-1]),np.imag(fixed_qpsk[1:-1]), 'b-')
         plt.plot(np.real(fixed_qpsk[1:-1:int(SAMPLE_RATE/SYMB_RATE)]),np.imag(fixed_qpsk[1:-1:int(SAMPLE_RATE/SYMB_RATE)]), 'ro')
-
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.grid(True)
         plt.title('Fine Frequency Synchronization (Costas Loop)')
         plt.savefig('media/fine_correction.png')
         plt.close()
@@ -238,13 +243,14 @@ def cross_corr_caf(rx_signal):
 
     if DEBUG:
         # Binary search CAF convergence plot
+        plt.figure(figsize=(10, 5))
         plt.plot(range(len(visited_freqs)), visited_freqs, marker='o')
         plt.xlabel("Iteration")
         plt.ylabel("Frequency Offset (Hz or bins)")
         plt.title("Binary Search Convergence on Frequency Offset")
         plt.grid(True)
         plt.savefig('media/binary_search_convergence.png')
-        plt.clf()
+        plt.close()
 
     #Correlate one last time to get index
     up_mixed_filter = mixing(ip_filter, freq_found, INTERPOLATION_VAL)
@@ -253,8 +259,11 @@ def cross_corr_caf(rx_signal):
 
     if DEBUG:
         # Start marker correlation graph
-        plt.title('start correlation')
+        plt.figure(figsize = (10, 6))
+        plt.title('Start Correlation')
         plt.plot(np.abs(start_map))
+        plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
+        plt.ylabel('Correlation Magnitude')
         plt.savefig('media/start_correlation.png')
         plt.close()
 
@@ -267,9 +276,29 @@ def cross_corr_caf(rx_signal):
 
     if DEBUG:
         # End marker correlation graph
-        plt.title('ends correlation')
+        plt.figure(figsize=(10, 6))
+        plt.title('End Correlation')
+        plt.xlabel('Sample Index')
+        plt.ylabel('Correlation Magnitude')
         plt.plot(np.abs(end_map))
+        plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
+        plt.ylabel('Correlation Magnitude')
         plt.savefig('media/end_correlation.png')
+        plt.close()
+
+        # Plot both correlations on top of the signal 
+        plt.figure(figsize=(10, 6))
+        plt.plot(np.abs(start_map), label='Start Marker Correlation', alpha=0.7)
+        plt.plot(np.abs(end_map), label='End Marker Correlation', alpha=0.7)
+        plt.axvline(start_idx, color='g', linestyle='--', label='Start Index')
+        plt.axvline(end_idx, color='r', linestyle='--', label='End Index')
+        plt.xlim(start_idx - 20000, end_idx + 2000)  # Adjust x-axis limits for better visibility
+        plt.title('Start and End Marker Correlation')
+        plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
+        plt.ylabel('Correlation Magnitude')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('media/start_end_correlation.png')
         plt.close()
 
     # Reslice signal
@@ -369,7 +398,7 @@ def channel_handler(rx_signal):
     decoded_message = demodulator(signal_ready)
     if DEBUG:
             plt.figure(figsize=(6, 6))
-            plt.plot(np.real(signal_ready[1:]), np.imag(signal_ready[1:]), 'o')
+            plt.plot(np.real(signal_ready[64:-64]), np.imag(signal_ready[64:-64]), 'o')
             plt.title('Final IQ Plot')
             plt.grid(True)
             plt.xlabel('In-Phase (I)')
@@ -423,7 +452,7 @@ def main():
     
     if DEBUG:
         plt.figure(figsize=(6, 6))
-        plt.plot(np.real(signal_ready[1:]), np.imag(signal_ready[1:]), 'o')
+        plt.plot(np.real(signal_ready[64:-64]), np.imag(signal_ready[64:-64]), 'o')
         plt.title('Final IQ Plot')
         plt.grid(True)
         plt.xlabel('In-Phase (I)')

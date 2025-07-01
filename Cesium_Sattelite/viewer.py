@@ -553,8 +553,7 @@ def Cesium_page():
             ui.add_head_html('''<script>document.title = 'Transmitter';</script>''')
 
             # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the transmitter simulation step.')
+            ui.label('Transmitter Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
             with ui.element('div').classes('flex-container'):
                 #bit sequence with prefix/postifx labeled
                 #TODO
@@ -580,27 +579,21 @@ def Cesium_page():
             ui.add_head_html('''<script>document.title = 'Channel Up';</script>''')
 
             # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the first channel simulation step.')
-
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+            ui.label('Channel Uplink Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
+            with ui.element('div').classes('flex-container'):
                 
                 #show information about h
-                ui.image('media/channel_up_h_phase.png').style('width: 40%;').force_reload()
+                zoomable_image('media/channel_up_h_phase.png')
 
-                with ui.row().style('width:100%'):
-                    # constellation plot of incoming signal
-                    ui.image('media/channel_up_incoming_tuned_constellation.png').style('width: 40%').force_reload()
-                    # tune to baseband and show the fft
-                    ui.image('media/channel_up_incoming_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
-                ui.label("Note that the tuned signal is tuned based on the transmit carrier so the frequency offset from doppler manifests as phase smearing of the symbols").style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
-                ui.label('Also note that this interpreted symbols are not aligned with the delayed signal').style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
-                
-                with ui.row().style('width:100%'):
-                    # constellation plot of outgoing signal
-                    ui.image('media/channel_up_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
-                    # fft outgoing
-                    ui.image('media/channel_up_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
+                # constellation plot of incoming signal
+                zoomable_image('media/channel_up_incoming_tuned_constellation.png')
+                # tune to baseband and show the fft
+                zoomable_image('media/channel_up_incoming_tuned_fft.png')
+
+                # constellation plot of outgoing signal
+                zoomable_image('media/channel_up_outgoing_tuned_constellation.png')
+                # fft outgoing
+                zoomable_image('media/channel_up_outgoing_tuned_fft.png')
 
                 # ui.image('media/channel_up_incoming_time.png').style('width: 50%;').force_reload()
                 # ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
@@ -608,7 +601,7 @@ def Cesium_page():
         @ui.page('/repeater')
         def repeater_page():     
             ui.add_head_html('''<script>document.title = 'Repeater';</script>''')
-            ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
+            ui.label('Repeater Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
             ui.label(f'The repeater will retransmit at {required_rep_power} W').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
             ui.label(f'The repeater takes in the signal and sends it back out, upconverted 10 MHz').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
@@ -617,63 +610,51 @@ def Cesium_page():
             ui.add_head_html('''<script>document.title = 'Channel Down';</script>''')
 
             # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the second channel simulation step.')
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
-                
+            ui.label('Channel Downlink Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
+            with ui.element('div').classes('flex-container'):                
                 #show information about h
-                ui.image('media/channel_down_h_phase.png').style('width: 40%;').force_reload()
+                zoomable_image('media/channel_down_h_phase.png')
 
-                with ui.row().style('width:100%'):
-                    # constellation plot of incoming signal
-                    ui.image('media/channel_down_incoming_tuned_constellation.png').style('width: 40%').force_reload()
-                    # tune to baseband and show the fft
-                    ui.image('media/channel_down_incoming_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
-                ui.label("Note that the tuned signal is tuned based on the transmit carrier so the frequency offset from doppler manifests as phase smearing of the symbols").style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
-                with ui.row().style('width:100%'):
-                    # constellation plot of outgoing signal
-                    ui.image('media/channel_down_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
-                    # fft outgoing
-                    ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
+                # constellation plot of incoming signal
+                zoomable_image('media/channel_down_incoming_tuned_constellation.png')
+                # tune to baseband and show the fft
+                zoomable_image('media/channel_down_incoming_tuned_fft.png')
+                # constellation plot of outgoing signal
+                zoomable_image('media/channel_down_outgoing_tuned_constellation.png')
+                # fft outgoing
+                zoomable_image('media/channel_down_outgoing_tuned_fft.png')
 
         @ui.page('/receiver')
         def receiver_page():
             ui.add_head_html('''<script>document.title = 'Receiver';</script>''')
 
             # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the receiver simulation step.')
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+            ui.label('Receiver Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
+            with ui.element('div').classes('flex-container'):
                 
                 # constellation plot of the incoming signal and fft
-                with ui.row().style('width:100%'):
-                    ui.image('media/rx_incoming.png').style('width: 40%').force_reload()
+                zoomable_image('media/rx_incoming.png')
 
                 # constellation plot of the incoming signal and fft after corse frequency correction
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                     ui.image('media/coarse_correction.png').style('width: 40%').force_reload()
+                zoomable_image('media/coarse_correction.png')
 
                 #binary search CAF convergence
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/binary_search_convergence.png').style('width: 40%').force_reload()
+                zoomable_image('media/binary_search_convergence.png')
 
                 # show phase correction
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/phase_offset.png').style('width: 40%').force_reload()
+                zoomable_image('media/phase_offset.png')
 
                 # show start and end correlation
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/start_correlation.png').style('width: 40%').force_reload()
-                    ui.image('media/end_correlation.png').style('width: 40%').force_reload()
-               
+                # zoomable_image('media/start_correlation.png')
+                # zoomable_image('media/end_correlation.png')
+                zoomable_image('media/start_end_correlation.png')
                 # show fine frequency correction constellation and fft
 
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/fine_correction.png').style('width: 40%').force_reload()
+                zoomable_image('media/fine_correction.png')
 
                 # show the final constellation plot after all corrections
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/clean_signal.png').style('width: 40%').force_reload()
+                zoomable_image('media/clean_signal.png')
+
                 # show the final recovered bits 
                 #TODO
                 #show the final recovered message 
