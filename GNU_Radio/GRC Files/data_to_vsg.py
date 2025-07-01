@@ -81,7 +81,7 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
         ##################################################
         # Blocks
         ##################################################
-        self.vsg60_iqin_0 = vsg60.iqin(freq, -10, samp_rate, False)
+        self.vsg60_iqin_0 = vsg60.iqin(freq, 0, samp_rate, False)
         self.qtgui_time_sink_x_0 = qtgui.time_sink_c(
             500, #size
             samp_rate, #samp_rate

@@ -283,7 +283,7 @@ blocks:
     alias: ''
     comment: ''
     frequency: freq
-    level: '-10'
+    level: '0'
     repeat: 'False'
     srate: samp_rate
   states:
