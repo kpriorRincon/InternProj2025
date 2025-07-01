@@ -333,7 +333,7 @@ def main():
     t, signal = fractional_delay(t, signal, delay_sec, fs)
     
     #test frequency correction
-    new_signal = signal * np.exp(-1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
+    new_signal = signal * np.exp(1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
     THETA = np.random.uniform(-np.pi, np.pi)
     print(f'phase offset: {np.rad2deg(THETA)}')
     new_signal = new_signal * np.exp(1j * THETA)

@@ -8,6 +8,7 @@
 from nicegui import ui, app
 import os
 import time
+import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timezone, timedelta
@@ -41,6 +42,41 @@ time_crossing = None
 # start of site
 text_box_container = ui.column().style('order: 2; width: 80%')
 recovered_message = None # this will be set in the simulation page when we recover the message
+required_rep_power = None # this will be set in the simulation page when we calculate the required repeater power  
+txFreq = None
+bits = None
+
+# Enhanced CSS for hover zoom effect in flex containers
+ui.add_css('''
+.thumbnail {
+    width: 350px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    cursor: pointer;
+    z-index: 1;
+    border-radius: 8px; /* optional: rounded corners */
+}
+.thumbnail:hover {
+    transform: scale(2.0);
+    z-index: 10;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+
+.flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 90%;
+    padding: 20px; /* add some padding to prevent edge clipping */
+}
+''', shared=True)
+
+def zoomable_image(src):
+    # input file path to the image
+    # returns an image that can be zoomed in on hover
+    return ui.image(src).classes('thumbnail').force_reload()
 
 def update_text_boxes(e):
     """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
@@ -120,6 +156,7 @@ ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
 
 @ui.page('/Cesium_page')
 def Cesium_page():
+    ui.add_head_html('''<script>document.title = 'Satellite View';</script>''')
     global count, tx_pos, rx_pos
     # start of Cesium page
 
@@ -181,7 +218,7 @@ def Cesium_page():
                 if sat.name == name:
                     sat_for_sim = sat
                     break
-            time_crossing = data['time'] #get the time of closest approach
+            time_crossing = data['time'] #get the time of closest approach 
             ui.navigate.to('/simulation_page')
             return
         
@@ -218,6 +255,7 @@ def Cesium_page():
         html_directory = os.path.dirname(__file__) #get the directory you're in
         # add the files available
         app.add_static_files('/static', html_directory)
+
     #cesium page take up the right 70 percent of the page
     ui.html(
         f'''
@@ -229,6 +267,8 @@ def Cesium_page():
 
     @ui.page('/simulation_page')
     def simulation_page(): 
+        ui.add_head_html('''<script>document.title = 'Simulation';</script>''')
+
         #When the user clicks the start simulation button run the following
 
         global time_crossing, sat_for_sim
@@ -237,7 +277,7 @@ def Cesium_page():
         # we will navigate to here whenever a row is clicked of a specific satellite
 
         dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo = timezone.utc) # convert the string to a readable time object 
-
+    
         time_crossing_skyfield = ts.from_datetime(dt_crossing)
         
         #the object sat_for_sim: GCRS coords
@@ -285,7 +325,7 @@ def Cesium_page():
         ui.label('Noise Floor (dBm)').style(
             'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
         )
-        noise_power = ui.slider(min=-120,max = -60, step=1).props('label-always').style('width: 10%')
+        noise_power = ui.slider(min= -120, max = -60, step = 1).props('label-always').style('width: 10%')
         
         ui.label('Desired SNR set to 20(dB)').style(
             'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
@@ -294,9 +334,17 @@ def Cesium_page():
         doppler_container =  ui.column() # store labels in this doppler container so we can easily clear them when the start_simulation button is pressed again
         
         #need to debug from here down:
-        def start_simulation():
+
+        #define the loading bar (initially hidden)
+        progress_bar = ui.linear_progress(show_value=False).props('indeterminate color="primary"').style('margin-top:10px; order: 2;').classes('w-64')
+        #hide right away
+        progress_bar.visible = False
+        async def start_simulation():
             '''This function runs when the start simulation button is clicked 
             and runs handlers to produce plots for each page as necessary'''
+            global txFreq, required_rep_power, bits
+            progress_bar.visible = True # show the progress bar
+            await asyncio.sleep(0.1) # give the UI time to update
             doppler_container.clear()
             # pass all the arguments from inputs
             mes = message.value
@@ -405,16 +453,16 @@ def Cesium_page():
             # So: amp^2 * alpha_up = required_tx_power  =>  amp = sqrt(required_tx_power / alpha_up)
             
             tx_amp = np.sqrt(required_tx_power) #we want the amplitude
-            sig_gen = SigGen.SigGen(txFreq, amp=tx_amp)
+            sig_gen = SigGen.SigGen(txFreq, amp = tx_amp)
 
-            bits = sig_gen.message_to_bits(mes)#note that this will add prefix and postfix to the bits associated wtih the message
+            bits = sig_gen.message_to_bits(mes) #note that this will add prefix and postfix to the bits associated wtih the message
 
             t, qpsk_signal = sig_gen.generate_qpsk(bits)
 
             sig_gen.handler(t) # run the sig gen handler
 
             #check if we scaled the power of the signal correctly
-            print(f'does: {np.mean(np.abs(qpsk_signal)**2)} = {required_tx_power}')
+            print(f'does: {np.mean(np.abs(qpsk_signal) ** 2)} = {required_tx_power}')
 
             #define channel up
             channel_up = Channel.Channel(qpsk_signal, h_up, noise, f_delta_up, up = True)
@@ -425,20 +473,23 @@ def Cesium_page():
             
             #amplify and upconvert:
             #we want the outgoing power to reach the required power
-            Pcurr = np.mean(np.abs(qpsk_signal_after_channel)**2)
-            gain = np.sqrt(required_rep_power/Pcurr)#this gain is used to get the power of the signal to desired power
-            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * new_t) * qpsk_signal_after_channel
+            Pcurr = np.mean(np.abs(qpsk_signal_after_channel) ** 2)
+            gain = np.sqrt(required_rep_power / Pcurr) #this gain is used to get the power of the signal to desired power
+            
+
+            repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * new_t) * qpsk_signal_after_channel 
+            
             #generate a plot of the tuned fft of the qpsk_signal_after_channel for the repeater page
-            repeated_qpsk_signal_tuned = repeated_qpsk_signal * np.exp(-1j * 2 * np.pi * txFreq * new_t)
+            repeated_qpsk_signal_tuned = repeated_qpsk_signal
             N = len(repeated_qpsk_signal_tuned)
             fft_repeated = np.fft.fftshift(np.fft.fft(repeated_qpsk_signal_tuned))
-            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / SAMPLE_RATE))
+            freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / SAMPLE_RATE)) + txFreq + 10e6 # shift the frequencies to center around txFreq
 
             plt.figure(figsize=(10, 6))
-            plt.plot(freqs_repeated, 20 * np.log10(np.abs(fft_repeated)))
+            plt.plot(freqs_repeated/1e6, 20 * np.log10(np.abs(fft_repeated)))
             plt.xlabel("Frequency (MHz)")
             plt.ylabel("Magnitude (dB)")
-            plt.title("FFT of Repeated Signal (Tuned to Transmit Frequency)")
+            plt.title("FFT of Repeated Signal")
             plt.grid(True)
             plt.tight_layout()
             plt.savefig('media/repeater_fft.png', dpi=300)
@@ -464,12 +515,13 @@ def Cesium_page():
             global recovered_message 
             recovered_message = channel_handler(tuned_signal) # this will generate the plots we want to display on the receiver page
             #### -------------------------------------
-
             # channel_down = Channel.Channel()
             ui.notify('Simulation Ready')
+            #hide the loading bar
+            progress_bar.visible = False
             return
         
-        ui.button('start simulation', on_click=start_simulation)
+        ui.button('Start Simulation', on_click=start_simulation)
         
         # Transmitter image (clickable)
         with ui.link(target='/transmitter', new_tab = True).style('width: 10vw; position: fixed; bottom: 2vh; left: 36vw; z-index: 1000; cursor: pointer;'):
@@ -498,124 +550,117 @@ def Cesium_page():
         # Placeholder pages for each simulation step
         @ui.page('/transmitter')
         def transmitter_page():
+            ui.add_head_html('''<script>document.title = 'Transmitter';</script>''')
+
             # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Transmitter Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the transmitter simulation step.')
-            
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+            ui.label('Transmitter Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
+            with ui.element('div').classes('flex-container'):
                 #bit sequence with prefix/postifx labeled
                 #TODO
+
                 #show upsampled bits sub plot one on top of the other real and imaginary
-                ui.image('media/tx_upsampled_bits.png').style('width: 50%').force_reload()
-                ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
-                ui.image('media/tx_upsampled_bits_fft.png').style('width: 50%').force_reload()
-                ui.label('These upsampled bits are pulse shaped with the following filter:').style('font-size: 1.5em; font-weight: bold;')
-                ui.image('media/tx_rrc.png').style('width: 30%').force_reload() #don't need to force reload because it doesn't change between siulations
+                zoomable_image('media/tx_upsampled_bits.png')
+                # ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
+                zoomable_image('media/tx_upsampled_bits_fft.png')
+                # ui.label('These upsampled bits are pulse shaped with the following filter:').style('font-size: 1.5em; font-weight: bold;')
+                zoomable_image('media/tx_rrc.png')
+                
                 #show the pulse shaping Re/Im
-                ui.image('media/tx_pulse_shaped_bits.png').style('width: 50%').force_reload()
+                zoomable_image('media/tx_pulse_shaped_bits.png')
+                
                 #show the baseband FFT
-                ui.image('media/tx_pulse_shaped_fft.png').style('width: 50%').force_reload()
+                zoomable_image('media/tx_pulse_shaped_fft.png')
+                
                 #show the constellation plot
-                ui.image('media/tx_constellation.png').style('width: 50%').force_reload()
+                zoomable_image('media/tx_constellation.png')
+        
         @ui.page('/channel1')
         def channel1_page():
-            # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Channel Uplink Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the first channel simulation step.')
+            ui.add_head_html('''<script>document.title = 'Channel Up';</script>''')
 
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+            # ui.button('Back', on_click=ui.navigate.back)
+            ui.label('Channel Uplink Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
+            with ui.element('div').classes('flex-container'):
                 
                 #show information about h
-                ui.image('media/channel_up_h_phase.png').style('width: 40%;').force_reload()
+                zoomable_image('media/channel_up_h_phase.png')
 
-                with ui.row().style('width:100%'):
-                    # constellation plot of incoming signal
-                    ui.image('media/channel_up_incoming_tuned_constellation.png').style('width: 40%').force_reload()
-                    # tune to baseband and show the fft
-                    ui.image('media/channel_up_incoming_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
-                ui.label("Note that the tuned signal is tuned based on the transmit carrier so the frequency offset from doppler manifests as phase smearing of the symbols").style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
-                ui.label('Also note that this interpreted symbols are not aligned with the delayed signal').style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
-                
-                with ui.row().style('width:100%'):
-                    # constellation plot of outgoing signal
-                    ui.image('media/channel_up_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
-                    # fft outgoing
-                    ui.image('media/channel_up_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
+                # constellation plot of incoming signal
+                zoomable_image('media/channel_up_incoming_tuned_constellation.png')
+                # tune to baseband and show the fft
+                zoomable_image('media/channel_up_incoming_tuned_fft.png')
+
+                # constellation plot of outgoing signal
+                zoomable_image('media/channel_up_outgoing_tuned_constellation.png')
+                # fft outgoing
+                zoomable_image('media/channel_up_outgoing_tuned_fft.png')
 
                 # ui.image('media/channel_up_incoming_time.png').style('width: 50%;').force_reload()
                 # ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
 
         @ui.page('/repeater')
-        def repeater_page():
-            # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Repeater Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the repeater simulation step.')
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
-                ui.image('media/repeater_fft.png').style('width: 40%;').force_reload()
+        def repeater_page():     
+            ui.add_head_html('''<script>document.title = 'Repeater';</script>''')
+            ui.label('Repeater Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
+            ui.label(f'The repeater will retransmit at {required_rep_power} W').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+            ui.label(f'The repeater takes in the signal and sends it back out, upconverted 10 MHz').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
         @ui.page('/channel2')
         def channel2_page():
-            # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Channel Downlink Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the second channel simulation step.')
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
-                
-                #show information about h
-                ui.image('media/channel_down_h_phase.png').style('width: 40%;').force_reload()
+            ui.add_head_html('''<script>document.title = 'Channel Down';</script>''')
 
-                with ui.row().style('width:100%'):
-                    # constellation plot of incoming signal
-                    ui.image('media/channel_down_incoming_tuned_constellation.png').style('width: 40%').force_reload()
-                    # tune to baseband and show the fft
-                    ui.image('media/channel_down_incoming_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
-                ui.label("Note that the tuned signal is tuned based on the transmit carrier so the frequency offset from doppler manifests as phase smearing of the symbols").style('font-size: 1.2em; font-weight: bold; white-space: normal; word-break: break-word;')
-                with ui.row().style('width:100%'):
-                    # constellation plot of outgoing signal
-                    ui.image('media/channel_down_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
-                    # fft outgoing
-                    ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
+            # ui.button('Back', on_click=ui.navigate.back)
+            ui.label('Channel Downlink Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
+            with ui.element('div').classes('flex-container'):                
+                #show information about h
+                zoomable_image('media/channel_down_h_phase.png')
+
+                # constellation plot of incoming signal
+                zoomable_image('media/channel_down_incoming_tuned_constellation.png')
+                # tune to baseband and show the fft
+                zoomable_image('media/channel_down_incoming_tuned_fft.png')
+                # constellation plot of outgoing signal
+                zoomable_image('media/channel_down_outgoing_tuned_constellation.png')
+                # fft outgoing
+                zoomable_image('media/channel_down_outgoing_tuned_fft.png')
 
         @ui.page('/receiver')
         def receiver_page():
+            ui.add_head_html('''<script>document.title = 'Receiver';</script>''')
+
             # ui.button('Back', on_click=ui.navigate.back)
-            ui.label('Receiver Page').style('font-size: 2em; font-weight: bold;')
-            ui.label('This is a placeholder for the receiver simulation step.')
-            with ui.column().style('width: 100%; justify-content: center; align-items: center;'):
+            ui.label('Receiver Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
+            with ui.element('div').classes('flex-container'):
                 
                 # constellation plot of the incoming signal and fft
-                with ui.row().style('width:100%'):
-                       # constellation plot of outgoing signal
-                    ui.image('media/channel_down_outgoing_tuned_constellation.png').style('width: 40%').force_reload()
-                    # fft outgoing
-                    ui.image('media/channel_down_outgoing_tuned_fft.png').style('width: 40%; align-self: center;').force_reload()
-                
-                # constellation plot of the incoming signal and fft after LPF
-                # with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                #     ui.image('media/receiver_constellation_lpf.png').style('width: 40%').force_reload()
+                zoomable_image('media/rx_incoming.png')
 
                 # constellation plot of the incoming signal and fft after corse frequency correction
-                # with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                #      ui.image('media/receiver_constellation_coarse_freq.png').style('width: 40').force_reload()
+                zoomable_image('media/coarse_correction.png')
 
                 #binary search CAF convergence
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/binary_search_convergence.png').style('width: 40%').force_reload()
+                zoomable_image('media/binary_search_convergence.png')
 
+                # show IQ before phase correction
+                zoomable_image('media/pre_phase_correction_constellation.png')
+            
                 # show phase correction
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/phase_offset.png').style('width: 40%').force_reload()
+                zoomable_image('media/phase_offset.png')
+            
+                # show IQ after phase correction
+                zoomable_image('media/phase_corrected_constellation.png')
 
-                # show start and end correlation
-                with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                    ui.image('media/start_correlation.png').style('width: 40%').force_reload()
-                    ui.image('media/end_correlation.png').style('width: 40%').force_reload()
-               
+                # show start and end correlation and the indecies to start and end of the message
+                zoomable_image('media/start_end_correlation.png')
                 # show fine frequency correction constellation and fft
-                # with ui.row().style('width: 100%; justify-content: center; align-items: center;'):
-                #     ui.image('media/receiver_constellation_fine_freq.png').style('width: 40%').force_reload()
+
+                zoomable_image('media/fine_correction.png')
+
+                # show the final constellation plot after all corrections
+                zoomable_image('media/clean_signal.png')
 
                 # show the final recovered bits 
-                
+                #TODO
                 #show the final recovered message 
                 ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 ui.run()
