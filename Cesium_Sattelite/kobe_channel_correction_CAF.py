@@ -44,8 +44,8 @@ def fractional_delay(t, signal, delay_in_sec, Fs):
     h = np.sinc(n-delay_in_samples)
     h *= np.hamming(N) #something like a rectangular window
     h /= np.sum(h) #normalize to get unity gain, we don't want to change the amplitude/power
-
-    plt.plot(h, '.-', label='filter taps')
+    plt.figure()
+    plt.stem(n, h, label='filter taps')
     plt.title(f'Filter Taps for Fractional Delay = {fractional_delay:.2f} samples')
     plt.show()
 
