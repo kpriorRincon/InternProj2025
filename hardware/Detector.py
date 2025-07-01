@@ -97,42 +97,48 @@ class Detector:
         detected = False
         
         # find the correlated signal
-        cor_start = sig.fftconvolve(samples**4, np.conj(match_start)**4, mode='same')
+        # start cor
+        cor_start = sig.fftconvolve(samples**4, np.conj(np.flip(match_start))**4, mode='same')
+        # start cor normalize
         cor_start = (cor_start - np.min(cor_start)) / (np.max(np.abs(cor_start)) - np.min(cor_start))
-        cor_end = sig.fftconvolve(samples**4, np.conj(match_end)**4, mode='same')
+        # end cor
+        cor_end = sig.fftconvolve(samples**4, np.conj(np.flip(match_end))**4, mode='same')
+        # end cor normalize
         cor_end = (cor_end - np.min(cor_end)) / (np.max(np.abs(cor_end)) - np.min(cor_end))
 
         # get start and end indices
-        start = np.argmax(np.abs(cor_start)) - len(match_start) * int(self.sps / 1 / self.Ts)    # go back 16 symbols e.g. 32 bits
-        end = np.argmax(np.abs(cor_end))
+        start = np.argmax(np.abs(cor_start)) - int(len(match_start) / 2)    # go back 16 symbols e.g. 32 bits
+        #start = np.argmax(np.abs(cor_start))
+        end = np.argmax(np.abs(cor_end)) + int(len(match_end) / 2)
+        #end = np.argmax(np.abs(cor_end))
 
         print("Start index: ", start)
         print("End index: ", end)
         
         # select training samples
-        samples1 = samples[0:start - 16]
-        print("Sampes1 length:", len(samples1))
-        samples2 = samples[start + 16:]
-        print("Sampes2 length:", len(samples2))
+        samples1 = cor_start[0:start]
+        print("Samples1 length:", len(samples1))
+        samples2 = cor_start[start + len(match_start):len(samples)-1]
+        print("Samples2 length:", len(samples2))
         training_samples = np.concatenate([samples1, samples2])
 
         # calculate the threshold
         M = len(training_samples)
         print(f"Training samples length: {M}")
         if M > 0:
-            P_fa = 0.2 # probability of false alarm
-            alpha = M*(P_fa**(-1/M) - 1)
-            Pn = np.mean(np.abs(training_samples))
-            self.threshold = Pn * alpha
+            P_fa = 0.01 # probability of false alarm
+            alpha = (P_fa**(-1/M) - 1) * M
+            Pn = np.sum(np.abs(training_samples)) / M
+            self.threshold = 20*np.log10(Pn * alpha)
 
         # if the maximum energy of the correlated signal is greater than the threshold update start index
         print(f"Max correlation value: {max(np.abs(cor_start))}, Threshold: {self.threshold}")
-        if max(np.abs(cor_start)) > self.threshold:
+        if max(20*np.log10(np.fft.fft(cor_start))) > self.threshold:
             # if the maximum energy of the correlated signal is greater than the threshold update end index
             if max(np.abs(cor_end)) > self.threshold:
                 detected = True
-                plt.plot(range(len(cor_start)), 20*np.log10(cor_start), label='Start Correlation')
-                plt.plot(range(len(cor_start)), 20*np.log10(cor_end), label='End Correlation')
+                plt.plot(np.fft.fftfreq(len(cor_start), 1/self.fs), 20*np.log10(np.fft.fft(cor_start)), label='Start Correlation')
+                plt.plot(np.fft.fftfreq(len(cor_end), 1/self.fs), 20*np.log10(np.fft.fft(cor_end)), label='End Correlation')
                 plt.grid()
                 plt.legend()
                 plt.title('Correlation of the Matched Filters')

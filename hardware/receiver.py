@@ -19,28 +19,24 @@ sdr.gain = 'auto'
 time.sleep(1)
 
 # settings to run detector
-N = 1024
 detected = False
+sps = 4
+N = 10 * 1024
 start = 0
 end = N - 1
-sps = 4
 beta = 0.35
 num_taps = 40
 symbol_rate = sdr.sample_rate / sps
 
 transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
-start_marker, end_marker = transmit_obj.
-start_symbols = transmit_obj.qpsk_mapping(start_marker)
-end_symbols = transmit_obj.qpsk_mapping(end_marker)
+start_marker, end_marker = transmit_obj.generate_markers()
+match_start, match_end = transmit_obj.modulated_markers(beta, N, start_marker, end_marker) 
 
 # detector object
-detect_obj = d.Detector(start_symbols, end_symbols, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=2)
-
-# create matched filters
-match_start, match_end = detect_obj.matchedFilter(sps)
+detect_obj = d.Detector(start_marker, end_marker, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
 
 # Spectrogram parameters
-fft_size = 2*1024
+fft_size = N
 hop_size = fft_size // 2
 spec_history = 100  # number of lines in spectrogram
 
