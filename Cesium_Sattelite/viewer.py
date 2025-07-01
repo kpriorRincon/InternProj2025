@@ -641,12 +641,16 @@ def Cesium_page():
                 #binary search CAF convergence
                 zoomable_image('media/binary_search_convergence.png')
 
+                # show IQ before phase correction
+                zoomable_image('media/pre_phase_correction_constellation.png')
+            
                 # show phase correction
                 zoomable_image('media/phase_offset.png')
+            
+                # show IQ after phase correction
+                zoomable_image('media/phase_corrected_constellation.png')
 
-                # show start and end correlation
-                # zoomable_image('media/start_correlation.png')
-                # zoomable_image('media/end_correlation.png')
+                # show start and end correlation and the indecies to start and end of the message
                 zoomable_image('media/start_end_correlation.png')
                 # show fine frequency correction constellation and fft
 

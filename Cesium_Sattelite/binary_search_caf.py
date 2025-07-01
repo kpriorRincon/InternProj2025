@@ -169,10 +169,13 @@ def costas_loop(qpsk_wave):
         plt.close()
 
         plt.figure(figsize=(6, 6))
-        plt.plot(np.real(fixed_qpsk[1:-1]),np.imag(fixed_qpsk[1:-1]), 'b-')
-        plt.plot(np.real(fixed_qpsk[1:-1:int(SAMPLE_RATE/SYMB_RATE)]),np.imag(fixed_qpsk[1:-1:int(SAMPLE_RATE/SYMB_RATE)]), 'ro')
+        plt.plot(np.real(fixed_qpsk[1:-1]),np.imag(fixed_qpsk[1:-1]), 'b-', label='oversampled signal', zorder = 1)
+        plt.scatter(np.real(fixed_qpsk[1:-1:int(SAMPLE_RATE/SYMB_RATE)]),np.imag(fixed_qpsk[1:-1:int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
+        plt.legend()
+        plt.axis('equal')
+        plt.tight_layout()
         plt.grid(True)
         plt.title('Fine Frequency Synchronization (Costas Loop)')
         plt.savefig('media/fine_correction.png')
@@ -304,6 +307,20 @@ def cross_corr_caf(rx_signal):
     # Reslice signal
     print(f"Start: {start_idx} End: {end_idx}")
     deci_signal = ip_signal[start_idx: end_idx:16]   
+    if DEBUG:
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(deci_signal[1:]), np.imag(deci_signal[1:]), 'b-', zorder = 1, label = 'oversampled signal')
+        plt.scatter(np.real(deci_signal[1::int(SAMPLE_RATE/SYMB_RATE)]), np.imag(deci_signal[1::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
+        plt.legend()
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.title('Output of CAF')
+        plt.grid(True)
+        plt.axis('equal')
+        plt.savefig('media/pre_phase_correction_constellation.png')
+        plt.close()
+
+
 
     # Fix phase offset
     sig_start = deci_signal[0: int(64 * SAMPLE_RATE / SYMB_RATE)]
@@ -323,7 +340,7 @@ def cross_corr_caf(rx_signal):
         phase_deg = np.rad2deg(phase_rad)
         print(f'Phase offset found: {phase_deg:.2f} degrees')
         phase = np.angle(h_norm)
-        plt.figure(figsize=(5, 5))
+        plt.figure(figsize=(6, 6))
         # Plot the unit circle
         circle = plt.Circle((0, 0), 1, color='lightgray', fill=False, linestyle='--')
         plt.gca().add_artist(circle)
@@ -346,6 +363,19 @@ def cross_corr_caf(rx_signal):
         plt.tight_layout()
         plt.plot(np.real(fixed_signal[1:]),np.imag(fixed_signal[1:]), 'o')
         plt.savefig('media/phase_offset.png', dpi = 300)
+        plt.close()
+
+        # Plot the constellation after phase correction
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(fixed_signal[1:]), np.imag(fixed_signal[1:]), 'b-', zorder = 1, label = 'oversampled signal')
+        plt.scatter(np.real(fixed_signal[1::int(SAMPLE_RATE/SYMB_RATE)]), np.imag(fixed_signal[1::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
+        plt.legend()
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.title('Constellation after Phase Correction')
+        plt.grid(True)
+        plt.axis('equal')
+        plt.savefig('media/phase_corrected_constellation.png')
         plt.close()
     return fixed_signal
 
@@ -412,7 +442,7 @@ def channel_handler(rx_signal):
 def main():
     #Generate QPSK at Carrier Frequency
     sig_gen = SigGen(freq=900e6, amp=1)
-    bits = sig_gen.message_to_bits('hello there' * 3)
+    bits = sig_gen.message_to_bits('hello there ' * 3)
     t, qpsk_wave = sig_gen.generate_qpsk(bits)   
 
     print(f"Length of TX Signal: {len(qpsk_wave)}")
