@@ -293,62 +293,31 @@ def cross_corr_caf(rx_signal):
         phase_rad = np.angle(h_norm)
         phase_deg = np.rad2deg(phase_rad)
         print(f'Phase offset found: {phase_deg:.2f} degrees')
-
-        point = h_norm / np.abs(h_norm)
-
-        # Create unit circle plot
-        fig, ax = plt.subplots(figsize=(6,6))
+        phase = np.angle(h_norm)
+        plt.figure(figsize=(5, 5))
+        # Plot the unit circle
         circle = plt.Circle((0, 0), 1, color='lightgray', fill=False, linestyle='--')
-        ax.add_artist(circle)
+        plt.gca().add_artist(circle)
 
-        # Plot the point
-        ax.plot(point.real, point.imag, 'bo', label='h_norm')
+        # Plot the arc from 0 to phase
+        arc_theta = np.linspace(0, phase, 100)
+        plt.plot(np.cos(arc_theta), np.sin(arc_theta), color='orange', linewidth=2, label='Phase Arc')
 
-        # Draw the curved red arc from angle 0 to phase_rad
-        theta = np.linspace(0, phase_rad, 100)
-        x_arc = np.cos(theta)
-        y_arc = np.sin(theta)
-        ax.plot(x_arc, y_arc, 'r-', linewidth=2, label='Phase arc')
+        # Plot the vector for h
+        plt.plot([0, np.real(h_norm)], [0, np.imag(h_norm)], marker='o', color='b', label='h normalized')
 
-        # Dashed red line from center to point
-        ax.plot([0, point.real], [0, point.imag], 'r--', linewidth=1)
-
-        # Plot x-axis line in light gray for reference
-        ax.plot([0, 1], [0, 0], color='gray', linestyle='--')
-
-        # Annotation box text
-        annot_text = f'Phase: {phase_deg:.1f}°\nValue: {point.real:.2f} + {point.imag:.2f}j'
-
-        # Annotate near the point with an arrow
-        ax.annotate(
-            annot_text,
-            xy=(point.real, point.imag),
-            xytext=(point.real + 0.1, point.imag + 0.1),  # offset text a bit
-            bbox=dict(boxstyle='round,pad=0.3', fc='yellow', alpha=0.7),
-            arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.2')
-        )
-
-        # Setup plot limits and labels
-        ax.set_xlim(-1.1, 1.3)
-        ax.set_ylim(-1.1, 1.3)
-        ax.set_aspect('equal')
-        ax.axhline(0, color='black', linewidth=0.5)
-        ax.axvline(0, color='black', linewidth=0.5)
-        ax.grid(True, linestyle='--', alpha=0.5)
-
-        # Add legend and title
-        ax.set_title('Phase Offset Detected')
-
-        plt.savefig('media/phase_offset_unit.png')
-        plt.close()
-        
+        plt.xlim(-1.1, 1.1)
+        plt.ylim(-1.1, 1.1)
+        plt.xlabel('Real')
+        plt.ylabel('Imaginary')
+        plt.title(f'Detected Phase offset: {np.degrees(phase):.2f}°')
+        plt.grid(True)
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.legend()
+        plt.tight_layout()
         plt.plot(np.real(fixed_signal[1:]),np.imag(fixed_signal[1:]), 'o')
-        plt.title('IQ Plot after Phase Correction')
-        plt.savefig('media/phase_corrected_signal.png')
+        plt.savefig('media/phase_offset.png', dpi = 300)
         plt.close()
-        
-    
-
     return fixed_signal
 
 def demodulator(qpsk_sig):

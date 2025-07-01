@@ -47,7 +47,7 @@ txFreq = None
 bits = None
 
 # Enhanced CSS for hover zoom effect in flex containers
-ui.add_head_html('''
+ui.add_css('''
 .thumbnail {
     width: 350px;
     position: relative;
@@ -56,15 +56,10 @@ ui.add_head_html('''
     z-index: 1;
     border-radius: 8px; /* optional: rounded corners */
 }
-
 .thumbnail:hover {
-    position: fixed !important; /* force fixed positioning */
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) scale(1.5) !important;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-    z-index: 9999 !important; /* ensure it's on top */
-    border-radius: 12px; /* slightly more rounded when enlarged */
+    transform: scale(4.08);
+    z-index: 10;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
 
 .flex-container {
