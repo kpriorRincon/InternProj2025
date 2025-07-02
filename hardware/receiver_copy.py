@@ -7,7 +7,7 @@ import Detector as d
 import receive_processing as rp
 import time
 import transmit_processing as tp
-
+from binary_search_caf import *
 # configure RTL-SDR
 sdr = RtlSdr()
 sdr.sample_rate = 2.88e6 # Hz
@@ -20,7 +20,7 @@ time.sleep(1)
 
 # settings to run detector
 detected = False
-sps = 20
+sps = 4
 N = 30 * 1024
 start = 0
 end = N - 1
@@ -87,10 +87,9 @@ while detected == False:
     samples = sdr.read_samples(N)
       
     # plot samples
-    #plt.plot(np.real(samples))
-    #plt.plot(np.imag(samples))
+    #plt.plot(np.real(samples[0:499]))
+    #plt.plot(np.imag(samples[0:499]))
     #plt.show()
-    
     # run detection
     detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 

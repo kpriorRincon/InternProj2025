@@ -1,5 +1,5 @@
 import numpy as np
-import scipy.signal as signal
+from scipy.signal import fftconvolve,  max_len_seq
 
 class transmit_processing:
     
@@ -49,7 +49,7 @@ class transmit_processing:
         - end_sequence : end marker
         """
 
-        random_sequence = signal.max_len_seq(11)[0]
+        random_sequence = max_len_seq(11)[0]
         idx = (len(random_sequence) - 1) // 2
         start_sequence = random_sequence[:idx]
         end_sequence = random_sequence[idx:-1]
@@ -193,9 +193,9 @@ class transmit_processing:
         Ts = 1 / symbol_rate
 
         _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
-        start_data = np.convolve(upsampled_start_symbols, h, 'same')
+        start_data = fftconvolve(upsampled_start_symbols, h, 'same')
         start_data = start_data.astype(np.complex64)
-        end_data = np.convolve(upsampled_end_symbols, h, 'same')
+        end_data = fftconvolve(upsampled_end_symbols, h, 'same')
         end_data = end_data.astype(np.complex64)
 
         return start_data, end_data
