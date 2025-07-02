@@ -2,8 +2,7 @@ from rtlsdr import *
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
-import scipy.signal as signal
-import Detector as d
+import Detector_copy as d
 import receive_processing as rp
 import time
 import transmit_processing as tp
