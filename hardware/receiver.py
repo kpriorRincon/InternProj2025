@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import scipy.signal as signal
-import Detector_copy as d
+import Detector as d
 import receive_processing as rp
 import time
 import transmit_processing as tp
+from channel_correction import *
 
 # configure RTL-SDR
 sdr = RtlSdr()
@@ -88,8 +89,13 @@ while detected == False:
     samples = sdr.read_samples(N)
     
     # plot samples
-    plt.plot(np.real(samples))
-    plt.plot(np.imag(samples))
+    plt.plot(np.real(samples), label = 'real')
+    plt.plot(np.imag(samples), label = 'imaginary')
+    plt.legend()
+    plt.title("Raw IQ Samples")
+    plt.xlabel('Time (samples)')
+    plt.ylabel('Amplitude')
+    plt.grid()
     plt.show()
 
     # save samples to an external file (optional) 
@@ -101,8 +107,8 @@ while detected == False:
 
 # take signal from the samples
 data = samples[start:end]
-open('selected_signal.bin', 'w').close()
-np.array(data, dtype=np.complex64).tofile("selected_signal.bin")
+# open('selected_signal.bin', 'w').close()
+# np.array(data, dtype=np.complex64).tofile("selected_signal.bin")
 print(f"Signal found after {count} cycles")
 
 # plot handling
@@ -112,13 +118,15 @@ plt.show()
 # begin signal processing
 print("Processing data...")
 
+
+bits_string, decoded_message = channel_handler(data)
 # create receive processing object
-recieve_obj = rp.receive_processing(sps, sdr.sample_rate)
+# recieve_obj = rp.receive_processing(sps, sdr.sample_rate)
 
 # process data
-bits_string, message = recieve_obj.work(data, beta, num_taps)
+# bits_string, message = recieve_obj.work(data, beta, num_taps)
 print(f"Bits: {bits_string}")
-print(f"Message: {message}")
+print(f"Message: {decoded_message}")
 
 # close sdr
 sdr.close()

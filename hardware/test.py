@@ -13,7 +13,7 @@ rp = receive_processing.receive_processing(sps, sample_rate)
 
 bits_out, data = tp.work(message, beta, N)
 
-bits_in, decoded_message = rp.work(data, beta, N)
+bits_in, decoded_message, symbols = rp.work(data, beta, N)
 
 print("Message Sent: ", message)
 print("Message Received: ", decoded_message)
