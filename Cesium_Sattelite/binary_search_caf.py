@@ -1,5 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams.update({
+    'axes.titlesize': 20,
+    'axes.labelsize': 16,      # X and Y axis label size
+    'xtick.labelsize': 14,     # X tick label size
+    'ytick.labelsize': 14,     # Y tick label size
+    'legend.fontsize': 14,     # Legend font size
+    'figure.titlesize': 22     # Figure suptitle size
+})
 import time
 from scipy.signal import resample_poly, firwin, lfilter, fftconvolve
 from Sig_Gen import SigGen, rrc_filter
@@ -107,28 +115,32 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
     if DEBUG:
+        plt.figure(figsize=(6, 6))
         plt.plot(np.real(fixed_qpsk[1:]), np.imag(fixed_qpsk[1:]), 'b-', zorder = 1, label = 'oversampled signal')
         plt.scatter(np.real(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
         plt.legend()
+        plt.axis('equal')
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Coarse Frequency Synchronization')
-        plt.savefig('media/coarse_correction.png')
+        plt.savefig('media/coarse_correction.png', dpi = 300)
         plt.close()
 
+        plt.figure(figsize=(6, 6))
         plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'blue', zorder = 2, label = 'RX Signal')
         plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]**2), s=10, color= 'green', zorder = 2, label = 'Signal at 2nd Power')
         plt.scatter(np.real(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'red', zorder = 2, label = 'Signal at 4th Power')
-
         plt.legend()
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Raising Signals to Nth Power')
-        plt.axis()
+        plt.axis('equal')
         plt.grid()
-        plt.show()
+        plt.savefig('media/Nth_Order.png', dpi = 300)
         plt.close()
 
+
+        plt.figure(figsize=(10, 6))
         plt.plot(freqs, fft_vals)
         #plt.axvline(x=freq_tone * order, color='red', linestyle='--', label='Detected Tone')
         plt.legend()
@@ -150,7 +162,8 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.title('FFT of Signal Raised to 4th')
         # label at freq_tone
 
-        plt.show()
+        plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300)
+        plt.close()
 
 
 
@@ -295,6 +308,7 @@ def cross_corr_caf(rx_signal):
         plt.grid(True)
         plt.savefig('media/binary_search_convergence.png')
         plt.close()
+        visited_freqs.clear()
 
     #Correlate one last time to get index
     up_mixed_filter = mixing(ip_filter, freq_found, INTERPOLATION_VAL)
