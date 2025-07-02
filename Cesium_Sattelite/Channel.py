@@ -106,60 +106,19 @@ class Channel:
         
         #here we would like to plot
         import matplotlib.pyplot as plt
+        plt.rcParams.update({
+            'axes.titlesize': 20,
+            'axes.labelsize': 16,      # X and Y axis label size
+            'xtick.labelsize': 14,     # X tick label size
+            'ytick.labelsize': 14,     # Y tick label size
+            'legend.fontsize': 14,     # Legend font size
+            'figure.titlesize': 22     # Figure suptitle size
+        })
         import numpy as np 
         
         direction = 'up' if self.up else 'down'#specifier so that the user files can be differentiated 
 
-        #plot incoming signal in time 
-        #plot them side by side
-
-        # plt.figure(figsize=(10, 6))
-        # plt.plot(t, np.real(self.incoming_signal))
-        # plt.title('Incoming Signal Time Domain')
-        # plt.xlabel('Time')
-        # plt.ylabel('Amplitude')
-        # plt.tight_layout()
-        # plt.savefig(f'media/channel_{direction}_incoming_time', dpi=300)
-        # plt.close()
-
-        #plot outgoing signal in time
-
-        # plt.figure(figsize= (10, 6))
-        # plt.plot(t, np.real(self.outgoing_signal))
-        # plt.title('Outgoing Signal Time Domain')
-        # plt.xlabel('Time')
-        # plt.ylabel('Amplitude')
-        # plt.tight_layout()
-        # plt.savefig(f'media/channel_{direction}_outgoing_time', dpi=300)
-        # plt.close()
-        # get the fft incoming
-        # plt.figure(figsize = (10, 6))
-        # S = np.fft.fft(self.incoming_signal)
-        # S_mag_db = 20 * np.log10(np.abs(S))
-        # N = len(t)
-
-        # f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
-        # plt.plot(f, S_mag_db)
-        # plt.title('Frequency Domain of Incoming Signal')
-        # plt.xlabel('Frequency (Hz)')
-        # plt.ylabel('Magnitude (dB)')
-        # plt.tight_layout()
-        # plt.savefig(f'media/channel_{direction}_incoming_fft', dpi = 300)
-        # plt.close()
-
-        # get fft outgoing
-        # plt.figure(figsize = (10, 6))
-        # S = np.fft.fft(self.outgoing_signal)
-        # S_mag_db = 20 * np.log10(np.abs(S))
-        # f = np.fft.fftshift(np.fft.fftfreq(N, d = 1/Fs))
-        # plt.plot(f, S_mag_db)
-        # plt.title('Frequency Domain of Outgoing Signal')
-        # plt.xlabel('Frequency (Hz)')
-        # plt.ylabel('Magnitude (dB)')
-        # plt.tight_layout()
-        # plt.savefig(f'media/channel_{direction}_outgoing_fft', dpi = 300)
-        # plt.close()
-
+    
         #plot the phase rotation h causes 
         # Normalize h to unit magnitude
         h_normalized = self.h / np.abs(self.h)
@@ -187,21 +146,6 @@ class Channel:
         plt.close()
 
         tuned_signal = self.incoming_signal * np.exp(-1j * 2 * np.pi * tune_frequency * t)# we want to tune down to baseband
-        #plot fft of the baseband incoming signal
-        plt.figure(figsize=(10, 6))
-        S = np.fft.fft(tuned_signal)
-        S_mag_db = 20 * np.log10(np.abs(S))
-        N = len(t)
-        Fs = 1 / (t[1] - t[0])
-        f = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / Fs))
-        plt.plot(f/1e6, np.fft.fftshift(S_mag_db))
-        plt.xlim(-Fs/6e6, Fs/6e6)
-        plt.title('Frequency Domain of Tuned Incoming Signal (Baseband)')
-        plt.xlabel('Frequency (MHz)')
-        plt.ylabel('Magnitude (dB)')
-        plt.tight_layout()
-        plt.savefig(f'media/channel_{direction}_incoming_tuned_fft.png', dpi=300)
-        plt.close()
 
         # Plot constellation of the tuned incoming signal
         plt.figure(figsize=(6, 6))
@@ -225,21 +169,7 @@ class Channel:
         #plot fft of the baseband outgoing signal
         tuned_outgoing_signal = self.outgoing_signal * np.exp(-1j * 2 * np.pi * tune_frequency * new_t)
         
-        plt.figure(figsize=(10, 6))
-        N = len(new_t)
-        Fs = int(1 / (new_t[1] - new_t[0]))
-        f = np.fft.fftshift(np.fft.fftfreq(N, d = 1 /Fs))
-        plt.figure(figsize=(10, 6))
-        S_out = np.fft.fft(tuned_outgoing_signal)
-        S_out_mag_db = 20 * np.log10(np.abs(S_out))
-        plt.plot(f/1e6, np.fft.fftshift(S_out_mag_db))
-        plt.title('Frequency Domain of Tuned Outgoing Signal (Baseband)')
-        plt.xlabel('Frequency (MHz)')
-        plt.ylabel('Magnitude (dB)')
-        plt.xlim(-Fs/6e6, Fs/6e6)
-        plt.tight_layout()
-        plt.savefig(f'media/channel_{direction}_outgoing_tuned_fft.png', dpi=300)
-        plt.close()
+        
         
 
         # Plot constellation of the tuned outgoing signal

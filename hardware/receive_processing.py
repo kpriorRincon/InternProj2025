@@ -18,7 +18,7 @@ class receive_processing:
         - fs : Sampling frequency/rate (Hz)
 
         Returns:
-        - time : The time vector of the impulse response
+        - t : The time vector of the impulse response
         - h : The impulse response of the RRC filter in the time domain
         """
 
@@ -134,9 +134,6 @@ class receive_processing:
         - message : Decoded message
         """
 
-        index = len(data) // 4
-        data = data[:index]
-
         symbol_rate = self.sample_rate / self.sps
         Ts = 1 / symbol_rate
 
@@ -151,4 +148,4 @@ class receive_processing:
 
         message = self.bits_to_message(bits)
         
-        return bits_string, message
+        return bits_string, message, symbols
