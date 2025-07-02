@@ -96,18 +96,32 @@ def zoomable_image(src):
 #Add a cool background image
 ui.add_head_html('''
     <style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        min-width: 100vw;
+        box-sizing: border-box;
+    }
     body {
         background-image: url("https://adventr.co/wp-content/uploads/2019/08/Red2Cover.jpg");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
         background-repeat: no-repeat; 
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        min-width: 100vw;
+        box-sizing: border-box;
     }
     
     .glass-bar {
         position: fixed;
         top: 0;
-        width: 100%;
+        left: 0;
+        width: 100vw;
+        min-width: 100vw;
         height: 60px;
         display: flex;
         gap: 20px;
@@ -121,21 +135,27 @@ ui.add_head_html('''
         padding: 0 30px;
         box-sizing: border-box;
         color: white;
-  }
+    }
 
-  .glass-bar .item {
+    .glass-bar .item {
         display: flex;
         align-items: center;
         cursor: pointer;
         gap: 8px;
         font-size: 18px;
         color: white;
-  }
+        transition: background 0.2s;
+    }
 
-  .spacer {
+    .glass-bar .item:hover {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+    }
+
+    .spacer {
         height: 60px; /* reserve space under the fixed bar */
-  }
-</style>
+    }
+    </style>
 ''')
 
 #Add the frosted glass bar
@@ -767,6 +787,13 @@ def control_page():
         ui.notify('Message sent!')  # notify the user that the message was sent
         return
             
+
+
+
+@ui.page('/ABOUT')
+def about_page():
+    pass
+
 
 #run the GUI
 ui.run()
