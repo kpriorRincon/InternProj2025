@@ -56,9 +56,9 @@ class Detector:
         print("End index: ", end)
         
         # select training samples
-        samples1 = start_trimmed[0:start]
+        samples1 = cor_start[0:start]
         print("Samples1 length:", len(samples1))
-        samples2 = start_trimmed[start + len(match_start):len(samples)-1]
+        samples2 = cor_start[start + len(match_start):len(samples)-1]
         print("Samples2 length:", len(samples2))
         training_samples = np.concatenate([samples1, samples2])
 
@@ -72,10 +72,10 @@ class Detector:
             self.threshold = Pn * alpha
 
         # if the maximum energy of the correlated signal is greater than the threshold update start index
-        print(f"Max correlation value: {max(np.abs(start_trimmed))}, Threshold: {self.threshold}")
-        if max(np.abs(start_trimmed)) > self.threshold:
+        print(f"Max correlation value: {max(np.abs(cor_start))}, Threshold: {self.threshold}")
+        if max(np.abs(cor_start)) > self.threshold:
             # if the maximum energy of the correlated signal is greater than the threshold update end index
-            if max(np.abs(end_trimmed)) > self.threshold:
+            if max(cor_end) > self.threshold:
                 detected = True
                 print("Length of start sequence: ", len(match_start))
                 print("Length of end sequence: ", len(match_end))
@@ -83,19 +83,19 @@ class Detector:
                 #plt.plot(np.fft.fftfreq(len(cor_end), 1/self.fs), 20*np.log10(np.fft.fft(cor_end)), label='End Correlation')
                 plt.subplot(2, 1, 1)
                 plt.title('Correlation of the Matched Filters')
-                plt.plot(np.abs(start_trimmed), label='start')
+                plt.plot(np.abs(cor_start), label='start')
                 plt.grid()
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
                 #plt.axvline(y = start, linestyle = '--', color = 'r')
-                plt.scatter(start_idx, np.abs(start_trimmed[start_idx]), s = 100, c = 'r', marker = '.')
+                plt.scatter(start_idx, np.abs(cor_start[start_idx]), s = 100, c = 'r', marker = '.')
                 
                 plt.subplot(2, 1, 2)
-                plt.plot(np.abs(end_trimmed), label='end')
+                plt.plot(np.abs(cor_end), label='end')
                 plt.grid()
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
-                plt.scatter(end_idx, np.abs(end_trimmed[end_idx]), s = 100, c = 'r', marker = '.')
+                plt.scatter(end_idx, np.abs(cor_end[end_idx]), s = 100, c = 'r', marker = '.')
                 #plt.axvline(x = end, linestyle = '--', color = 'r')
                 plt.show()
 
