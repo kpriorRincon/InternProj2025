@@ -87,9 +87,9 @@ samples = None
 samples = sdr.read_samples(N)
     #detect_obj.step_detect(samples)      
     # plot samples
-    #plt.plot(np.real(samples))
-    #plt.plot(np.imag(samples))
-    #plt.show()
+plt.plot(np.real(samples))
+plt.plot(np.imag(samples))
+plt.show()
     
 np.array(samples, dtype=np.complex64).tofile("test_data.bin")
 
