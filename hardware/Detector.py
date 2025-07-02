@@ -13,6 +13,32 @@ class Detector:
         self.threshold = 8
         self.sps = sps
 
+    def step_detect(self, samples):
+        """
+        Detect the signal with a step function
+
+        Parameters:
+        - samples: samples read in by the RTL-SDR
+
+        Returns:
+        - detected: bool set high when signal found
+        - start: start index
+        - end: end index
+
+        """
+        t = len(samples) - 1
+        
+        # make step functoin
+        step_function = [0]*20000 + [1]*20000
+        step_function = np.array(step_function)
+        
+        # correlation signal with step function
+        correlation = sig.fftconvolve(samples, step_function)
+        
+        # plot
+        plt.plot(correlation)
+        #plt.show()
+
     def detector(self, samples, match_start, match_end):
         """
         Detects the sent signal amongst noise

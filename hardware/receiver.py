@@ -20,12 +20,12 @@ time.sleep(1)
 
 # settings to run detector
 detected = False
-sps = 4
-N = 30 * 1024
+sps = 20
+N = 100 * 1024
 start = 0
 end = N - 1
 beta = 0.35
-num_taps = 40
+num_taps = 101
 symbol_rate = sdr.sample_rate / sps
 
 transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
@@ -85,13 +85,14 @@ while detected == False:
     # read samples from RTL-SDR
     samples = None
     samples = sdr.read_samples(N)
-      
+    detect_obj.step_detect(samples)      
     # plot samples
-    #plt.plot(np.real(samples[0:499]))
-    #plt.plot(np.imag(samples[0:499]))
-    #plt.show()
+    plt.plot(np.real(samples))
+    plt.plot(np.imag(samples))
+    plt.show()
+    
     # run detection
-    detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+    #detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 data = samples[start:end]
 print(f"Signal found after {count} cycles")
