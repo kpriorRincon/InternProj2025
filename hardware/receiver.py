@@ -85,14 +85,14 @@ while detected == False:
     # read samples from RTL-SDR
     samples = None
     samples = sdr.read_samples(N)
-    detect_obj.step_detect(samples)      
+    #detect_obj.step_detect(samples)      
     # plot samples
-    plt.plot(np.real(samples))
-    plt.plot(np.imag(samples))
-    plt.show()
+    #plt.plot(np.real(samples))
+    #plt.plot(np.imag(samples))
+    #plt.show()
     
     # run detection
-    #detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+    detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 data = samples[start:end]
 print(f"Signal found after {count} cycles")

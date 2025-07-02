@@ -34,9 +34,10 @@ class Detector:
         
         # correlation signal with step function
         correlation = sig.fftconvolve(samples, step_function)
-        
+       
+
         # plot
-        plt.plot(correlation)
+        plt.plot(np.abs(correlation))
         #plt.show()
 
     def detector(self, samples, match_start, match_end):
@@ -64,32 +65,37 @@ class Detector:
         
         # find the correlated signal
         # start cor
-        cor_start = sig.fftconvolve(samples**4, np.conj(np.flip(match_start)**4), mode='same')
+        cor_start = sig.fftconvolve(samples, np.conj(np.flip(match_start)), mode='same')
         # start cor normalize
         cor_start = (cor_start - np.min(cor_start)) / (np.max(np.abs(cor_start)) - np.min(cor_start))
         # end cor
-        cor_end = sig.fftconvolve(samples**4, np.conj(np.flip(match_end)**4), mode='same')
+        cor_end = sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same')
         # end cor normalize
         cor_end = (cor_end - np.min(cor_end)) / (np.max(np.abs(cor_end)) - np.min(cor_end))
         
         # trim the fat
-        trim_factor = 5000
-        start_trimmed = cor_start[trim_factor:len(cor_start)-trim_factor]
-        end_trimmed = cor_end[trim_factor:len(cor_end)-trim_factor]
+        #trim_factor = 1000
+        #start_trimmed = cor_start[trim_factor:len(cor_start)-trim_factor]
+        #end_trimmed = cor_end[trim_factor:len(cor_end)-trim_factor]
 
         # get start and end indices
-        start = np.argmax(np.abs(start_trimmed)) - int(len(match_start) / 2)    # go back length of the start/end sequence
-        start_idx = np.argmax(np.abs(start_trimmed))
-        end = np.argmax(np.abs(end_trimmed)) + int(len(match_end) / 2)
-        end_idx = np.argmax(np.abs(end_trimmed))
+        #start = np.argmax(np.abs(start_trimmed)) - int(len(match_start) / 2)    # go back length of the start/end sequence
+        #start_idx = np.argmax(np.abs(start_trimmed))
+        #end = np.argmax(np.abs(end_trimmed)) + int(len(match_end) / 2)
+        #end_idx = np.argmax(np.abs(end_trimmed))
+
+        start = np.argmax(np.abs(cor_start)) - int(len(match_start) / 2)
+        start_idx = np.argmax(np.abs(cor_start))
+        end = np.argmax(np.abs(cor_end)) + int(len(match_end) / 2)
+        end_idx = np.argmax(np.abs(cor_end))
 
         print("Start index: ", start)
         print("End index: ", end)
         
         # select training samples
-        samples1 = start_trimmed[0:start]
+        samples1 = cor_start[0:start]
         print("Samples1 length:", len(samples1))
-        samples2 = start_trimmed[start + len(match_start):len(samples)-1]
+        samples2 = cor_start[start + len(match_start):len(samples)-1]
         print("Samples2 length:", len(samples2))
         training_samples = np.concatenate([samples1, samples2])
 
@@ -103,10 +109,10 @@ class Detector:
             self.threshold = Pn * alpha
 
         # if the maximum energy of the correlated signal is greater than the threshold update start index
-        print(f"Max correlation value: {max(np.abs(start_trimmed))}, Threshold: {self.threshold}")
-        if max(np.abs(start_trimmed)) > self.threshold:
+        print(f"Max correlation value: {max(np.abs(cor_start))}, Threshold: {self.threshold}")
+        if max(np.abs(cor_start)) > self.threshold:
             # if the maximum energy of the correlated signal is greater than the threshold update end index
-            if max(np.abs(end_trimmed)) > self.threshold:
+            if max(np.abs(cor_end)) > self.threshold:
                 detected = True
                 print("Length of start sequence: ", len(match_start))
                 print("Length of end sequence: ", len(match_end))
@@ -114,19 +120,19 @@ class Detector:
                 #plt.plot(np.fft.fftfreq(len(cor_end), 1/self.fs), 20*np.log10(np.fft.fft(cor_end)), label='End Correlation')
                 plt.subplot(2, 1, 1)
                 plt.title('Correlation of the Matched Filters')
-                plt.plot(np.abs(start_trimmed), label='start')
+                plt.plot(np.abs(cor_start), label='start')
                 plt.grid()
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
                 #plt.axvline(y = start, linestyle = '--', color = 'r')
-                plt.scatter(start_idx, np.abs(start_trimmed[start_idx]), s = 100, c = 'r', marker = '.')
+                plt.scatter(start_idx, np.abs(cor_start[start_idx]), s = 100, c = 'r', marker = '.')
                 
                 plt.subplot(2, 1, 2)
-                plt.plot(np.abs(end_trimmed), label='end')
+                plt.plot(np.abs(cor_start), label='end')
                 plt.grid()
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
-                plt.scatter(end_idx, np.abs(end_trimmed[end_idx]), s = 100, c = 'r', marker = '.')
+                plt.scatter(end_idx, np.abs(cor_start[end_idx]), s = 100, c = 'r', marker = '.')
                 #plt.axvline(x = end, linestyle = '--', color = 'r')
                 plt.show()
 
@@ -137,4 +143,4 @@ class Detector:
             end = len(samples) - 1
             detected = False
         
-        return detected, start + trim_factor, end + trim_factor
+        return detected, start, end
