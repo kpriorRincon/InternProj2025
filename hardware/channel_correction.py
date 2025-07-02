@@ -14,9 +14,9 @@ min_freq = -200
 snr_db = 20
 
 def lowpass_filter(raw_signal):
-        lowcut = 0
-        highcut = 0.05 #960e6
-        fir_coeff = firwin(NUMTAPS, highcut, pass_zero=False, fs=SAMPLE_RATE)
+        bw = SYMB_RATE * (BETA + 1)
+        highcut = bw / 2 + 10e3
+        fir_coeff = firwin(NUMTAPS, highcut, pass_zero='lowpass', fs=SAMPLE_RATE)
         # pass-zero = whether DC / 0Hz is in the passband
         
         print(f"Length of raw signal: {len(raw_signal)}")
@@ -26,6 +26,29 @@ def lowpass_filter(raw_signal):
         delay = (NUMTAPS - 1) // 2 
         padded_signal = np.pad(filtered_sig, (0, delay), mode='constant')
         filtered_sig = padded_signal[delay:] 
+
+
+                # Frequency axis for FFT
+        N = len(raw_signal)
+        freqs = fftshift(fftfreq(N, d=1/SAMPLE_RATE))
+        
+        # FFT of raw and filtered signals
+        fft_raw = fftshift(np.abs(fft(raw_signal)))
+        fft_filtered = fftshift(np.abs(fft(filtered_sig)))
+
+
+        # Plot FFT comparison
+        plt.figure(figsize=(12, 5))
+        plt.plot(freqs / 1e6, 20 * np.log10(fft_raw + 1e-10), label='Before Filtering', alpha=0.7)
+        plt.plot(freqs / 1e6, 20 * np.log10(fft_filtered + 1e-10), label='After Filtering', alpha=0.7)
+        plt.title('Frequency Response of Signal (Before vs After Low-Pass FIR Filter)')
+        plt.xlabel('Frequency (MHz)')
+        plt.ylabel('Magnitude (dB)')
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
 
         return filtered_sig
 

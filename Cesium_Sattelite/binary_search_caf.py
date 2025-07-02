@@ -1,23 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams.update({
-    'axes.titlesize': 20,
-    'axes.labelsize': 16,      # X and Y axis label size
-    'xtick.labelsize': 14,     # X tick label size
-    'ytick.labelsize': 14,     # Y tick label size
-    'legend.fontsize': 14,     # Legend font size
-    'figure.titlesize': 22     # Figure suptitle size
-})
 import time
 from scipy.signal import resample_poly, firwin, lfilter, fftconvolve
+from numpy.fft import fft, fftfreq, fftshift
 from Sig_Gen import SigGen, rrc_filter
 from config import *
 DEBUG = 1
-freq_offset = 2000
+freq_offset = 60000
 time_delay = 0.00232
 max_freq = 200
 min_freq = -200
-snr_db = 20
+snr_db = 10
 
 def integer_delay(signal, num_samples):
     '''Apply an integer delay by padding the front of the signal with zeros'''
@@ -73,9 +66,9 @@ def add_awgn(signal):
     return signal + noise
 
 def lowpass_filter(raw_signal):
-        lowcut = 0
-        highcut = 0.05 #960e6
-        fir_coeff = firwin(NUMTAPS, highcut, pass_zero=False, fs=SAMPLE_RATE)
+        bw = SYMB_RATE * (BETA + 1)
+        highcut = bw / 2 + 10e3
+        fir_coeff = firwin(NUMTAPS, highcut, pass_zero='lowpass', fs=SAMPLE_RATE)
         # pass-zero = whether DC / 0Hz is in the passband
         
         print(f"Length of raw signal: {len(raw_signal)}")
@@ -85,7 +78,25 @@ def lowpass_filter(raw_signal):
         delay = (NUMTAPS - 1) // 2 
         padded_signal = np.pad(filtered_sig, (0, delay), mode='constant')
         filtered_sig = padded_signal[delay:] 
+        # Frequency axis for FFT
+        N = len(raw_signal)
+        freqs = fftshift(fftfreq(N, d=1/SAMPLE_RATE))
+        
+        # FFT of raw and filtered signals
+        fft_raw = fftshift(np.abs(fft(raw_signal)))
+        fft_filtered = fftshift(np.abs(fft(filtered_sig)))
 
+        # Plot FFT comparison
+        plt.figure(figsize=(12, 5))
+        plt.plot(freqs / 1e6, 20 * np.log10(fft_raw + 1e-10), label='Before Filtering', alpha=0.7)
+        plt.plot(freqs / 1e6, 20 * np.log10(fft_filtered + 1e-10), label='After Filtering', alpha=0.7)
+        plt.title('Frequency Response of Signal (Before vs After Low-Pass FIR Filter)')
+        plt.xlabel('Frequency (MHz)')
+        plt.ylabel('Magnitude (dB)')
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
 
         return filtered_sig
 
@@ -115,32 +126,28 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
     if DEBUG:
-        plt.figure(figsize=(6, 6))
         plt.plot(np.real(fixed_qpsk[1:]), np.imag(fixed_qpsk[1:]), 'b-', zorder = 1, label = 'oversampled signal')
         plt.scatter(np.real(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
         plt.legend()
-        plt.axis('equal')
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Coarse Frequency Synchronization')
-        plt.savefig('media/coarse_correction.png', dpi = 300)
+        plt.savefig('media/coarse_correction.png')
         plt.close()
 
-        plt.figure(figsize=(6, 6))
         plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'blue', zorder = 2, label = 'RX Signal')
         plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]**2), s=10, color= 'green', zorder = 2, label = 'Signal at 2nd Power')
         plt.scatter(np.real(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'red', zorder = 2, label = 'Signal at 4th Power')
+
         plt.legend()
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Raising Signals to Nth Power')
-        plt.axis('equal')
+        plt.axis()
         plt.grid()
-        plt.savefig('media/Nth_Order.png', dpi = 300)
+        plt.show()
         plt.close()
 
-
-        plt.figure(figsize=(10, 6))
         plt.plot(freqs, fft_vals)
         #plt.axvline(x=freq_tone * order, color='red', linestyle='--', label='Detected Tone')
         plt.legend()
@@ -162,8 +169,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.title('FFT of Signal Raised to 4th')
         # label at freq_tone
 
-        plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300)
-        plt.close()
+        plt.show()
 
 
 
@@ -308,7 +314,6 @@ def cross_corr_caf(rx_signal):
         plt.grid(True)
         plt.savefig('media/binary_search_convergence.png')
         plt.close()
-        visited_freqs.clear()
 
     #Correlate one last time to get index
     up_mixed_filter = mixing(ip_filter, freq_found, INTERPOLATION_VAL)
