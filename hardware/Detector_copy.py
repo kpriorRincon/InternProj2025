@@ -41,9 +41,6 @@ class Detector:
         # end cor
         cor_end = np.abs(sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same'))
         
-        # trim the fat
-        trim_factor = 5000
-
         # get start and end indices
         start = np.argmax(cor_start) - int(len(match_start) / 2)    # go back length of the start/end sequence
         start_idx = np.argmax(cor_start)
@@ -105,4 +102,4 @@ class Detector:
             end = len(samples) - 1
             detected = False
         
-        return detected, start + trim_factor, end + trim_factor
+        return detected, start, end

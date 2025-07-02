@@ -28,6 +28,7 @@ beta = 0.35
 num_taps = 101
 symbol_rate = sdr.sample_rate / sps
 
+# create transmit object for the start and end markers
 transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
 match_start, match_end = transmit_obj.modulated_markers(beta, num_taps) 
 
@@ -43,7 +44,7 @@ spec_history = 100  # number of lines in spectrogram
 fig, ax = plt.subplots()
 spec_data = np.zeros((spec_history, fft_size // 2))
 img = ax.imshow(spec_data, aspect='auto', origin='lower',
-                extent=[0, sdr.sample_rate / 2 / 1e6, 0, spec_history],
+                extent=[-(sdr.sample_rate / 2 / 1e6) / 2, (sdr.sample_rate / 2 / 1e6) / 2, -spec_history / 2, spec_history / 2],
                 cmap='viridis', vmin=-100, vmax=0)
 
 ax.set_xlabel("Frequency (MHz)")
@@ -63,6 +64,7 @@ def update(frame):
     img.set_data(spec_data)
     return [img]
 
+# run animation for the waterfall plot
 ani = animation.FuncAnimation(fig, update, interval=50, blit=True)
 plt.tight_layout()
 plt.show()
@@ -77,25 +79,28 @@ except Exception as e:
     exit()
 
 # run detection
-count = 0
+count = 0   # count cycles until detected
 while detected == False:
-    count += 1
+    count += 1  # increment cycle count
     
     # read samples from RTL-SDR
     samples = None
     samples = sdr.read_samples(N)
-    #detect_obj.step_detect(samples)      
+    
     # plot samples
     plt.plot(np.real(samples))
     plt.plot(np.imag(samples))
     plt.show()
-    
+
+    # save samples to an external file (optional) 
     #np.array(samples, dtype=np.complex64).tofile("test_data.bin")
 
     # run detection
     detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
+# take signal from the samples
 data = samples[start:end]
+np.array(data, dtype=np.complex64).tofile("selected_signal.bin")
 print(f"Signal found after {count} cycles")
 
 # plot handling
@@ -104,10 +109,6 @@ plt.show()
 
 # begin signal processing
 print("Processing data...")
-
-# time correction
-# Phase correction  
-# frequency correction
 
 # create receive processing object
 recieve_obj = rp.receive_processing(sps, sdr.sample_rate)
