@@ -21,7 +21,7 @@ time.sleep(1)
 # settings to run detector
 detected = False
 sps = 20
-N = 100 * 1024
+N = 20 * 1024
 start = 0
 end = N - 1
 beta = 0.35
@@ -29,11 +29,10 @@ num_taps = 101
 symbol_rate = sdr.sample_rate / sps
 
 transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
-start_marker, end_marker = transmit_obj.generate_markers()
-match_start, match_end = transmit_obj.modulated_markers(beta, num_taps, start_marker, end_marker) 
+match_start, match_end = transmit_obj.modulated_markers(beta, num_taps) 
 
 # detector object
-detect_obj = d.Detector(start_marker, end_marker, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
+#detect_obj = d.Detector(start_marker, end_marker, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
 
 # Spectrogram parameters
 fft_size = N
