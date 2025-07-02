@@ -6,7 +6,7 @@ from Sig_Gen import SigGen, rrc_filter
 from config import *
 from transmit_processing import transmit_processing
 from receive_processing import receive_processing
-DEBUG = 1
+DEBUG = False
 freq_offset = 20000
 time_delay = 0.00232
 max_freq = 200
@@ -331,7 +331,8 @@ def channel_handler(rx_signal):
 
     rp = receive_processing(int(SAMPLE_RATE/SYMB_RATE), SAMPLE_RATE)
     filtered_sig = lowpass_filter(rx_signal)
-    caf_fixed = cross_corr_caf(filtered_sig, True)
+    course_fixed = coarse_freq_recovery(filtered_sig)
+    caf_fixed = cross_corr_caf(course_fixed, True)
     costas_fixed = costas_loop(caf_fixed)
     bits_string, decoded_message, symbols = rp.work(costas_fixed, BETA, NUMTAPS)
     

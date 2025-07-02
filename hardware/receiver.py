@@ -12,7 +12,7 @@ from channel_correction import *
 # configure RTL-SDR
 sdr = RtlSdr()
 sdr.sample_rate = 2.88e6 # Hz
-sdr.center_freq = 905e6 # Hz
+sdr.center_freq = 910e6 # Hz
 sdr.freq_correction = 60 # PPM
 sdr.gain = 'auto'
 
@@ -87,16 +87,6 @@ while detected == False:
     # read samples from RTL-SDR
     samples = None
     samples = sdr.read_samples(N)
-    
-    # plot samples
-    plt.plot(np.real(samples), label = 'real')
-    plt.plot(np.imag(samples), label = 'imaginary')
-    plt.legend()
-    plt.title("Raw IQ Samples")
-    plt.xlabel('Time (samples)')
-    plt.ylabel('Amplitude')
-    plt.grid()
-    plt.show()
 
     # save samples to an external file (optional) 
     open('test_data.bin', 'w').close()
@@ -106,7 +96,8 @@ while detected == False:
     detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 # take signal from the samples
-data = samples[start:end]
+#data = samples[start:end]
+data = samples
 # open('selected_signal.bin', 'w').close()
 # np.array(data, dtype=np.complex64).tofile("selected_signal.bin")
 print(f"Signal found after {count} cycles")
