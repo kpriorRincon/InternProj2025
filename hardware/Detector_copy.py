@@ -84,6 +84,8 @@ class Detector:
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
                 #plt.axvline(y = start, linestyle = '--', color = 'r')
+                # plt.xlabel("Time (samples)")
+                plt.ylabel("Magnitude")
                 plt.scatter(start_idx, np.abs(cor_start[start_idx]), s = 100, c = 'r', marker = '.')
                 
                 plt.subplot(2, 1, 2)
@@ -92,6 +94,8 @@ class Detector:
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
                 plt.scatter(end_idx, np.abs(cor_end[end_idx]), s = 100, c = 'r', marker = '.')
+                plt.xlabel("Time (samples)")
+                plt.ylabel("Magnitude")
                 #plt.axvline(x = end, linestyle = '--', color = 'r')
                 plt.show()
 
