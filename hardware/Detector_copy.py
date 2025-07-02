@@ -3,9 +3,7 @@ import scipy.signal as sig
 import matplotlib.pyplot as plt
 from hardware.channel_correction_hardware import *
 class Detector:
-    def __init__(self, marker_start, marker_end, N, Ts, beta=0.35, fs=2.4e6, sps=2):
-        self.marker_start = marker_start
-        self.marker_end = marker_end
+    def __init__(self, N, Ts, beta=0.35, fs=2.4e6, sps=2):
         self.beta = beta
         self.N = N
         self.Ts = Ts
@@ -43,15 +41,13 @@ class Detector:
         # end cor
         cor_end = np.abs(sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same'))
         
-        # trim the fat
-        trim_factor = 5000
-
         # get start and end indices
         start = np.argmax(cor_start) - int(len(match_start) / 2)    # go back length of the start/end sequence
         start_idx = np.argmax(cor_start)
         end = np.argmax(cor_end) + int(len(match_end) / 2)
         end_idx = np.argmax(cor_end)
         
+    
         print("Start index: ", start)
         print("End index: ", end)
         
@@ -66,7 +62,7 @@ class Detector:
         M = len(training_samples)
         print(f"Training samples length: {M}")
         if M > 0:
-            P_fa = 0.075 # probability of false alarm
+            P_fa = 0.001 # probability of false alarm
             alpha = (P_fa**(-1/M) - 1) * M
             Pn = np.sum(np.abs(training_samples)) / M
             self.threshold = Pn * alpha
@@ -100,10 +96,10 @@ class Detector:
                 plt.show()
 
         # if the start index is greater than the end index signal not found, return default values
-        if start_idx > end_idx or start < 0 or end > len(samples) or (end - start) > 2 * len(match_start):
+        if start_idx > end_idx or start < 0 or end > len(samples):
             print("Start index greater than end...\nSignal not found...\nSet to defaults")
             start = 0
             end = len(samples) - 1
             detected = False
         
-        return detected, start + trim_factor, end + trim_factor
+        return detected, start, end

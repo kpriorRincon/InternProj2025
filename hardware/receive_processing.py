@@ -151,4 +151,4 @@ class receive_processing:
 
         message = self.bits_to_message(bits)
         
-        return bits_string, message
+        return bits_string, message, symbols
