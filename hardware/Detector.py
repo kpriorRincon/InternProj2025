@@ -103,7 +103,7 @@ class Detector:
         M = len(training_samples)
         print(f"Training samples length: {M}")
         if M > 0:
-            P_fa = 0.075 # probability of false alarm
+            P_fa = 0.2 # probability of false alarm
             alpha = (P_fa**(-1/M) - 1) * M
             Pn = np.sum(np.abs(training_samples)) / M
             self.threshold = Pn * alpha

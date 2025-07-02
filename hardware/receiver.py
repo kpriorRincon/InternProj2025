@@ -79,20 +79,22 @@ except Exception as e:
 
 # run detection
 count = 0
-while detected == False:
-    count += 1
+#while detected == False:
+#    count += 1
     
     # read samples from RTL-SDR
-    samples = None
-    samples = sdr.read_samples(N)
+samples = None
+samples = sdr.read_samples(N)
     #detect_obj.step_detect(samples)      
     # plot samples
     #plt.plot(np.real(samples))
     #plt.plot(np.imag(samples))
     #plt.show()
     
+np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+
     # run detection
-    detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+    #detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 data = samples[start:end]
 print(f"Signal found after {count} cycles")
