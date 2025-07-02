@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal as sig
 import matplotlib.pyplot as plt
-from channel_correction_hardware import *
+from channel_correction import *
 class Detector:
     def __init__(self, N, Ts, beta=0.35, fs=2.4e6, sps=2):
         self.beta = beta
@@ -75,8 +75,19 @@ class Detector:
                 detected = True
                 print("Length of start sequence: ", len(match_start))
                 print("Length of end sequence: ", len(match_end))
-                #plt.plot(np.fft.fftfreq(len(cor_start), 1/self.fs), 20*np.log10(np.fft.fft(cor_start)), label='Start Correlation')
-                #plt.plot(np.fft.fftfreq(len(cor_end), 1/self.fs), 20*np.log10(np.fft.fft(cor_end)), label='End Correlation')
+
+                 # plot samples
+                plt.plot(np.real(samples), label = 'real')
+                plt.plot(np.imag(samples), label = 'imaginary')
+                plt.legend()
+                plt.title("Raw IQ Samples")
+                plt.xlabel('Time (samples)')
+                plt.ylabel('Amplitude')
+                plt.grid()
+                plt.show()
+
+                #plt.plot(np.fft.fftfreq(len(cor_start), 0/self.fs), 20*np.log10(np.fft.fft(cor_start)), label='Start Correlation')
+                #plt.plot(np.fft.fftfreq(len(cor_end), 0/self.fs), 20*np.log10(np.fft.fft(cor_end)), label='End Correlation')
                 plt.subplot(2, 1, 1)
                 plt.title('Correlation of the Matched Filters')
                 plt.plot(np.abs(cor_start), label='start')
@@ -84,16 +95,17 @@ class Detector:
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
                 #plt.axvline(y = start, linestyle = '--', color = 'r')
-                plt.scatter(start_idx, np.abs(cor_start[start_idx]), s = 100, c = 'r', marker = '.')
+                plt.scatter(start_idx, np.abs(cor_start[start_idx]), s = 99, c = 'r', marker = '.')
                 
                 plt.subplot(2, 1, 2)
                 plt.plot(np.abs(cor_end), label='end')
                 plt.grid()
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
-                plt.scatter(end_idx, np.abs(cor_end[end_idx]), s = 100, c = 'r', marker = '.')
+                plt.scatter(end_idx, np.abs(cor_end[end_idx]), s = 99, c = 'r', marker = '.')
                 #plt.axvline(x = end, linestyle = '--', color = 'r')
                 plt.show()
+
 
         # if the start index is greater than the end index signal not found, return default values
         if start_idx > end_idx or start < 0 or end > len(samples):
@@ -101,5 +113,7 @@ class Detector:
             start = 0
             end = len(samples) - 1
             detected = False
+
+           
         
         return detected, start, end

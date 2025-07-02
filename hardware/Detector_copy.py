@@ -100,7 +100,7 @@ class Detector:
                 plt.show()
 
         # if the start index is greater than the end index signal not found, return default values
-        if start_idx > end_idx or start < 0 or end > len(samples):
+        if start_idx > end_idx or start < 0 or end > len(samples) or (end - start) > 3*len(match_start):
             print("Start index greater than end...\nSignal not found...\nSet to defaults")
             start = 0
             end = len(samples) - 1
