@@ -503,13 +503,13 @@ def main():
     print(f"Length of TX Signal: {len(qpsk_wave)}")
     # Integer time delay
     #qpsk_wave, t = integer_delay(qpsk_wave, 100)
-    t, qpsk_wave = fractional_delay(t, qpsk_wave, time_delay)
+    #t, qpsk_wave = fractional_delay(t, qpsk_wave, time_delay)
 
     # Set frequency offset
-    qpsk_wave = qpsk_wave * np.exp(1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
+    #qpsk_wave = qpsk_wave * np.exp(1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
     
     # Uniformly random phase offset
-    qpsk_wave = phase_offset(qpsk_wave)
+    #qpsk_wave = phase_offset(qpsk_wave)
 
     # Adding AWGN
     post_channel_wave = add_awgn(qpsk_wave)

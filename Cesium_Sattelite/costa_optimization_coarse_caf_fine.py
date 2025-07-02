@@ -6,6 +6,7 @@ import time
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+from matplotlib import animation
 
 fs = 2.88e6
 symb_rate = fs/20
@@ -217,11 +218,56 @@ def main():
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot_surface(A, B, error_matrix, cmap='viridis')
+    ax.scatter(
+        best_beta, best_alpha, min_error,
+        color='red',
+        s=60,
+        marker='o',
+        label='Min Error',
+        edgecolor='black',
+        zorder=9
+    )
+    ax.plot3D(
+        [best_beta, best_beta],
+        [best_alpha, best_alpha],
+        [0, 1.5],  # test value
+        color='red',
+        linewidth=2,
+        linestyle='--',
+        zorder=10
+    )
+
     ax.set_xlabel('Beta')
     ax.set_ylabel('Alpha')
     ax.set_zlabel('Error')
     ax.set_title('Costas Loop Error Surface')
+    # Assuming you previously found the best alpha/beta/error
+    label_text = (
+        f"Best Alpha: {best_alpha:.3f}\n"
+        f"Best Beta: {best_beta:.6f}\n"
+        f"Min Error: {min_error:.6f}"
+    )
+
+    # Place text outside the data range (adjust X, Y, Z to fit)
+    fig.text(
+        0.1, 0.79,  # position in figure coords: x=85% from left, y=20% from bottom
+        f"Best Alpha: {best_alpha:.5f}\nBest Beta: {best_beta:.7f}\nMin Error: {min_error:.6f}",
+        fontsize=10,
+        bbox=dict(boxstyle='round,pad=0.3', fc='lightyellow', ec='blue', alpha=0.8)
+    )
+    #plt.show()
+
+    def rotate(angle):
+        ax.view_init(elev=30, azim=angle)
+
+    rot_anim = animation.FuncAnimation(fig, rotate, frames=np.arange(0, 360, 2), interval=100)
+    rot_anim.save("costas_loop_surface.gif", dpi=150, writer='pillow')
+
+
     plt.show()
+
+
+
     plt.figure(figsize=(10, 6))
     sns.heatmap(error_matrix, xticklabels=np.round(betas, 8), yticklabels=np.round(alphas, 5), cmap='mako', annot=False)
     plt.xlabel('Beta')
