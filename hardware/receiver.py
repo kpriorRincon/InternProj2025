@@ -89,8 +89,13 @@ while detected == False:
     samples = sdr.read_samples(N)
     
     # plot samples
-    plt.plot(np.real(samples))
-    plt.plot(np.imag(samples))
+    plt.plot(np.real(samples), label = 'real')
+    plt.plot(np.imag(samples), label = 'imaginary')
+    plt.legend()
+    plt.title("Raw IQ Samples")
+    plt.xlabel('Time (samples)')
+    plt.ylabel('Amplitude')
+    plt.grid()
     plt.show()
 
     # save samples to an external file (optional) 
