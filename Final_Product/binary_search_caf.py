@@ -123,6 +123,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Coarse Frequency Synchronization')
+        plt.tight_layout()
         plt.savefig('media/coarse_correction.png', dpi = 300)
         plt.close()
 
@@ -136,6 +137,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.title('Raising Signals to Nth Power')
         plt.axis('equal')
         plt.grid()
+        plt.tight_layout()
         plt.savefig('media/Nth_Order.png', dpi = 300)
         plt.close()
 
@@ -161,7 +163,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.ylabel('Magnitude')
         plt.title('FFT of Signal Raised to 4th')
         # label at freq_tone
-
+        plt.tight_layout()
         plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300)
         plt.close()
 
@@ -229,7 +231,7 @@ def costas_loop(qpsk_wave):
         plt.ylabel('Quadrature (Q)')
         plt.legend()
         plt.axis('equal')
-        
+        plt.tight_layout()
         plt.grid(True)
         plt.title('Fine Frequency Synchronization (Costas Loop)')
         plt.savefig('media/fine_correction.png')
@@ -304,7 +306,7 @@ def cross_corr_caf(rx_signal):
         plt.plot(range(len(visited_freqs)), visited_freqs, marker='o')
         plt.xlabel("Iteration")
         plt.ylabel("Frequency Offset (Hz or bins)")
-        plt.title("Binary Search Convergence on Frequency Offset")
+        plt.title("Binary Search CAF Convergence on Frequency Offset")
         plt.grid(True)
         plt.savefig('media/binary_search_convergence.png')
         plt.close()
@@ -369,7 +371,7 @@ def cross_corr_caf(rx_signal):
         plt.legend()
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
-        plt.title('Output of CAF')
+        plt.title('Constelation Plot After CAF')
         plt.grid(True)
         plt.axis('equal')
         plt.savefig('media/pre_phase_correction_constellation.png')
@@ -489,7 +491,6 @@ def channel_handler(rx_signal):
             plt.xlabel('In-Phase (I)')
             plt.ylabel('Quadrature (Q)')
             plt.axis('equal')
-            
             plt.savefig('media/clean_signal.png')
             plt.close()
     return decoded_message
@@ -543,7 +544,7 @@ def main():
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.axis('equal')
-        
+        plt.tight_layout()
         plt.savefig('media/clean_signal.png')
         plt.close()
 
