@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import scipy.signal as signal
-import Detector as d
+import Detector_copy as d
 import receive_processing as rp
 import time
 import transmit_processing as tp
@@ -32,7 +32,7 @@ transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
 match_start, match_end = transmit_obj.modulated_markers(beta, num_taps) 
 
 # detector object
-#detect_obj = d.Detector(start_marker, end_marker, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
+detect_obj = d.Detector(N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
 
 # Spectrogram parameters
 fft_size = N
@@ -78,22 +78,22 @@ except Exception as e:
 
 # run detection
 count = 0
-#while detected == False:
-#    count += 1
+while detected == False:
+    count += 1
     
     # read samples from RTL-SDR
-samples = None
-samples = sdr.read_samples(N)
+    samples = None
+    samples = sdr.read_samples(N)
     #detect_obj.step_detect(samples)      
     # plot samples
-plt.plot(np.real(samples))
-plt.plot(np.imag(samples))
-plt.show()
+    plt.plot(np.real(samples))
+    plt.plot(np.imag(samples))
+    plt.show()
     
-np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+    #np.array(samples, dtype=np.complex64).tofile("test_data.bin")
 
     # run detection
-    #detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+    detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 data = samples[start:end]
 print(f"Signal found after {count} cycles")

@@ -3,9 +3,7 @@ import scipy.signal as sig
 import matplotlib.pyplot as plt
 from binary_search_caf import *
 class Detector:
-    def __init__(self, marker_start, marker_end, N, Ts, beta=0.35, fs=2.4e6, sps=2):
-        self.marker_start = marker_start
-        self.marker_end = marker_end
+    def __init__(self, N, Ts, beta=0.35, fs=2.4e6, sps=2):
         self.beta = beta
         self.N = N
         self.Ts = Ts
@@ -51,7 +49,7 @@ class Detector:
         start_idx = np.argmax(cor_start)
         end = np.argmax(cor_end) + int(len(match_end) / 2)
         end_idx = np.argmax(cor_end)
-
+    
         print("Start index: ", start)
         print("End index: ", end)
         
