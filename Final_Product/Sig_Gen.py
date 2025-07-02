@@ -266,7 +266,7 @@ class SigGen:
         )
         plt.xlabel("In-phase (I)")
         plt.ylabel("Quadrature (Q)")
-        plt.title("Constellation Diagram (Pulse Shaped Symbols)")
+        plt.title("Constellation Diagram\n(Pulse Shaped Symbols)")
         plt.grid(True)
         plt.axis('equal')
         plt.tight_layout()

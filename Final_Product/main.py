@@ -81,6 +81,7 @@ ui.add_css('''
     justify-content: center;
     align-items: center;
     gap: 20px;
+    width: 100%;
     padding: 200px; /* add some padding to prevent edge clipping */
 }
 ''', shared=True)
@@ -92,11 +93,71 @@ def zoomable_image(src):
 
 
 #Front page 
-with ui.row().style('height: 100vh; width: 100%; display: flex; justify-content: center; align-items: center;'):
-    with ui.link(target='\SIMULATE'):
-        simulate_button = ui.image('media/simulate.png').style('width: 50vh; height: 50vh;')
-    with ui.link(target='\CONTROL'):
-        control_button = ui.image('media/control.png').style('width: 50vh; height: 50vh;')
+#Add a cool background image
+ui.add_head_html('''
+    <style>
+    body {
+        background-image: url("https://adventr.co/wp-content/uploads/2019/08/Red2Cover.jpg");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no-repeat; 
+    }
+    
+    .glass-bar {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        height: 60px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.1);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 1000;
+        padding: 0 30px;
+        box-sizing: border-box;
+        color: white;
+  }
+
+  .glass-bar .item {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        gap: 8px;
+        font-size: 18px;
+        color: white;
+  }
+
+  .spacer {
+        height: 60px; /* reserve space under the fixed bar */
+  }
+</style>
+''')
+
+#Add the frosted glass bar
+with ui.element('div').classes('glass-bar'):
+    with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/SIMULATE')):
+        ui.icon('code')
+        ui.label('Simulation')
+
+    with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/CONTROL')):
+        ui.icon('settings')
+        ui.label('Control')
+
+    with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
+        ui.icon('info')
+        ui.label('About')
+#add some spacer to content doesn't go under the fixed bar
+ui.element('div').classes('spacer')
+
+#Main page content:
+
+
+
 
 
 # Simulate Page-------------------------------------------------------------------------------------------------------------------
@@ -602,8 +663,12 @@ def simulate_page():
             def repeater_page():     
                 ui.add_head_html('''<script>document.title = 'Repeater';</script>''')
                 ui.label('Repeater Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
-                ui.label(f'The repeater will retransmit at {required_rep_power} W').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
-                ui.label(f'The repeater takes in the signal and sends it back out, upconverted 10 MHz').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+                ui.label(f'The repeater will retransmit at {required_rep_power} W').style(
+                    'font-size: 1.5em; font-weight: bold; margin-top: 1em; text-align: center; display: block; width: 100%;'
+                )
+                ui.label(f'The repeater takes in the signal and sends it back out, upconverted 10 MHz').style(
+                    'font-size: 1.5em; font-weight: bold; margin-top: 1em; text-align: center; display: block; width: 100%;'
+                )
 
             @ui.page('/channel2')
             def channel2_page():
@@ -666,9 +731,42 @@ def simulate_page():
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page(): 
-    pass
+    #instructions
 
+    #Text input centered with submit button to the right 
+    with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
+        text_input = ui.input(placeholder="Enter a Message to Send").props('rounded outlined dense').style('width: 60%; font-size:20px;')
+        #when submit button is clicked have a loading bar until the hardware has sent and received the message 
+        submit_button = ui.button('Submit', on_click=lambda: send_message(text_input.value)).style('width: 20%;')
+    with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
 
+        #loading bar
+        loading_bar = ui.linear_progress(value = 'controlling hardware...').props('indeterminate color="primary"').style('width: 20%; height: 32px; margin-top: 20px; order: 2;')
+        #hide the loading bar initially
+        loading_bar.visible = False
+    async def send_message(message):
+        """Sends the message to the hardware and waits for a response."""
+        #check if message is empty if it is notify the user and return
+        if not message:
+            ui.notify('Please enter a message to send.')
+            return
+        loading_bar.visible = True
+        await asyncio.sleep(0.1)  # give the UI time to update
+
+        #------
+        #insert command and control here
+        #------
+
+        #placeholder for sending the message to the hardware DELTE THIS when  when ready
+        
+        for i in range(100):
+            await asyncio.sleep(1)
+            print(f'{i}.Sending message: {message}')
+
+        loading_bar.visible = False
+        ui.notify('Message sent!')  # notify the user that the message was sent
+        return
+            
 
 #run the GUI
 ui.run()
