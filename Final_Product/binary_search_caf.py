@@ -123,8 +123,8 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Coarse Frequency Synchronization')
-        plt.tight_layout()
-        plt.savefig('media/coarse_correction.png', dpi = 300)
+        
+        plt.savefig('media/coarse_correction.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
         plt.figure(figsize=(6, 6))
@@ -137,8 +137,8 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.title('Raising Signals to Nth Power')
         plt.axis('equal')
         plt.grid()
-        plt.tight_layout()
-        plt.savefig('media/Nth_Order.png', dpi = 300)
+        
+        plt.savefig('media/Nth_Order.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
 
@@ -163,8 +163,8 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.ylabel('Magnitude')
         plt.title('FFT of Signal Raised to 4th')
         # label at freq_tone
-        plt.tight_layout()
-        plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300)
+        
+        plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
 
@@ -221,7 +221,7 @@ def costas_loop(qpsk_wave):
         plt.grid()
         plt.xlabel('Loop Iteration Count')
         plt.ylabel('Frequency (Hz)')
-        plt.savefig('media/costas_convergence.png')
+        plt.savefig('media/costas_convergence.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
         plt.figure(figsize=(6, 6))
@@ -231,10 +231,10 @@ def costas_loop(qpsk_wave):
         plt.ylabel('Quadrature (Q)')
         plt.legend()
         plt.axis('equal')
-        plt.tight_layout()
+        
         plt.grid(True)
         plt.title('Fine Frequency Synchronization (Costas Loop)')
-        plt.savefig('media/fine_correction.png')
+        plt.savefig('media/fine_correction.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
     return fixed_qpsk
@@ -308,7 +308,7 @@ def cross_corr_caf(rx_signal):
         plt.ylabel("Frequency Offset (Hz or bins)")
         plt.title("Binary Search CAF Convergence on Frequency Offset")
         plt.grid(True)
-        plt.savefig('media/binary_search_convergence.png')
+        plt.savefig('media/binary_search_convergence.png', dpi = 300, bbox_inches='tight')
         plt.close()
         visited_freqs.clear()
 
@@ -324,7 +324,7 @@ def cross_corr_caf(rx_signal):
         plt.plot(np.abs(start_map))
         plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
         plt.ylabel('Correlation Magnitude')
-        plt.savefig('media/start_correlation.png')
+        plt.savefig('media/start_correlation.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
     #Correlate with end marker match filter for end idx
@@ -343,7 +343,7 @@ def cross_corr_caf(rx_signal):
         plt.plot(np.abs(end_map))
         plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
         plt.ylabel('Correlation Magnitude')
-        plt.savefig('media/end_correlation.png')
+        plt.savefig('media/end_correlation.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
         # Plot both correlations on top of the signal 
@@ -358,7 +358,7 @@ def cross_corr_caf(rx_signal):
         plt.ylabel('Correlation Magnitude')
         plt.legend()
         plt.grid(True)
-        plt.savefig('media/start_end_correlation.png')
+        plt.savefig('media/start_end_correlation.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
     # Reslice signal
@@ -374,7 +374,7 @@ def cross_corr_caf(rx_signal):
         plt.title('Constelation Plot After CAF')
         plt.grid(True)
         plt.axis('equal')
-        plt.savefig('media/pre_phase_correction_constellation.png')
+        plt.savefig('media/pre_phase_correction_constellation.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
 
@@ -419,7 +419,7 @@ def cross_corr_caf(rx_signal):
         plt.legend()
         
         plt.plot(np.real(fixed_signal[1:]),np.imag(fixed_signal[1:]), 'o')
-        plt.savefig('media/phase_offset.png', dpi = 300)
+        plt.savefig('media/phase_offset.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
         # Plot the constellation after phase correction
@@ -432,7 +432,7 @@ def cross_corr_caf(rx_signal):
         plt.title('Constellation after Phase Correction')
         plt.grid(True)
         plt.axis('equal')
-        plt.savefig('media/phase_corrected_constellation.png')
+        plt.savefig('media/phase_corrected_constellation.png', dpi = 300, bbox_inches='tight')
         plt.close()
     return fixed_signal
 
@@ -473,7 +473,7 @@ def channel_handler(rx_signal):
         plt.grid(True)
         plt.axis('equal')
         plt.title('Incoming IQ Plot')
-        plt.savefig('media/rx_incoming.png')
+        plt.savefig('media/rx_incoming.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
     filtered_sig = lowpass_filter(rx_signal)
@@ -491,7 +491,7 @@ def channel_handler(rx_signal):
             plt.xlabel('In-Phase (I)')
             plt.ylabel('Quadrature (Q)')
             plt.axis('equal')
-            plt.savefig('media/clean_signal.png')
+            plt.savefig('media/clean_signal.png', dpi = 300, bbox_inches='tight')
             plt.close()
     return decoded_message
 
@@ -544,8 +544,8 @@ def main():
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.axis('equal')
-        plt.tight_layout()
-        plt.savefig('media/clean_signal.png')
+        
+        plt.savefig('media/clean_signal.png', dpi = 300, bbox_inches='tight')
         plt.close()
 
     #message = channel_handler(qpsk_base)

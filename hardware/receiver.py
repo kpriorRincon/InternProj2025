@@ -89,8 +89,8 @@ while detected == False:
     samples = sdr.read_samples(N)
 
     # save samples to an external file (optional) 
-    open('test_data.bin', 'w').close()
-    np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+    #open('test_data.bin', 'w').close()
+    #np.array(samples, dtype=np.complex64).tofile("test_data.bin")
 
     # run detection
     detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
