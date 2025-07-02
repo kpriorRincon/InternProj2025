@@ -49,6 +49,7 @@ class Detector:
         start_idx = np.argmax(cor_start)
         end = np.argmax(cor_end) + int(len(match_end) / 2)
         end_idx = np.argmax(cor_end)
+        
     
         print("Start index: ", start)
         print("End index: ", end)
