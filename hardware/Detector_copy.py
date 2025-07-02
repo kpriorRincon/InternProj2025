@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal as sig
 import matplotlib.pyplot as plt
-from binary_search_caf import *
+from hardware.channel_correction_hardware import *
 class Detector:
     def __init__(self, marker_start, marker_end, N, Ts, beta=0.35, fs=2.4e6, sps=2):
         self.marker_start = marker_start

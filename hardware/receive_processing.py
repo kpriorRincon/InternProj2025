@@ -134,8 +134,8 @@ class receive_processing:
         - message : Decoded message
         """
 
-        index = len(data) // 4
-        data = data[:index]
+        #index = len(data) // 4
+        #data = data[:index]
 
         symbol_rate = self.sample_rate / self.sps
         Ts = 1 / symbol_rate

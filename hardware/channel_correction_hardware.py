@@ -4,6 +4,8 @@ import time
 from scipy.signal import resample_poly, firwin, lfilter, fftconvolve
 from Sig_Gen import SigGen, rrc_filter
 from config import *
+from transmit_processing import transmit_processing
+from receive_processing import receive_processing
 DEBUG = 1
 freq_offset = 20000
 time_delay = 0.00232
@@ -228,19 +230,22 @@ def binary_search(rx_signal, match_filter, l_freq, r_freq):
     return freq
 
 
-def cross_corr_caf(rx_signal):
+def cross_corr_caf(rx_signal, bscaf_flag):
     # Generate QPSK wave of start marker
-    sig_gen = SigGen(0, 1.0)    
-    _, marker_filter = sig_gen.generate_qpsk(START_MARKER)
+    #sig_gen = SigGen(0, 1.0)    
+    #_, marker_filter = sig_gen.generate_qpsk(START_MARKER)
+    tp = transmit_processing(int(SAMPLE_RATE/SYMB_RATE), SYMB_RATE)
+    marker_filter, end_filter = tp.modulated_markers(BETA, NUMTAPS)
+    freq_found = 0
 
     #Interpolate signal and match filter
+    if bscaf_flag:
+        strt = time.time()
+        # Binary search for frequency offset
+        freq_found = binary_search(rx_signal, marker_filter, min_freq, max_freq)
 
-    strt = time.time()
-    # Binary search for frequency offset
-    freq_found = binary_search(rx_signal, marker_filter, min_freq, max_freq)
-
-    print(f"Total time for binary search: {time.time() - strt} s.")
-    print(f"Binary Search CAF: {freq_found}")
+        print(f"Total time for binary search: {time.time() - strt} s.")
+        print(f"Binary Search CAF: {freq_found}")
 
     if DEBUG:
         # Binary search CAF convergence plot
@@ -271,7 +276,6 @@ def cross_corr_caf(rx_signal):
         plt.close()
 
     #Correlate with end marker match filter for end idx
-    _, end_filter = sig_gen.generate_qpsk(END_MARKER)
     ip_end_filter = resample_poly(end_filter, INTERPOLATION_VAL, 1)
     mixed_end_filter = mixing(ip_end_filter, freq_found, INTERPOLATION_VAL)
     end_map = fftconvolve(ip_signal, np.conj(np.flip(mixed_end_filter)), mode = 'same')
@@ -286,7 +290,7 @@ def cross_corr_caf(rx_signal):
         plt.plot(np.abs(end_map))
         plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
         plt.ylabel('Correlation Magnitude')
-        plt.show('media/end_correlation.png')
+        plt.show()
         plt.close()
 
         # Plot both correlations on top of the signal 
@@ -301,7 +305,7 @@ def cross_corr_caf(rx_signal):
         plt.ylabel('Correlation Magnitude')
         plt.legend()
         plt.grid(True)
-        plt.show('media/start_end_correlation.png')
+        plt.show()
         plt.close()
 
     # Reslice signal
@@ -317,7 +321,7 @@ def cross_corr_caf(rx_signal):
         plt.title('Output of CAF')
         plt.grid(True)
         plt.axis('equal')
-        plt.show('media/pre_phase_correction_constellation.png')
+        plt.show()
         plt.close()
 
 
@@ -362,7 +366,7 @@ def cross_corr_caf(rx_signal):
         plt.legend()
         plt.tight_layout()
         plt.plot(np.real(fixed_signal[1:]),np.imag(fixed_signal[1:]), 'o')
-        plt.show('media/phase_offset.png', dpi = 300)
+        plt.show()
         plt.close()
 
         # Plot the constellation after phase correction
@@ -375,7 +379,7 @@ def cross_corr_caf(rx_signal):
         plt.title('Constellation after Phase Correction')
         plt.grid(True)
         plt.axis('equal')
-        plt.show('media/phase_corrected_constellation.png')
+        plt.show()
         plt.close()
     return fixed_signal
 
@@ -421,11 +425,12 @@ def channel_handler(rx_signal):
 
     filtered_sig = lowpass_filter(rx_signal)
     coarse_fixed = coarse_freq_recovery(filtered_sig)
-    caf_fixed = cross_corr_caf(coarse_fixed)
+    caf_fixed = cross_corr_caf(coarse_fixed, True)
     costas_fixed = costas_loop(caf_fixed)
     rrc_signal = RRC_filter(costas_fixed)
     signal_ready = decimate(rrc_signal, int(SAMPLE_RATE/SYMB_RATE))
     decoded_message = demodulator(signal_ready)
+    
     if DEBUG:
             plt.figure(figsize=(6, 6))
             plt.plot(np.real(signal_ready[64:-64]), np.imag(signal_ready[64:-64]), 'o')
@@ -439,13 +444,37 @@ def channel_handler(rx_signal):
             plt.close()
     return decoded_message
 
+def channel_handler_2(rx_signal):
+    filtered_sig = lowpass_filter(rx_signal)
+    coarse_fixed = coarse_freq_recovery(filtered_sig)
+    caf_fixed = cross_corr_caf(coarse_fixed, True)
+    costas_fixed = costas_loop(caf_fixed)
+    rp = receive_processing(int(SAMPLE_RATE/SYMB_RATE), SAMPLE_RATE)
+    _, message = rp.work(costas_fixed, BETA, NUMTAPS)
+    return message
 def main():
+
+    # Load file
+    raw_data = np.fromfile("test_data.bin", dtype=np.complex64)
+    print("Raw data loaded from file:\n", raw_data)
     #Generate QPSK at Carrier Frequency
+    
+    """
     sig_gen = SigGen(freq=900e6, amp=1)
     bits = sig_gen.message_to_bits('hello there ' * 3)
-    t, qpsk_wave = sig_gen.generate_qpsk(bits)   
+    o_t, o_qpsk = sig_gen.generate_qpsk(bits)   
 
-    print(f"Length of TX Signal: {len(qpsk_wave)}")
+
+
+    tp = transmit_processing(int(SAMPLE_RATE/SYMB_RATE), SYMB_RATE)    
+    _, qpsk_wave = tp.work('hello there ' * 3, BETA, NUMTAPS)
+
+    qpsk_wave = raw_data
+    t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
+
+    #t = o_t
+    #qpsk_wave = o_qpsk * np.exp(-1j* 2 * np.pi * 900e6 * t)
+    #print(f"Length of TX Signal: {len(qpsk_wave)}")
     # Integer time delay
     #qpsk_wave, t = integer_delay(qpsk_wave, 100)
     t, qpsk_wave = fractional_delay(t, qpsk_wave, time_delay)
@@ -459,15 +488,12 @@ def main():
     # Adding AWGN
     post_channel_wave = add_awgn(qpsk_wave)
 
-    #Tune down to baseband
-    qpsk_base = post_channel_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
-    
-    lpf_signal = lowpass_filter(qpsk_base)
+    lpf_signal = lowpass_filter(post_channel_wave)
     
     coarse_fixed_sig = coarse_freq_recovery(lpf_signal)
 
     # Run CAF and return frequency offset found with highest correlation
-    caf_fixed_sig = cross_corr_caf(coarse_fixed_sig)
+    caf_fixed_sig = cross_corr_caf(coarse_fixed_sig, True)
 
     #Down convert with offset
     final_fixed_sig = costas_loop(caf_fixed_sig)
@@ -491,8 +517,8 @@ def main():
         plt.tight_layout()
         plt.show()
         plt.close()
-
-    #message = channel_handler(qpsk_base)
+    """
+    message = channel_handler_2(raw_data)
     print(f"The decoded message = {message}")
 
 if __name__ == "__main__":

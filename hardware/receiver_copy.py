@@ -6,7 +6,7 @@ import Detector_copy as d
 import receive_processing as rp
 import time
 import transmit_processing as tp
-from binary_search_caf import *
+from hardware.channel_correction_hardware import *
 # configure RTL-SDR
 sdr = RtlSdr()
 sdr.sample_rate = 2.88e6 # Hz
