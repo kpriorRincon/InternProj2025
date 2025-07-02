@@ -452,7 +452,7 @@ def Cesium_page():
                 ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
 
 
-            #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
+            #Simply run all of the handlers here that produce desired graphs to be used in each individual page
             #decide the amplitude of the signal so that by the time it gets to the repeater it's very
             # Calculate amplitude scaling so that the QPSK signal has required_tx_power at the repeater
             # QPSK average power is proportional to amp^2 (assuming unit average symbol energy)
