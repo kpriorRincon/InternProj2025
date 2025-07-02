@@ -5,7 +5,7 @@ from scipy.signal import resample_poly, firwin, lfilter, fftconvolve
 from Sig_Gen import SigGen, rrc_filter
 from config import *
 DEBUG = 1
-freq_offset = 20000
+freq_offset = 2000
 time_delay = 0.00232
 max_freq = 200
 min_freq = -200
@@ -107,7 +107,6 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
     if DEBUG:
-        plt.figure(figsize=(6, 6))
         plt.plot(np.real(fixed_qpsk[1:]), np.imag(fixed_qpsk[1:]), 'b-', zorder = 1, label = 'oversampled signal')
         plt.scatter(np.real(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
         plt.legend()
@@ -116,6 +115,45 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.title('Coarse Frequency Synchronization')
         plt.savefig('media/coarse_correction.png')
         plt.close()
+
+        plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'blue', zorder = 2, label = 'RX Signal')
+        plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]**2), s=10, color= 'green', zorder = 2, label = 'Signal at 2nd Power')
+        plt.scatter(np.real(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'red', zorder = 2, label = 'Signal at 4th Power')
+
+        plt.legend()
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.title('Raising Signals to Nth Power')
+        plt.axis()
+        plt.grid()
+        plt.show()
+        plt.close()
+
+        plt.plot(freqs, fft_vals)
+        #plt.axvline(x=freq_tone * order, color='red', linestyle='--', label='Detected Tone')
+        plt.legend()
+        plt.xlim(-10e3, 100e3)
+        plt.annotate(
+            f'Frequency offset:\n{freq_tone * order:.2f} Hz',  # multi-line label in MHz
+            xy=(freq_tone * order, np.max(fft_vals)),         # annotation target (converted to MHz)
+            xytext=(freq_tone * order * 0.90, np.max(fft_vals) * 1.05 - 3),  # text to the left and slightly above
+            fontsize=10,
+            color='blue',
+            ha='right',
+            va='bottom',
+            arrowprops=dict(facecolor='blue', arrowstyle='->', lw=1.5),
+            bbox=dict(boxstyle='round,pad=0.3', fc='lightyellow', ec='blue', alpha=0.8)
+        )
+        plt.xlabel('Frequency (kHz)')
+        plt.grid()
+        plt.ylabel('Magnitude')
+        plt.title('FFT of Signal Raised to 4th')
+        # label at freq_tone
+
+        plt.show()
+
+
+
         
     return fixed_qpsk
 
@@ -165,6 +203,9 @@ def costas_loop(qpsk_wave):
         plt.figure(figsize=(10, 6))
         plt.plot(freq_log,'.-')
         plt.title('Costas Loop Frequency Convergence')
+        plt.grid()
+        plt.xlabel('Loop Iteration Count')
+        plt.ylabel('Frequency (Hz)')
         plt.savefig('media/costas_convergence.png')
         plt.close()
 
@@ -461,7 +502,7 @@ def main():
 
     #Tune down to baseband
     qpsk_base = post_channel_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
-    
+
     lpf_signal = lowpass_filter(qpsk_base)
     
     coarse_fixed_sig = coarse_freq_recovery(lpf_signal)

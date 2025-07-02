@@ -1,6 +1,6 @@
 SAMPLE_RATE = 2.88e6
 SYMB_RATE = SAMPLE_RATE / 20
-NUMTAPS = 201
+NUMTAPS = 41
 BETA = 0.8
 INTERPOLATION_VAL = 16
 START_MARKER =[1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
