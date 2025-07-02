@@ -500,24 +500,7 @@ def simulate_page():
                 Pcurr = np.mean(np.abs(qpsk_signal_after_channel) ** 2)
                 gain = np.sqrt(required_rep_power / Pcurr) #this gain is used to get the power of the signal to desired power
                 
-
                 repeated_qpsk_signal = gain * np.exp(1j*2 * np.pi * 10e6 * new_t) * qpsk_signal_after_channel 
-                
-                #generate a plot of the tuned fft of the qpsk_signal_after_channel for the repeater page
-                repeated_qpsk_signal_tuned = repeated_qpsk_signal
-                N = len(repeated_qpsk_signal_tuned)
-                fft_repeated = np.fft.fftshift(np.fft.fft(repeated_qpsk_signal_tuned))
-                freqs_repeated = np.fft.fftshift(np.fft.fftfreq(N, d = 1 / SAMPLE_RATE)) + txFreq + 10e6 # shift the frequencies to center around txFreq
-
-                plt.figure(figsize=(10, 6))
-                plt.plot(freqs_repeated/1e6, 20 * np.log10(np.abs(fft_repeated)))
-                plt.xlabel("Frequency (MHz)")
-                plt.ylabel("Magnitude (dB)")
-                plt.title("FFT of Repeated Signal")
-                plt.grid(True)
-                plt.tight_layout()
-                plt.savefig('media/repeater_fft.png', dpi=300)
-                plt.close()
 
                 #now we want to see if we actually got to the desired power
                 #debug:

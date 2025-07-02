@@ -141,7 +141,7 @@ class Channel:
         plt.grid(True)
         plt.gca().set_aspect('equal', adjustable='box')
         plt.legend()
-        plt.tight_layout()
+        
         plt.savefig(f'media/channel_{direction}_h_phase.png', dpi=300)
         plt.close()
 
@@ -161,7 +161,7 @@ class Channel:
         plt.grid(True)
         plt.legend()
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.tight_layout()
+        
         plt.savefig(f'media/channel_{direction}_incoming_tuned_constellation.png', dpi=300)
         plt.close()
 
@@ -183,6 +183,6 @@ class Channel:
         plt.grid(True)
         plt.legend()
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.tight_layout()
+        
         plt.savefig(f'media/channel_{direction}_outgoing_tuned_constellation.png', dpi=300)
         plt.close()

@@ -229,7 +229,7 @@ def costas_loop(qpsk_wave):
         plt.ylabel('Quadrature (Q)')
         plt.legend()
         plt.axis('equal')
-        plt.tight_layout()
+        
         plt.grid(True)
         plt.title('Fine Frequency Synchronization (Costas Loop)')
         plt.savefig('media/fine_correction.png')
@@ -415,7 +415,7 @@ def cross_corr_caf(rx_signal):
         plt.grid(True)
         plt.gca().set_aspect('equal', adjustable='box')
         plt.legend()
-        plt.tight_layout()
+        
         plt.plot(np.real(fixed_signal[1:]),np.imag(fixed_signal[1:]), 'o')
         plt.savefig('media/phase_offset.png', dpi = 300)
         plt.close()
@@ -489,7 +489,7 @@ def channel_handler(rx_signal):
             plt.xlabel('In-Phase (I)')
             plt.ylabel('Quadrature (Q)')
             plt.axis('equal')
-            plt.tight_layout()
+            
             plt.savefig('media/clean_signal.png')
             plt.close()
     return decoded_message
@@ -543,7 +543,7 @@ def main():
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.axis('equal')
-        plt.tight_layout()
+        
         plt.savefig('media/clean_signal.png')
         plt.close()
 
