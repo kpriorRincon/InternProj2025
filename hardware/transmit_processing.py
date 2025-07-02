@@ -1,12 +1,45 @@
 import numpy as np
-import scipy.signal as signal
+from scipy.signal import fftconvolve,  max_len_seq
 
 class transmit_processing:
     
     def __init__(self, sps, sample_rate):
         self.sps = sps
         self.sample_rate = sample_rate
-        
+        self.start_sequence = [1, 1, 1, 1, 1, 1, 1, 0,
+                               0, 0, 1, 1, 1, 0, 1, 1,
+                               0, 0, 0, 1, 0, 1, 0, 0,
+                               1, 0, 1, 1, 1, 1, 1, 0,
+                               1, 0, 1, 0, 1, 0, 0, 0,
+                               0, 1, 0, 1, 1, 0, 1, 1,
+                               1, 1, 0, 0, 1, 1, 1, 0,
+                               0, 1, 0, 1, 0, 1, 1, 0,
+                               0, 1, 1, 0, 0, 0, 0, 0,
+                               1, 1, 0, 1, 1, 0, 1, 0,
+                               1, 1, 1, 0, 1, 0, 0, 0,
+                               1, 1, 0, 0, 1, 0, 0, 0,
+                               1, 0, 0, 0, 0, 0, 0, 1,
+                               0, 0, 1, 0, 0, 1, 1, 0,
+                               1, 0, 0, 1, 1, 1, 1, 0,
+                               1, 1, 1, 0, 0, 0, 0, 1 ]
+
+        self.end_sequence = [1, 1, 1, 0, 0, 0, 0, 1,
+                             1, 1, 1, 0, 0, 1, 1, 0,
+                             1, 0, 1, 0, 1, 0, 0, 1,
+                             1, 0, 1, 0, 1, 0, 0, 0,
+                             1, 1, 1, 1, 0, 1, 1, 1,
+                             0, 1, 0, 0, 1, 0, 1, 1,
+                             1, 1, 1, 1, 1, 1, 0, 1,
+                             0, 0, 1, 1, 0, 1, 0, 1,
+                             1, 1, 1, 1, 1, 1, 0, 1,
+                             1, 0, 1, 0, 1, 0, 1, 0,
+                             0, 1, 1, 1, 0, 0, 0, 0,
+                             1, 1, 1, 0, 0, 0, 1, 0,
+                             0, 1, 0, 1, 0, 0, 1, 1,
+                             0, 1, 1, 1, 0, 1, 0, 1,
+                             0, 1, 0, 1, 0, 1, 1, 0,
+                             0, 0, 1, 1, 0, 1, 0, 1]
+            
     def generate_markers(self):
         """
         Generates start and end markers for the signal
@@ -16,7 +49,7 @@ class transmit_processing:
         - end_sequence : end marker
         """
 
-        random_sequence = signal.max_len_seq(11)[0]
+        random_sequence = max_len_seq(11)[0]
         idx = (len(random_sequence) - 1) // 2
         start_sequence = random_sequence[:idx]
         end_sequence = random_sequence[idx:-1]
@@ -24,7 +57,7 @@ class transmit_processing:
         return start_sequence, end_sequence
         
     # function that converts a message to its bit sequence
-    def message_to_bits(self, message, start_sequence, end_sequence):
+    def message_to_bits(self, message):
         """
         Convert a string message to a bitstream 
 
@@ -39,7 +72,7 @@ class transmit_processing:
         message_binary = ''.join(format(ord(char), '08b') for char in message)
 
         # add start and end markers to the bitstream
-        message_binary = ''.join(str(bit) for bit in start_sequence) + message_binary + ''.join(str(bit) for bit in end_sequence)
+        message_binary = ''.join(str(bit) for bit in self.start_sequence) + message_binary + ''.join(str(bit) for bit in self.end_sequence)
     
         # coverts bit sequence from a string to a list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
@@ -112,7 +145,7 @@ class transmit_processing:
         - h : The impulse response of the RRC filter in the time domain
         """
 
-        t = np.arange(-N // 2, N // 2 + 1) / fs 
+        t = np.linspace(-N//2, N//2, N) / fs 
 
         h = np.zeros_like(t) 
 
@@ -128,10 +161,10 @@ class transmit_processing:
                 numerator = np.sin(np.pi * t[i] * (1 - beta) / Ts) + 4 * beta * t[i] / Ts * np.cos(np.pi * t[i] * (1 + beta) / Ts)
                 denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
                 h[i] = numerator / denominator
-        return t, h
+        return t, h/np.sqrt(np.sum(h**2))  # Normalize to get unity gain
     
     # function that modulates the start and end markers of the signal 
-    def modulated_markers(self, beta, N, start_sequence, end_sequence):
+    def modulated_markers(self, beta, N):
         """
         Modulate start and end sequences
 
@@ -144,8 +177,8 @@ class transmit_processing:
         - end_data : Modulated end sequence
         """ 
      
-        start_sequence = ''.join(str(bit) for bit in start_sequence)
-        end_sequence =  ''.join(str(bit) for bit in end_sequence)
+        start_sequence = ''.join(str(bit) for bit in self.start_sequence)
+        end_sequence =  ''.join(str(bit) for bit in self.end_sequence)
 
         start_sequence = [int(bit) for bit in start_sequence.strip()]
         end_sequence = [int(bit) for bit in end_sequence.strip()]
@@ -160,9 +193,9 @@ class transmit_processing:
         Ts = 1 / symbol_rate
 
         _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
-        start_data = np.convolve(upsampled_start_symbols, h, 'same')
+        start_data = fftconvolve(upsampled_start_symbols, h, 'same')
         start_data = start_data.astype(np.complex64)
-        end_data = np.convolve(upsampled_end_symbols, h, 'same')
+        end_data = fftconvolve(upsampled_end_symbols, h, 'same')
         end_data = end_data.astype(np.complex64)
 
         return start_data, end_data
@@ -180,9 +213,9 @@ class transmit_processing:
         - bits : Modulated bits
         - data : IQ data to be sent to transmitter
         """
-        start_sequence, end_sequence = self.generate_markers()
+        # start_sequence, end_sequence = self.generate_markers()
 
-        bits = self.message_to_bits(message, start_sequence, end_sequence)
+        bits = self.message_to_bits(message)
 
         bits_string = ''.join(str(b) for b in bits)
 

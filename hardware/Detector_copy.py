@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal as sig
 import matplotlib.pyplot as plt
-
+from binary_search_caf import *
 class Detector:
     def __init__(self, marker_start, marker_end, N, Ts, beta=0.35, fs=2.4e6, sps=2):
         self.marker_start = marker_start
@@ -12,33 +12,6 @@ class Detector:
         self.fs = fs
         self.threshold = 8
         self.sps = sps
-
-    def step_detect(self, samples):
-        """
-        Detect the signal with a step function
-
-        Parameters:
-        - samples: samples read in by the RTL-SDR
-
-        Returns:
-        - detected: bool set high when signal found
-        - start: start index
-        - end: end index
-
-        """
-        t = len(samples) - 1
-        
-        # make step functoin
-        step_function = [0]*20000 + [1]*20000
-        step_function = np.array(step_function)
-        
-        # correlation signal with step function
-        correlation = sig.fftconvolve(samples, step_function)
-       
-
-        # plot
-        plt.plot(np.abs(correlation))
-        #plt.show()
 
     def detector(self, samples, match_start, match_end):
         """
@@ -54,10 +27,11 @@ class Detector:
         - start: start index of the message
         - end: end index of the message
         """
+
         print("Length of samples: ", len(samples))
         # normalize the samples
-        samples = (samples - np.min(samples)) / (np.max(np.abs(samples)) - np.min(samples))
-
+        # samples = (samples - np.min(samples)) / (np.max(np.abs(samples)) - np.min(samples))
+        samples = coarse_freq_recovery(samples)
         # default returns 
         start = 0
         end = len(samples) - 1
@@ -65,30 +39,19 @@ class Detector:
         
         # find the correlated signal
         # start cor
-        cor_start = sig.fftconvolve(samples, np.conj(np.flip(match_start)), mode='same')
-        # start cor normalize
-        cor_start = (cor_start - np.min(cor_start)) / (np.max(np.abs(cor_start)) - np.min(cor_start))
+        cor_start = np.abs(sig.fftconvolve(samples, np.conj(np.flip(match_start)), mode='same'))
         # end cor
-        cor_end = sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same')
-        # end cor normalize
-        cor_end = (cor_end - np.min(cor_end)) / (np.max(np.abs(cor_end)) - np.min(cor_end))
+        cor_end = np.abs(sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same'))
         
         # trim the fat
-        #trim_factor = 1000
-        #start_trimmed = cor_start[trim_factor:len(cor_start)-trim_factor]
-        #end_trimmed = cor_end[trim_factor:len(cor_end)-trim_factor]
+        trim_factor = 5000
 
         # get start and end indices
-        #start = np.argmax(np.abs(start_trimmed)) - int(len(match_start) / 2)    # go back length of the start/end sequence
-        #start_idx = np.argmax(np.abs(start_trimmed))
-        #end = np.argmax(np.abs(end_trimmed)) + int(len(match_end) / 2)
-        #end_idx = np.argmax(np.abs(end_trimmed))
-
-        start = np.argmax(np.abs(cor_start)) - int(len(match_start) / 2)
-        start_idx = np.argmax(np.abs(cor_start))
-        end = np.argmax(np.abs(cor_end)) + int(len(match_end) / 2)
-        end_idx = np.argmax(np.abs(cor_end))
-
+        start = np.argmax(cor_start) - int(len(match_start) / 2)    # go back length of the start/end sequence
+        start_idx = np.argmax(cor_start)
+        end = np.argmax(cor_end) + int(len(match_end) / 2)
+        end_idx = np.argmax(cor_end)
+        
         print("Start index: ", start)
         print("End index: ", end)
         
@@ -103,7 +66,7 @@ class Detector:
         M = len(training_samples)
         print(f"Training samples length: {M}")
         if M > 0:
-            P_fa = 0.2 # probability of false alarm
+            P_fa = 0.075 # probability of false alarm
             alpha = (P_fa**(-1/M) - 1) * M
             Pn = np.sum(np.abs(training_samples)) / M
             self.threshold = Pn * alpha
@@ -112,7 +75,7 @@ class Detector:
         print(f"Max correlation value: {max(np.abs(cor_start))}, Threshold: {self.threshold}")
         if max(np.abs(cor_start)) > self.threshold:
             # if the maximum energy of the correlated signal is greater than the threshold update end index
-            if max(np.abs(cor_end)) > self.threshold:
+            if max(cor_end) > self.threshold:
                 detected = True
                 print("Length of start sequence: ", len(match_start))
                 print("Length of end sequence: ", len(match_end))
@@ -128,11 +91,11 @@ class Detector:
                 plt.scatter(start_idx, np.abs(cor_start[start_idx]), s = 100, c = 'r', marker = '.')
                 
                 plt.subplot(2, 1, 2)
-                plt.plot(np.abs(cor_start), label='end')
+                plt.plot(np.abs(cor_end), label='end')
                 plt.grid()
                 plt.legend()
                 plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
-                plt.scatter(end_idx, np.abs(cor_start[end_idx]), s = 100, c = 'r', marker = '.')
+                plt.scatter(end_idx, np.abs(cor_end[end_idx]), s = 100, c = 'r', marker = '.')
                 #plt.axvline(x = end, linestyle = '--', color = 'r')
                 plt.show()
 
@@ -143,4 +106,4 @@ class Detector:
             end = len(samples) - 1
             detected = False
         
-        return detected, start, end
+        return detected, start + trim_factor, end + trim_factor

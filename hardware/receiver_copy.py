@@ -2,12 +2,11 @@ from rtlsdr import *
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
-import scipy.signal as signal
-import Detector as d
+import Detector_copy as d
 import receive_processing as rp
 import time
 import transmit_processing as tp
-
+from binary_search_caf import *
 # configure RTL-SDR
 sdr = RtlSdr()
 sdr.sample_rate = 2.88e6 # Hz
@@ -20,19 +19,20 @@ time.sleep(1)
 
 # settings to run detector
 detected = False
-sps = 20
-N = 20 * 1024
+sps = 4
+N = 30 * 1024
 start = 0
 end = N - 1
 beta = 0.35
-num_taps = 101
+num_taps = 40
 symbol_rate = sdr.sample_rate / sps
 
 transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
-match_start, match_end = transmit_obj.modulated_markers(beta, num_taps) 
+start_marker, end_marker = transmit_obj.generate_markers()
+match_start, match_end = transmit_obj.modulated_markers(beta, num_taps, start_marker, end_marker) 
 
 # detector object
-#detect_obj = d.Detector(start_marker, end_marker, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
+detect_obj = d.Detector(start_marker, end_marker, N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
 
 # Spectrogram parameters
 fft_size = N
@@ -78,22 +78,19 @@ except Exception as e:
 
 # run detection
 count = 0
-#while detected == False:
-#    count += 1
+while detected == False:
+    count += 1
     
     # read samples from RTL-SDR
-samples = None
-samples = sdr.read_samples(N)
-    #detect_obj.step_detect(samples)      
+    samples = None
+    samples = sdr.read_samples(N)
+      
     # plot samples
-plt.plot(np.real(samples))
-plt.plot(np.imag(samples))
-plt.show()
-    
-np.array(samples, dtype=np.complex64).tofile("test_data.bin")
-
+    #plt.plot(np.real(samples[0:499]))
+    #plt.plot(np.imag(samples[0:499]))
+    #plt.show()
     # run detection
-    #detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+    detected, start, end = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 data = samples[start:end]
 print(f"Signal found after {count} cycles")

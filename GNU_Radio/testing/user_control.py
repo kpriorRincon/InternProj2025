@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 # GNU Radio Python Flow Graph
-# Title: vsg experimentation
+# Title: Not titled yet
 # GNU Radio version: 3.10.1.1
 
 from packaging.version import Version as StrictVersion
@@ -21,30 +21,29 @@ if __name__ == '__main__':
             print("Warning: failed to XInitThreads()")
 
 from PyQt5 import Qt
+from gnuradio import eng_notation
 from gnuradio import qtgui
 from gnuradio.filter import firdes
 import sip
 from gnuradio import blocks
-import pmt
+from gnuradio import digital
 from gnuradio import gr
 from gnuradio.fft import window
 import sys
 import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
-from gnuradio import eng_notation
-import vsg60
 
 
 
 from gnuradio import qtgui
 
-class data_to_vsg(gr.top_block, Qt.QWidget):
+class user_control(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        gr.top_block.__init__(self, "vsg experimentation", catch_exceptions=True)
+        gr.top_block.__init__(self, "Not titled yet", catch_exceptions=True)
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("vsg experimentation")
+        self.setWindowTitle("Not titled yet")
         qtgui.util.check_set_qss()
         try:
             self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
@@ -62,7 +61,7 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
         self.top_grid_layout = Qt.QGridLayout()
         self.top_layout.addLayout(self.top_grid_layout)
 
-        self.settings = Qt.QSettings("GNU Radio", "data_to_vsg")
+        self.settings = Qt.QSettings("GNU Radio", "user_control")
 
         try:
             if StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
@@ -75,22 +74,32 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 2.88e6
-        self.freq = freq = 905e6
+        self.sps = sps = 4
+        self.samp_rate = samp_rate = 32000
+        self.qpsk = qpsk = digital.constellation_calcdist([-1-1j, -1+1j, 1+1j, 1-1j], [0, 1, 3, 2],
+        4, 1, digital.constellation.AMPLITUDE_NORMALIZATION).base()
+        self.my_string = my_string = '0'
+        self.excess_bw = excess_bw = 0.35
 
         ##################################################
         # Blocks
         ##################################################
-        self.vsg60_iqin_0 = vsg60.iqin(freq, 0, samp_rate, False)
+        self._my_string_tool_bar = Qt.QToolBar(self)
+        self._my_string_tool_bar.addWidget(Qt.QLabel("'my_string'" + ": "))
+        self._my_string_line_edit = Qt.QLineEdit(str(self.my_string))
+        self._my_string_tool_bar.addWidget(self._my_string_line_edit)
+        self._my_string_line_edit.returnPressed.connect(
+            lambda: self.set_my_string(str(str(self._my_string_line_edit.text()))))
+        self.top_layout.addWidget(self._my_string_tool_bar)
         self.qtgui_time_sink_x_0 = qtgui.time_sink_c(
-            500, #size
+            1024, #size
             samp_rate, #samp_rate
-            "Tx", #name
+            "", #name
             1, #number of inputs
             None # parent
         )
         self.qtgui_time_sink_x_0.set_update_time(0.10)
-        self.qtgui_time_sink_x_0.set_y_axis(-1.5, 1.5)
+        self.qtgui_time_sink_x_0.set_y_axis(-1, 1)
 
         self.qtgui_time_sink_x_0.set_y_label('Amplitude', "")
 
@@ -103,7 +112,7 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
         self.qtgui_time_sink_x_0.enable_stem_plot(False)
 
 
-        labels = ['Real', 'Imaginary', 'Signal 3', 'Signal 4', 'Signal 5',
+        labels = ['Signal 1', 'Signal 2', 'Signal 3', 'Signal 4', 'Signal 5',
             'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
         widths = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
@@ -133,92 +142,114 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
-        self.qtgui_freq_sink_x_0 = qtgui.freq_sink_c(
+        self.qtgui_const_sink_x_0 = qtgui.const_sink_c(
             1024, #size
-            window.WIN_BLACKMAN_hARRIS, #wintype
-            freq, #fc
-            samp_rate, #bw
-            "Tx", #name
-            1,
+            "", #name
+            1, #number of inputs
             None # parent
         )
-        self.qtgui_freq_sink_x_0.set_update_time(0.10)
-        self.qtgui_freq_sink_x_0.set_y_axis(-140, 10)
-        self.qtgui_freq_sink_x_0.set_y_label('Relative Gain', 'dB')
-        self.qtgui_freq_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, 0.0, 0, "")
-        self.qtgui_freq_sink_x_0.enable_autoscale(False)
-        self.qtgui_freq_sink_x_0.enable_grid(False)
-        self.qtgui_freq_sink_x_0.set_fft_average(1.0)
-        self.qtgui_freq_sink_x_0.enable_axis_labels(True)
-        self.qtgui_freq_sink_x_0.enable_control_panel(False)
-        self.qtgui_freq_sink_x_0.set_fft_window_normalized(False)
-
+        self.qtgui_const_sink_x_0.set_update_time(0.10)
+        self.qtgui_const_sink_x_0.set_y_axis(-2, 2)
+        self.qtgui_const_sink_x_0.set_x_axis(-2, 2)
+        self.qtgui_const_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
+        self.qtgui_const_sink_x_0.enable_autoscale(False)
+        self.qtgui_const_sink_x_0.enable_grid(False)
+        self.qtgui_const_sink_x_0.enable_axis_labels(True)
 
 
         labels = ['', '', '', '', '',
             '', '', '', '', '']
         widths = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
-        colors = ["blue", "red", "green", "black", "cyan",
-            "magenta", "yellow", "dark red", "dark green", "dark blue"]
+        colors = ["blue", "red", "red", "red", "red",
+            "red", "red", "red", "red", "red"]
+        styles = [0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0]
+        markers = [0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0]
         alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0]
 
         for i in range(1):
             if len(labels[i]) == 0:
-                self.qtgui_freq_sink_x_0.set_line_label(i, "Data {0}".format(i))
+                self.qtgui_const_sink_x_0.set_line_label(i, "Data {0}".format(i))
             else:
-                self.qtgui_freq_sink_x_0.set_line_label(i, labels[i])
-            self.qtgui_freq_sink_x_0.set_line_width(i, widths[i])
-            self.qtgui_freq_sink_x_0.set_line_color(i, colors[i])
-            self.qtgui_freq_sink_x_0.set_line_alpha(i, alphas[i])
+                self.qtgui_const_sink_x_0.set_line_label(i, labels[i])
+            self.qtgui_const_sink_x_0.set_line_width(i, widths[i])
+            self.qtgui_const_sink_x_0.set_line_color(i, colors[i])
+            self.qtgui_const_sink_x_0.set_line_style(i, styles[i])
+            self.qtgui_const_sink_x_0.set_line_marker(i, markers[i])
+            self.qtgui_const_sink_x_0.set_line_alpha(i, alphas[i])
 
-        self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.qwidget(), Qt.QWidget)
-        self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
-        self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/empire/Documents/InternProj2025/hardware/data_for_sighound.bin', True, 0, 0)
-        self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
+        self._qtgui_const_sink_x_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_const_sink_x_0_win)
+        self.digital_constellation_modulator_0 = digital.generic_mod(
+            constellation=qpsk,
+            differential=True,
+            samples_per_symbol=sps,
+            pre_diff_code=True,
+            excess_bw=excess_bw,
+            verbose=False,
+            log=False,
+            truncate=False)
+        self.blocks_vector_source_x_0 = blocks.vector_source_b([bytes(my_string, "ascii")], False, 1, [])
+        self.blocks_unpack_k_bits_bb_0 = blocks.unpack_k_bits_bb(8)
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_file_source_0, 0), (self.blocks_throttle_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.qtgui_freq_sink_x_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.qtgui_time_sink_x_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.vsg60_iqin_0, 0))
+        self.connect((self.blocks_unpack_k_bits_bb_0, 0), (self.digital_constellation_modulator_0, 0))
+        self.connect((self.blocks_vector_source_x_0, 0), (self.blocks_unpack_k_bits_bb_0, 0))
+        self.connect((self.digital_constellation_modulator_0, 0), (self.qtgui_const_sink_x_0, 0))
+        self.connect((self.digital_constellation_modulator_0, 0), (self.qtgui_time_sink_x_0, 0))
 
 
     def closeEvent(self, event):
-        self.settings = Qt.QSettings("GNU Radio", "data_to_vsg")
+        self.settings = Qt.QSettings("GNU Radio", "user_control")
         self.settings.setValue("geometry", self.saveGeometry())
         self.stop()
         self.wait()
 
         event.accept()
 
+    def get_sps(self):
+        return self.sps
+
+    def set_sps(self, sps):
+        self.sps = sps
+
     def get_samp_rate(self):
         return self.samp_rate
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
-        self.qtgui_freq_sink_x_0.set_frequency_range(self.freq, self.samp_rate)
         self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
-        self.vsg60_iqin_0.set_srate(self.samp_rate)
 
-    def get_freq(self):
-        return self.freq
+    def get_qpsk(self):
+        return self.qpsk
 
-    def set_freq(self, freq):
-        self.freq = freq
-        self.qtgui_freq_sink_x_0.set_frequency_range(self.freq, self.samp_rate)
-        self.vsg60_iqin_0.set_frequency(self.freq)
+    def set_qpsk(self, qpsk):
+        self.qpsk = qpsk
+
+    def get_my_string(self):
+        return self.my_string
+
+    def set_my_string(self, my_string):
+        self.my_string = my_string
+        Qt.QMetaObject.invokeMethod(self._my_string_line_edit, "setText", Qt.Q_ARG("QString", str(self.my_string)))
+        self.blocks_vector_source_x_0.set_data([bytes(self.my_string, "ascii")], [])
+
+    def get_excess_bw(self):
+        return self.excess_bw
+
+    def set_excess_bw(self, excess_bw):
+        self.excess_bw = excess_bw
 
 
 
 
-def main(top_block_cls=data_to_vsg, options=None):
+def main(top_block_cls=user_control, options=None):
 
     if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
         style = gr.prefs().get_string('qtgui', 'style', 'raster')
