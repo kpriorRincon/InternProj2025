@@ -184,13 +184,8 @@ def run_receiver():
 
 
 def main():
-<<<<<<< HEAD
     raw_data = np.fromfile("test_data.bin", dtype=np.complex64)
     print("Length of data in file: ", len(raw_data))
-=======
-    raw_data = np.fromfile("test_data_old.bin", dtype=np.complex64)
-    print(len(raw_data))
->>>>>>> 3b53e3b45ae700db67a43d4b151ab9bcad9378f0
 
 
     i = 0
