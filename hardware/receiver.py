@@ -36,12 +36,6 @@ match_start, match_end = transmit_obj.modulated_markers(beta, num_taps)
 # detector object
 detect_obj = d.Detector(sdr.sample_rate)
 
-# Spectrogram parameters
-fft_size = N
-hop_size = fft_size // 2
-spec_history = 100  # number of lines in spectrogram
-
-
 # Test SDR connection before main loop
 try:
     test_samples = sdr.read_samples(1024)
