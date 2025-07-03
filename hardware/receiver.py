@@ -34,7 +34,7 @@ transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
 match_start, match_end = transmit_obj.modulated_markers(beta, num_taps) 
 
 # detector object
-detect_obj = d.Detector(N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
+detect_obj = d.Detector(sdr.sample_rate)
 
 # Spectrogram parameters
 fft_size = N
@@ -93,7 +93,7 @@ while detected == False:
     #np.array(samples, dtype=np.complex64).tofile("test_data.bin")
 
     # run detection
-    detected, start, end, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+    detected, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 # take signal from the samples
 #data = samples[start:end]
