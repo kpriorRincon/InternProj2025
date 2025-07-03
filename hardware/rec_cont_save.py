@@ -13,7 +13,6 @@ from channel_correction import *
 sdr = RtlSdr()
 sdr.sample_rate = 2.88e6 # Hz
 sdr.center_freq = 920e6 # Hz
-sdr.center_freq = 905e6 # Hz
 sdr.freq_correction = 60 # PPM
 sdr.gain = 'auto'
 
@@ -83,7 +82,7 @@ except Exception as e:
 total_t = 0
 # run detection
 count = 0   # count cycles until detected
-open('test_data.bin', 'a')
+open('test_data.bin', 'wb').close()  # clear the file before writing
 while count < 10:
     count += 1  # increment cycle count
     # read samples from RTL-SDR
@@ -91,38 +90,21 @@ while count < 10:
     samples = sdr.read_samples(N)
 
     # save samples to an external file (optional) 
-    np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+    with open('test_data.bin', 'ab') as f:
+        # Convert samples to complex64 and write to file
+        f.write(np.array(samples, dtype=np.complex64).tobytes())
+    
     strt_t = time.time()
     # run detection
     
     total_t = time.time() - strt_t
     #detected, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
-print(f"Time to run detection on buffer: {total_t} s")
-# take signal from the samples
-#data = samples[start:end]
-data = coarse_fixed
-# open('selected_signal.bin', 'w').close()
-# np.array(data, dtype=np.complex64).tofile("selected_signal.bin")
-print(f"Signal found after {count} cycles")
-
-# plot handling
-plt.ioff()
-plt.show()
-
-# begin signal processing
-print("Processing data...")
-
-strt_t = time.time()
-bits_string, decoded_message = channel_handler(data)
-# create receive processing object
-# recieve_obj = rp.receive_processing(sps, sdr.sample_rate)
-total_t = time.time() - strt_t
-print(f"Time to run rest of RX chain to till demod: {total_t} s")
-# process data
-# bits_string, message = recieve_obj.work(data, beta, num_taps)
-print(f"Bits: {bits_string}")
-print(f"Message: {decoded_message}")
+# error check
+print("Done saving samples")
+raw_data = np.fromfile("test_data.bin", dtype=np.complex64)
+print("Length of data: ", len(raw_data))
+print("Total time: ", total_t)
 
 # close sdr
 sdr.close()
