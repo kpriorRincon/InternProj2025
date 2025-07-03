@@ -65,11 +65,8 @@ def run_receiver():
     print("Processing data...")
     bits_string, decoded_message = channel_handler(data)
 
-    # process data
-    print(f"Bits: {bits_string}")
-    print(f"Message: {decoded_message}")
-
     # close sdr
     sdr.close()
 
+    # return the 
     return bits_string, decoded_message
