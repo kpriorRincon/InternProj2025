@@ -12,7 +12,11 @@ from channel_correction import *
 # configure RTL-SDR
 sdr = RtlSdr()
 sdr.sample_rate = 2.88e6 # Hz
+<<<<<<< HEAD
 sdr.center_freq = 920e6 # Hz
+=======
+sdr.center_freq = 905e6 # Hz
+>>>>>>> 57653237c4b38ad6b4690e8bb14a1b059a0feef4
 sdr.freq_correction = 60 # PPM
 sdr.gain = 'auto'
 
@@ -34,7 +38,7 @@ transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
 match_start, match_end = transmit_obj.modulated_markers(beta, num_taps) 
 
 # detector object
-detect_obj = d.Detector(N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
+detect_obj = d.Detector(sdr.sample_rate)
 
 # Spectrogram parameters
 fft_size = N
@@ -93,9 +97,13 @@ while detected == False:
     #np.array(samples, dtype=np.complex64).tofile("test_data.bin")
     strt_t = time.time()
     # run detection
+<<<<<<< HEAD
     detected, start, end, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
     
     total_t = time.time() - strt_t
+=======
+    detected, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+>>>>>>> 57653237c4b38ad6b4690e8bb14a1b059a0feef4
 
 print(f"Time to run detection on buffer: {total_t} s")
 # take signal from the samples
