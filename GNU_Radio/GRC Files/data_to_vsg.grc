@@ -33,7 +33,19 @@ options:
     state: enabled
 
 blocks:
-- name: freq
+- name: freq_rx
+  id: variable
+  parameters:
+    comment: ''
+    value: 920e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [392, 12.0]
+    rotation: 0
+    state: enabled
+- name: freq_tx
   id: variable
   parameters:
     comment: ''
@@ -76,9 +88,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [352, 220.0]
+    coordinate: [320, 220.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: blocks_throttle_0
   id: blocks_throttle
   parameters:
@@ -96,6 +108,25 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [568, 252.0]
+    rotation: 0
+    state: enabled
+- name: blocks_throttle_0_0
+  id: blocks_throttle
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [560, 444.0]
     rotation: 0
     state: enabled
 - name: qtgui_freq_sink_x_0
@@ -129,7 +160,7 @@ blocks:
     color9: '"dark green"'
     comment: ''
     ctrlpanel: 'False'
-    fc: freq
+    fc: freq_tx
     fftsize: '1024'
     freqhalf: 'True'
     grid: 'False'
@@ -276,13 +307,55 @@ blocks:
     coordinate: [792, 228.0]
     rotation: 0
     state: true
+- name: soapy_bladerf_sink_0
+  id: soapy_bladerf_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq_rx
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '40'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [776, 448.0]
+    rotation: 0
+    state: enabled
+- name: soapy_bladerf_source_0
+  id: soapy_bladerf_source
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq_tx
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '30.0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [336, 436.0]
+    rotation: 0
+    state: enabled
 - name: vsg60_iqin_0
   id: vsg60_iqin
   parameters:
     affinity: ''
     alias: ''
     comment: ''
-    frequency: freq
+    frequency: freq_tx
     level: '0'
     repeat: 'False'
     srate: samp_rate
@@ -299,6 +372,8 @@ connections:
 - [blocks_throttle_0, '0', qtgui_freq_sink_x_0, '0']
 - [blocks_throttle_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_throttle_0, '0', vsg60_iqin_0, '0']
+- [blocks_throttle_0_0, '0', soapy_bladerf_sink_0, '0']
+- [soapy_bladerf_source_0, '0', blocks_throttle_0_0, '0']
 
 metadata:
   file_format: 1
