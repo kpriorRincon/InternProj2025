@@ -290,7 +290,7 @@ blocks:
     bus_structure: null
     coordinate: [776, 612.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: qtgui_time_sink_x_0
   id: qtgui_time_sink_x
   parameters:
@@ -484,7 +484,7 @@ blocks:
     bus_structure: null
     coordinate: [776, 516.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: soapy_bladerf_sink_0
   id: soapy_bladerf_sink
   parameters:
