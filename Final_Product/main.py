@@ -148,8 +148,7 @@ ui.add_head_html('''
     }
 
     .glass-bar .item:hover {
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 8px;
+        scale: 1.05;
     }
 
     .spacer {
@@ -204,6 +203,9 @@ ui.add_head_html('''
 
 #Add the frosted glass bar
 with ui.element('div').classes('glass-bar'):
+    with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
+        ui.icon('home')
+        ui.label('Home')
     with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/SIMULATE')):
         ui.icon('code')
         ui.label('Simulation')
@@ -239,6 +241,70 @@ with ui.element('div').classes('wrapper'):
 # Simulate Page-------------------------------------------------------------------------------------------------------------------
 @ui.page('/SIMULATE')
 def simulate_page():
+    ui.add_head_html('''
+    <script>
+    document.title = 'Simulation';
+    </script>
+    <style>
+    .glass-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        min-width: 100vw;
+        height: 60px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.4);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 1000;
+        padding: 0 30px;
+        box-sizing: border-box;
+        color: white;
+    }
+
+    .glass-bar .item {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        gap: 8px;
+        font-size: 18px;
+        color: white;
+        transition: background 0.2s;
+    }
+
+    .glass-bar .item:hover {
+        scale: 1.05;
+    }
+
+    .spacer {
+        height: 60px; /* reserve space under the fixed bar */
+    } 
+                     
+    </style>''')
+
+    with ui.element('div').classes('glass-bar'):
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
+            ui.icon('home')
+            ui.label('Home')
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/SIMULATE')):
+            ui.icon('code')
+            ui.label('Simulation')
+
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/CONTROL')):
+            ui.icon('settings')
+            ui.label('Control')
+
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
+            ui.icon('info')
+            ui.label('About')
+    #add some spacer to content doesn't go under the fixed bar
+    ui.element('div').classes('spacer')
+
     text_box_container = ui.column().style('order: 2; width: 80%')
     def update_text_boxes(e):
         """Updates the UI to display the appropriate number of satellite selection buttons based on user input."""
@@ -316,7 +382,69 @@ def simulate_page():
 
     @ui.page('/Cesium_page')
     def Cesium_page():
-        ui.add_head_html('''<script>document.title = 'Satellite View';</script>''')
+        ui.add_head_html('''
+        <script>
+        document.title = 'Satellite View';
+        </script>
+        <style>
+        .glass-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            min-width: 100vw;
+            height: 60px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.4);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            padding: 0 30px;
+            box-sizing: border-box;
+            color: white;
+        }
+
+        .glass-bar .item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 8px;
+            font-size: 18px;
+            color: white;
+            transition: background 0.2s;
+        }
+
+        .glass-bar .item:hover {
+            scale: 1.05;
+        }
+
+        .spacer {
+            height: 60px; /* reserve space under the fixed bar */
+        } 
+                        
+        </style>''')
+        with ui.element('div').classes('glass-bar'):
+            with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
+                ui.icon('home')
+                ui.label('Home')
+            with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/SIMULATE')):
+                ui.icon('code')
+                ui.label('Simulation')
+
+            with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/CONTROL')):
+                ui.icon('settings')
+                ui.label('Control')
+
+            with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
+                ui.icon('info')
+                ui.label('About')
+        #add some spacer to content doesn't go under the fixed bar
+        ui.element('div').classes('spacer')
+
         global count, tx_pos, rx_pos
         # start of Cesium page
 
@@ -419,8 +547,8 @@ def simulate_page():
         #cesium page take up the right 70 percent of the page
         ui.html(
             f'''
-            <div style="position: fixed; top: 0; right: 0; width: 70vw; height: 95vh; border: none; margin: 1vh 1vw 0 0; padding: 0; overflow: hidden; z-index: 999999; box-shadow: 0 0 10px rgba(0,0,0,0.2); background: #fff; border-radius: 12px;">
-                <iframe style="width: 100%; height: 100%; border: none;" src="/static/viewer.html?t={int(time.time())}"></iframe>
+            <div style="position: absolute; top: 70px; right: 0; width: 70vw; height: 90vh; border: none; margin: 1vh 1vw 0 0; padding: 0; overflow: hidden; z-index: 999999; box-shadow: 0 0 10px rgba(0,0,0,0.2); background: #fff; border-radius: 12px;">
+            <iframe style="width: 100%; height: 100%; border: none;" src="/static/viewer.html?t={int(time.time())}"></iframe>
             </div>
             '''
         )
@@ -428,7 +556,68 @@ def simulate_page():
         @ui.page('/simulation_page')
         def simulation_page(): 
             
-            ui.add_head_html('''<script>document.title = 'Simulation';</script>''')
+            ui.add_head_html('''
+            <script>
+            document.title = 'Simulation';
+            </script>
+            <style>
+            .glass-bar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                min-width: 100vw;
+                height: 60px;
+                display: flex;
+                gap: 20px;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(10px);
+                background: rgba(0, 0, 0, 0.4);
+                -webkit-backdrop-filter: blur(10px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                z-index: 1000;
+                padding: 0 30px;
+                box-sizing: border-box;
+                color: white;
+            }
+
+            .glass-bar .item {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                gap: 8px;
+                font-size: 18px;
+                color: white;
+                transition: background 0.2s;
+            }
+
+            .glass-bar .item:hover {
+                scale: 1.05;
+            }
+
+            .spacer {
+                height: 60px; /* reserve space under the fixed bar */
+            }        
+        </style>          
+            ''')
+            with ui.element('div').classes('glass-bar'):
+                with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
+                    ui.icon('home')
+                    ui.label('Home')
+                with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/SIMULATE')):
+                    ui.icon('code')
+                    ui.label('Simulation')
+
+                with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/CONTROL')):
+                    ui.icon('settings')
+                    ui.label('Control')
+
+                with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
+                    ui.icon('info')
+                    ui.label('About')
+            #add some spacer to content doesn't go under the fixed bar
+            ui.element('div').classes('spacer')
 
             #When the user clicks the start simulation button run the following
 
@@ -509,7 +698,7 @@ def simulate_page():
                 doppler_container.clear()
                 # pass all the arguments from inputs
                 mes = message.value
-                if message.value == '':
+                if message.value == None or message.value == '':
                     mes = 'hello world' #default value
                     ui.notify('defaulting message to \'hello world\'')
                 # print(mes)
@@ -806,8 +995,71 @@ def simulate_page():
 
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
-def control_page(): 
-    #instructions
+def control_page():
+    ui.add_head_html('''
+            <script>
+            document.title = 'Simulation';
+            </script>
+            <style>
+            .glass-bar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                min-width: 100vw;
+                height: 60px;
+                display: flex;
+                gap: 20px;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(10px);
+                background: rgba(0, 0, 0, 0.4);
+                -webkit-backdrop-filter: blur(10px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                z-index: 1000;
+                padding: 0 30px;
+                box-sizing: border-box;
+                color: white;
+            }
+
+            .glass-bar .item {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                gap: 8px;
+                font-size: 18px;
+                color: white;
+                transition: background 0.2s;
+            }
+
+            .glass-bar .item:hover {
+                scale: 1.05;
+            }
+
+            .spacer {
+                height: 60px; /* reserve space under the fixed bar */
+            }        
+        </style>          
+            ''')
+    with ui.element('div').classes('glass-bar'):
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
+            ui.icon('home')
+            ui.label('Home')
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/SIMULATE')):
+            ui.icon('code')
+            ui.label('Simulation')
+
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/CONTROL')):
+            ui.icon('settings')
+            ui.label('Control')
+
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
+            ui.icon('info')
+            ui.label('About')
+    #add some spacer to content doesn't go under the fixed bar
+    ui.element('div').classes('spacer')
+
+    #TODO instructions
 
     #Text input centered with submit button to the right 
     with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
