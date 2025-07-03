@@ -1104,7 +1104,230 @@ def control_page():
 
 @ui.page('/ABOUT')
 def about_page():
-    pass
+    ui.add_head_html('''
+            <script>
+            document.title = 'About';
+            </script>
+            <style>
+            .glass-bar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                min-width: 100vw;
+                height: 60px;
+                display: flex;
+                gap: 20px;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(10px);
+                background: rgba(0, 0, 0, 0.4);
+                -webkit-backdrop-filter: blur(10px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                z-index: 1000;
+                padding: 0 30px;
+                box-sizing: border-box;
+                color: white;
+            }
+
+            .glass-bar .item {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                gap: 8px;
+                font-size: 18px;
+                color: white;
+                transition: background 0.2s;
+            }
+
+            .glass-bar .item:hover {
+                scale: 1.05;
+            }
+
+            .spacer {
+                height: 60px; /* reserve space under the fixed bar */
+            }   
+            
+            .profile_container {
+                display: flex;
+                justify-content: center;  
+                align-items: center;
+                flex-flow wrap;
+                gap:30px;
+            }
+                     
+            .profile {
+                position: relative;
+                z-index: 1;
+                width: 250px;
+                aspect-ratio: 1 / 1.4;
+                padding: 1rem;
+                border-radius: 20px;
+                background-color: white;
+                box-shadow: 0 30px 30px 5px #d6d9e2;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column; 
+                gap: 1rem;     
+            }
+                     
+            .profile-image-wrap {
+                position: relative;
+                width: 118px;
+                aspect-ratio: 1;          
+                padding: 7px;
+                border-radius: 100%;  
+            }
+
+            .profile-image-wrap::after{
+                position: absolute;
+                z-index: -1;
+                content: '';
+                inset: 0;
+                border-radius: 100%;
+                background: linear-gradient(135deg, #f0f1f5, #d6d9e2);
+                opacity: 0;
+                transition: opacity 1s; 
+                animation: rotate 4s linear infinite; 
+                animation-play-state: paused;
+                filter: saturate(2) blur(10px);                  
+            }
+            @keyframes rotate {
+                to {
+                     rotate: 360deg;
+                }
+            }
+            .profile:hover .profile-image-wrap::after {
+                opacity: 1;
+                animation-play-state: running;
+            }
+            .profile-image {
+                     aspect-ratio: 1;
+                     border-radius: 100%;
+                     overflow: hidden;
+            .profile-meta {
+                text-align: center;         
+            }
+            .profile-name {
+                font-size: 20px;
+                font-size: 1.2rem;
+                font-weight: 500;
+            }
+            .profile-school {
+                font-size: 14px;
+                font-size: 0.875rem;
+                color: #a0a2b6;
+                margin-bottom: 1rem;
+            }
+            .profile-socials {
+                font-size: 1rem;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 1rem;  
+            }
+            </style>          
+            ''')
+    with ui.element('div').classes('glass-bar'):
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
+            ui.icon('home')
+            ui.label('Home')
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/SIMULATE')):
+            ui.icon('code')
+            ui.label('Simulation')
+
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/CONTROL')):
+            ui.icon('settings')
+            ui.label('Control')
+
+        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
+            ui.icon('info')
+            ui.label('About')
+    #add some spacer to content doesn't go under the fixed bar
+    ui.element('div').classes('spacer')
+    
+    ui.html('''
+    <div class = 'profile_container'> 
+        <!-- Kobe --> 
+        <div class = 'profile'>
+            <div class='profile-image-wrap'>
+                <div class= 'profile-image'>
+                    <img src='media/profile_placeholder'>
+                </div>
+            <div class = 'profile-meta'>
+                <div class = 'profile-name'>Kobe Prior</div>
+                <div class = 'profile-role'>insert here</div>
+                <div class = 'profile-school'>Colorado School of Mines</div>
+                <div class = 'profile-socials'>
+                    <i class = 'fa-brands fa-youtube></i>
+                    <i class = 'fa-brands fa-linkedin'></i>
+                    <i class = 'fa-brands fa-github'></i>
+                </div>
+            
+            </div>
+        </div>        
+        
+            
+        <!-- Skylar -->    
+        <div class = 'profile'>
+            <div class='profile-image-wrap'>
+                <div class= 'profile-image'>
+                    <img src='media/profile_placeholder'>
+                </div>
+            <div class = 'profile-meta'>
+                <div class = 'profile-name'>Kobe Prior</div>
+                <div class = 'profile-role'>insert here</div>
+                <div class = 'profile-school'>Colorado School of Mines</div>
+                <div class = 'profile-socials'>
+                    <i class = 'fa-brands fa-youtube></i>
+                    <i class = 'fa-brands fa-linkedin'></i>
+                    <i class = 'fa-brands fa-github'></i>
+                </div>
+            
+            </div>
+        </div>   
+            
+        <!-- Jorge -->    
+        <div class = 'profile'>
+            <div class='profile-image-wrap'>
+                <div class= 'profile-image'>
+                    <img src='media/profile_placeholder'>
+                </div>
+            <div class = 'profile-meta'>
+                <div class = 'profile-name'>Kobe Prior</div>
+                <div class = 'profile-role'>insert here</div>
+                <div class = 'profile-school'>Colorado School of Mines</div>
+                <div class = 'profile-socials'>
+                    <i class = 'fa-brands fa-youtube></i>
+                    <i class = 'fa-brands fa-linkedin'></i>
+                    <i class = 'fa-brands fa-github'></i>
+                </div>
+            
+            </div>
+        </div>  
+        
+        <!-- Trevor -->    
+        <div class = 'profile'>
+            <div class='profile-image-wrap'>
+                <div class= 'profile-image'>
+                    <img src='media/profile_placeholder'>
+                </div>
+            <div class = 'profile-meta'>
+                <div class = 'profile-name'>Kobe Prior</div>
+                <div class = 'profile-role'>insert here</div>
+                <div class = 'profile-school'>Colorado School of Mines</div>
+                <div class = 'profile-socials'>
+                    <i class = 'fa-brands fa-youtube></i>
+                    <i class = 'fa-brands fa-linkedin'></i>
+                    <i class = 'fa-brands fa-github'></i>
+                </div>
+            
+            </div>
+        </div>  
+             
+    </div>
+    ''')
 
 
 #run the GUI
