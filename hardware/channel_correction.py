@@ -67,16 +67,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
 
-    if DEBUG:
-        plt.figure(figsize=(6, 6))
-        plt.plot(np.real(fixed_qpsk[1:]), np.imag(fixed_qpsk[1:]), 'b-', zorder = 1, label = 'oversampled signal')
-        plt.scatter(np.real(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(fixed_qpsk[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
-        plt.legend()
-        plt.xlabel('In-Phase (I)')
-        plt.ylabel('Quadrature (Q)')
-        plt.title('Coarse Frequency Synchronization')
-        plt.show()
-        plt.close()
+
         
     return fixed_qpsk
 
@@ -355,9 +346,20 @@ def channel_handler(rx_signal):
         plt.close()
 
     rp = receive_processing(int(SAMPLE_RATE/SYMB_RATE), SAMPLE_RATE)
-    filtered_sig = lowpass_filter(rx_signal)
-    course_fixed = coarse_freq_recovery(filtered_sig)
-    caf_fixed = cross_corr_caf(course_fixed, True)
+    course_fixed = coarse_freq_recovery(rx_signal)
+    if DEBUG:
+        plt.figure(figsize=(6, 6))
+        plt.plot(np.real(course_fixed[1:]), np.imag(course_fixed[1:]), 'b-', zorder = 1, label = 'oversampled signal')
+        plt.scatter(np.real(course_fixed[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(course_fixed[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
+        plt.legend()
+        plt.xlabel('In-Phase (I)')
+        plt.ylabel('Quadrature (Q)')
+        plt.title('Coarse Frequency Synchronization')
+        plt.show()
+        plt.close()
+    lpf_sig = lowpass_filter(course_fixed)
+
+    caf_fixed = cross_corr_caf(lpf_sig, True)
     costas_fixed = costas_loop(caf_fixed)
     bits_string, decoded_message, symbols = rp.work(costas_fixed, BETA, NUMTAPS)
     
