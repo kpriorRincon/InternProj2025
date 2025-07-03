@@ -1082,7 +1082,11 @@ def control_page():
         await asyncio.sleep(0.1)  # give the UI time to update
 
         #------
-        #insert command and control here
+        # insert command and control here
+        # Tell the blade to warm up
+        # Configure a file for the signal hound
+        # Start
+        #
         #------
 
         #placeholder for sending the message to the hardware DELTE THIS when  when ready
