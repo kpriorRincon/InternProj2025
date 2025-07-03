@@ -12,7 +12,7 @@ from channel_correction import *
 # configure RTL-SDR
 sdr = RtlSdr()
 sdr.sample_rate = 2.88e6 # Hz
-sdr.center_freq = 910e6 # Hz
+sdr.center_freq = 920e6 # Hz
 sdr.freq_correction = 60 # PPM
 sdr.gain = 'auto'
 
@@ -34,7 +34,7 @@ transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
 match_start, match_end = transmit_obj.modulated_markers(beta, num_taps) 
 
 # detector object
-detect_obj = d.Detector(N, 1 / symbol_rate, beta, sdr.sample_rate, sps=sps)
+detect_obj = d.Detector(sdr.sample_rate)
 
 # Spectrogram parameters
 fft_size = N
@@ -79,22 +79,25 @@ except Exception as e:
     sdr.close()
     exit()
 
+total_t = 0
 # run detection
 count = 0   # count cycles until detected
+open('test_data.bin', 'a')
 while detected == False:
     count += 1  # increment cycle count
-    
     # read samples from RTL-SDR
     samples = None
     samples = sdr.read_samples(N)
 
     # save samples to an external file (optional) 
-    #open('test_data.bin', 'w').close()
-    #np.array(samples, dtype=np.complex64).tofile("test_data.bin")
-
+    np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+    strt_t = time.time()
     # run detection
-    detected, start, end, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+    
+    total_t = time.time() - strt_t
+    detected, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
+print(f"Time to run detection on buffer: {total_t} s")
 # take signal from the samples
 #data = samples[start:end]
 data = coarse_fixed
@@ -109,11 +112,12 @@ plt.show()
 # begin signal processing
 print("Processing data...")
 
-
+strt_t = time.time()
 bits_string, decoded_message = channel_handler(data)
 # create receive processing object
 # recieve_obj = rp.receive_processing(sps, sdr.sample_rate)
-
+total_t = time.time() - strt_t
+print(f"Time to run rest of RX chain to till demod: {total_t} s")
 # process data
 # bits_string, message = recieve_obj.work(data, beta, num_taps)
 print(f"Bits: {bits_string}")

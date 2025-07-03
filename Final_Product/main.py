@@ -43,6 +43,7 @@ from satellite_czml import satellite_czml # See Readme for mor information this 
 #downgrade pygeoif: pip install pygeoif==0.7.0
 
 from skyfield.api import load, wgs84, EarthSatellite
+import pathlib
 saved_tles = get_up_to_date_TLE()  # get the most up to date TLE
 # define the position of the transmitter and receiver
 tx_pos = wgs84.latlon(39.586389, -104.828889, elevation_m=1600)  # Kobe's seat at Rincon
@@ -156,13 +157,13 @@ ui.add_head_html('''
     }
                  
     .card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 32px;
-    min-height: 32vh;
-    width: 70vw;
-    box-sizing: border-box;
-    margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 32px;
+        min-height: 32vh;
+        width: 70vw;
+        box-sizing: border-box;
+        margin: 0 auto;
     }
 
     .card {
@@ -1104,7 +1105,13 @@ def control_page():
 
 @ui.page('/ABOUT')
 def about_page():
+    
+    # Serve the media folder statically so images can be accessed via /static/media/...
+    media_dir = pathlib.Path(__file__).parent / "media"
+    app.add_static_files('/static/media', str(media_dir))
+
     ui.add_head_html('''
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
             <script>
             document.title = 'About';
             </script>
@@ -1146,86 +1153,137 @@ def about_page():
 
             .spacer {
                 height: 60px; /* reserve space under the fixed bar */
-            }   
-            
-            .profile_container {
-                display: flex;
-                justify-content: center;  
-                align-items: center;
-                flex-flow wrap;
-                gap:30px;
-            }
-                     
-            .profile {
-                position: relative;
-                z-index: 1;
-                width: 250px;
-                aspect-ratio: 1 / 1.4;
-                padding: 1rem;
-                border-radius: 20px;
-                background-color: white;
-                box-shadow: 0 30px 30px 5px #d6d9e2;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column; 
-                gap: 1rem;     
-            }
-                     
-            .profile-image-wrap {
-                position: relative;
-                width: 118px;
-                aspect-ratio: 1;          
-                padding: 7px;
-                border-radius: 100%;  
+            }     
+
+            * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             }
 
-            .profile-image-wrap::after{
-                position: absolute;
-                z-index: -1;
-                content: '';
-                inset: 0;
-                border-radius: 100%;
-                background: linear-gradient(135deg, #f0f1f5, #d6d9e2);
-                opacity: 0;
-                transition: opacity 1s; 
-                animation: rotate 4s linear infinite; 
-                animation-play-state: paused;
-                filter: saturate(2) blur(10px);                  
+            img {
+            max-width: 100%;
             }
+
+            body {
+            font-family: system-ui, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #0f0f0f;
+            background-color: #ecedef;
+            padding: 50px;
+            }
+
+            h1 {
+            text-align: center;
+            margin-bottom: 4rem;
+            }
+
+            .users {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-flow: wrap;
+            gap: 30px;
+            }
+
+            .user {
+            position: relative;
+            z-index: 1;
+            width: 250px;
+            /* height: 350px; */
+            /* 350/250 = 1.4 */
+            aspect-ratio: 1 / 1.4;
+            padding: 1rem;
+            border-radius: 20px;
+            background-color: #fff;
+            box-shadow: 0 30px 30px 5px #d6d9e2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 1rem;
+            }
+
+            .user-img-wrap {
+            position: relative;
+            width: 117px;
+            aspect-ratio: 1;
+            padding: 7px;
+            border-radius: 100%;
+            }
+
+            .user-img-wrap::after {
+            position: absolute;
+            z-index: -1;
+            content: "";
+            inset: 0;
+            border-radius: 100%;
+
+            background: linear-gradient(
+                #4cd964,
+                #5ac8fa,
+                #007aff,
+                #7dc8e8,
+                #5856d6,
+                #ff2d55
+            );
+
+            opacity: 0;
+            transition: opacity 1s;
+
+            animation: rotate 4s linear infinite;
+            animation-play-state: paused;
+            filter: saturate(2) blur(10px);
+            }
+
+            .user:hover .user-img-wrap::after {
+            opacity: 1;
+            animation-play-state: running;
+            }
+
             @keyframes rotate {
-                to {
-                     rotate: 360deg;
-                }
+            to {
+                rotate: 360deg;
             }
-            .profile:hover .profile-image-wrap::after {
-                opacity: 1;
-                animation-play-state: running;
             }
-            .profile-image {
-                     aspect-ratio: 1;
-                     border-radius: 100%;
-                     overflow: hidden;
-            .profile-meta {
-                text-align: center;         
+
+            .user-img {
+            aspect-ratio: 1;
+            border-radius: 100%;
+            overflow: hidden;
             }
-            .profile-name {
-                font-size: 20px;
-                font-size: 1.2rem;
-                font-weight: 500;
+
+            .user-meta {
+            text-align: center;
             }
-            .profile-school {
-                font-size: 14px;
-                font-size: 0.875rem;
-                color: #a0a2b6;
-                margin-bottom: 1rem;
+
+            .user-name {
+            font-size: 20px;
+            font-size: 1.25rem;
+            font-weight: 500;
             }
-            .profile-socials {
-                font-size: 1rem;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 1rem;  
+
+            .user-role {
+            font-size: 14px;
+            font-size: 0.875rem;
+            color: #a0a2b6;
+            margin-bottom: 1rem;
+            }
+                     
+            .user-school {
+            font-size: 14px;
+            font-size: 0.875rem;
+            color: #a0a2b6;
+            margin-bottom: 1rem;          
+            }
+
+            .user-profiles {
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
             }
             </style>          
             ''')
@@ -1246,88 +1304,138 @@ def about_page():
             ui.label('About')
     #add some spacer to content doesn't go under the fixed bar
     ui.element('div').classes('spacer')
+    with ui.row().style('width: 80%; justify-content: space-between; align-items: center; margin: 0 auto;'):
+        with ui.column().style('width: 40%; min-width: 200px;'):
+            #left image
+            ui.image('https://www.rincon.com/assets/imgs/slides/satellite-1.jpg')
+        with ui.column().style('width: 55%; min-width: 200px;'):
+            #right text
+            # Add a project title at the top of the About page
+            ui.label("Red Mountain Internship Project").style(
+                'font-size: 2.5em; font-weight: bold; margin-bottom: 1.5em; text-align: center; display: block; width: 100%;'
+            )
+            ui.label("In Rincon Research Coorporation's Internship program in the summer of 2025 four bright interns from a variety of diciplines came together to simulate and realize a bent pipe communication system. ").style(
+                'font-size: 1.3em; margin-bottom: 2em; text-align: center; display: block; width: 100%;'
+            )
+    #add some spacer
+    ui.element('div').classes('spacer')
+
+    #Simulation
+
+
+    #add some spacer
+    ui.element('div').classes('spacer')
     
-    ui.html('''
-    <div class = 'profile_container'> 
-        <!-- Kobe --> 
-        <div class = 'profile'>
-            <div class='profile-image-wrap'>
-                <div class= 'profile-image'>
-                    <img src='media/profile_placeholder'>
-                </div>
-            <div class = 'profile-meta'>
-                <div class = 'profile-name'>Kobe Prior</div>
-                <div class = 'profile-role'>insert here</div>
-                <div class = 'profile-school'>Colorado School of Mines</div>
-                <div class = 'profile-socials'>
-                    <i class = 'fa-brands fa-youtube></i>
-                    <i class = 'fa-brands fa-linkedin'></i>
-                    <i class = 'fa-brands fa-github'></i>
-                </div>
-            
+    #Control
+
+    #add some spacer
+    ui.element('div').classes('spacer')
+    with ui.row().style('width: 100%; justify-content: center;'):
+        ui.html('''       
+    <div class="users">
+      
+        <div class="user">
+        <div class="user-img-wrap">
+          <div class="user-img">
+        <img src="/static/media/Skylar.jpg">
+          </div>
+        </div>
+        <div class="user-meta">
+          <div class="user-name">
+        Skylar Harris
+          </div>
+          <div class = 'user-role'>
+        ZMQ, Signal Processing, Hardware Implementation
+          </div>
+          <div class="user-school">
+        University of Colorado Boulder
+          </div>
+          
+          <div class="user-profiles">
+        <a href="https://www.linkedin.com/in/skylar-harris-82aba52a4?trk=people-guest_people_search-card" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="https://github.com/skha3371" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+
             </div>
-        </div>        
-        
-            
-        <!-- Skylar -->    
-        <div class = 'profile'>
-            <div class='profile-image-wrap'>
-                <div class= 'profile-image'>
-                    <img src='media/profile_placeholder'>
-                </div>
-            <div class = 'profile-meta'>
-                <div class = 'profile-name'>Kobe Prior</div>
-                <div class = 'profile-role'>insert here</div>
-                <div class = 'profile-school'>Colorado School of Mines</div>
-                <div class = 'profile-socials'>
-                    <i class = 'fa-brands fa-youtube></i>
-                    <i class = 'fa-brands fa-linkedin'></i>
-                    <i class = 'fa-brands fa-github'></i>
-                </div>
-            
+        </div>
+      </div>
+
+    <div class="user">
+        <div class="user-img-wrap">
+          <div class="user-img">
+        <img src="/static/media/Kobe.JPG">
+          </div>
+        </div>
+        <div class="user-meta">
+          <div class="user-name">
+        Jorge Hernandez
+          </div>
+          <div class = 'user-role'>
+        Channel Correction, Software-hardware Integration
+          </div>
+          <div class="user-school">
+        Purdue University
+          </div>
+          
+          <div class="user-profiles">
+        <a href="https://www.linkedin.com/in/jorge-hernandez-957190242" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="https://github.com/jorgeh309" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+
             </div>
-        </div>   
-            
-        <!-- Jorge -->    
-        <div class = 'profile'>
-            <div class='profile-image-wrap'>
-                <div class= 'profile-image'>
-                    <img src='media/profile_placeholder'>
-                </div>
-            <div class = 'profile-meta'>
-                <div class = 'profile-name'>Kobe Prior</div>
-                <div class = 'profile-role'>insert here</div>
-                <div class = 'profile-school'>Colorado School of Mines</div>
-                <div class = 'profile-socials'>
-                    <i class = 'fa-brands fa-youtube></i>
-                    <i class = 'fa-brands fa-linkedin'></i>
-                    <i class = 'fa-brands fa-github'></i>
-                </div>
-            
-            </div>
-        </div>  
-        
-        <!-- Trevor -->    
-        <div class = 'profile'>
-            <div class='profile-image-wrap'>
-                <div class= 'profile-image'>
-                    <img src='media/profile_placeholder'>
-                </div>
-            <div class = 'profile-meta'>
-                <div class = 'profile-name'>Kobe Prior</div>
-                <div class = 'profile-role'>insert here</div>
-                <div class = 'profile-school'>Colorado School of Mines</div>
-                <div class = 'profile-socials'>
-                    <i class = 'fa-brands fa-youtube></i>
-                    <i class = 'fa-brands fa-linkedin'></i>
-                    <i class = 'fa-brands fa-github'></i>
-                </div>
-            
-            </div>
-        </div>  
-             
+        </div>
+      </div>
+                
+    <div class="user">
+        <div class="user-img-wrap">
+          <div class="user-img">
+        <img src="/static/media/Kobe.JPG">
+          </div>
+        </div>
+        <div class="user-meta">
+          <div class="user-name">
+        Kobe Prior
+          </div>
+          <div class = 'user-role'>
+        GUI, Satellite Simulation, Channel Model
+          </div>
+          <div class="user-school">
+        Colorado School of Mines
+          </div>
+          
+          <div class="user-profiles">
+        <a href="https://www.youtube.com/@kobetutors/featured" target="_blank" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://www.linkedin.com/in/kobeprior" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="https://github.com/kobeprior99" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+                
+
+    <div class="user">
+        <div class="user-img-wrap">
+          <div class="user-img">
+        <img src="/static/media/Kobe.JPG">
+          </div>
+        </div>
+        <div class="user-meta">
+          <div class="user-name">
+        Trevor Wiseman
+          </div>
+          <div class = 'user-role'>
+        Signal Processing, Detection, Hardware Implementation
+          </div>
+          <div class="user-school">
+        Brigham Young University
+          </div>
+          
+          <div class="user-profiles">
+        <a href="https://www.linkedin.com/in/trevor-w-7a5889ba" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="https://github.com/kobeprior99" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+
     </div>
-    ''')
+        ''')
 
 
 #run the GUI
