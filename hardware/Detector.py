@@ -3,13 +3,9 @@ import scipy.signal as sig
 import matplotlib.pyplot as plt
 from channel_correction import *
 class Detector:
-    def __init__(self, N, Ts, beta=0.35, fs=2.4e6, sps=2):
-        self.beta = beta
-        self.N = N
-        self.Ts = Ts
+    def __init__(self, fs=2.4e6):
         self.fs = fs
         self.threshold = 8
-        self.sps = sps
 
     def detector(self, samples, match_start, match_end):
         """
@@ -114,4 +110,4 @@ class Detector:
             end = len(coarse_fixed) - 1
             detected = False
         
-        return detected, start, end, coarse_fixed
+        return detected, coarse_fixed
