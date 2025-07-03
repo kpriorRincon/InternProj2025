@@ -55,15 +55,14 @@ def run_receiver():
         samples = sdr.read_samples(N)
 
         # run detection
-        detected, _, _ = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+        detected, corrected_data = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
     # take signal from the samples
-    data = samples
     print(f"Signal found after {count} cycles")
 
     # begin signal processing
     print("Processing data...")
-    bits_string, decoded_message = channel_handler(data)
+    bits_string, decoded_message = channel_handler(corrected_data)
 
     # close sdr
     sdr.close()
