@@ -18,11 +18,11 @@ class receive_processing:
         - fs : Sampling frequency/rate (Hz)
 
         Returns:
-        - time : The time vector of the impulse response
+        - t : The time vector of the impulse response
         - h : The impulse response of the RRC filter in the time domain
         """
 
-        t = np.arange(-N // 2, N // 2 + 1) / fs 
+        t = np.linspace(-N//2, N//2, N) / fs 
 
         h = np.zeros_like(t) 
 
@@ -38,7 +38,7 @@ class receive_processing:
                 numerator = np.sin(np.pi * t[i] * (1 - beta) / Ts) + 4 * beta * t[i] / Ts * np.cos(np.pi * t[i] * (1 + beta) / Ts)
                 denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
                 h[i] = numerator / denominator
-        return t, h
+        return t, h/np.sqrt(np.sum(h**2))  # Normalize to get unity gain
     
     # function to decimate the data
     def decimate(self, sps, data):
@@ -112,7 +112,7 @@ class receive_processing:
         - message (str) : Decoded message
         """
 
-        # bits = bits[128:-128] # Take out markers
+        bits = bits[128:-128] # Take out markers
 
         bits_string = ''.join(str(bit) for bit in bits)
 
@@ -134,9 +134,6 @@ class receive_processing:
         - message : Decoded message
         """
 
-        # index = len(data) // 2
-        # data = data[:index]
-
         symbol_rate = self.sample_rate / self.sps
         Ts = 1 / symbol_rate
 
@@ -151,4 +148,4 @@ class receive_processing:
 
         message = self.bits_to_message(bits)
         
-        return bits_string, message
+        return bits_string, message, symbols

@@ -11,6 +11,14 @@ import time
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams.update({
+    'axes.titlesize': 20,
+    'axes.labelsize': 16,      # X and Y axis label size
+    'xtick.labelsize': 14,     # X tick label size
+    'ytick.labelsize': 14,     # Y tick label size
+    'legend.fontsize': 14,     # Legend font size
+    'figure.titlesize': 22     # Figure suptitle size
+})
 from datetime import datetime, timezone, timedelta
 # function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
@@ -68,8 +76,7 @@ ui.add_css('''
     justify-content: center;
     align-items: center;
     gap: 20px;
-    width: 90%;
-    padding: 20px; /* add some padding to prevent edge clipping */
+    padding: 200px; /* add some padding to prevent edge clipping */
 }
 ''', shared=True)
 
@@ -445,7 +452,7 @@ def Cesium_page():
                 ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
 
 
-            #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
+            #Simply run all of the handlers here that produce desired graphs to be used in each individual page
             #decide the amplitude of the signal so that by the time it gets to the repeater it's very
             # Calculate amplitude scaling so that the QPSK signal has required_tx_power at the repeater
             # QPSK average power is proportional to amp^2 (assuming unit average symbol energy)
@@ -587,16 +594,9 @@ def Cesium_page():
 
                 # constellation plot of incoming signal
                 zoomable_image('media/channel_up_incoming_tuned_constellation.png')
-                # tune to baseband and show the fft
-                zoomable_image('media/channel_up_incoming_tuned_fft.png')
 
                 # constellation plot of outgoing signal
                 zoomable_image('media/channel_up_outgoing_tuned_constellation.png')
-                # fft outgoing
-                zoomable_image('media/channel_up_outgoing_tuned_fft.png')
-
-                # ui.image('media/channel_up_incoming_time.png').style('width: 50%;').force_reload()
-                # ui.image('media/channel_up_outgoing_time.png').style('width: 50%;').force_reload()
 
         @ui.page('/repeater')
         def repeater_page():     
@@ -614,15 +614,11 @@ def Cesium_page():
             with ui.element('div').classes('flex-container'):                
                 #show information about h
                 zoomable_image('media/channel_down_h_phase.png')
-
                 # constellation plot of incoming signal
                 zoomable_image('media/channel_down_incoming_tuned_constellation.png')
-                # tune to baseband and show the fft
-                zoomable_image('media/channel_down_incoming_tuned_fft.png')
                 # constellation plot of outgoing signal
                 zoomable_image('media/channel_down_outgoing_tuned_constellation.png')
-                # fft outgoing
-                zoomable_image('media/channel_down_outgoing_tuned_fft.png')
+
 
         @ui.page('/receiver')
         def receiver_page():

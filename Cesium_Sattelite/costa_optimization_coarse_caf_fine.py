@@ -1,11 +1,19 @@
 from Sig_Gen import SigGen, rrc_filter
 import numpy as np
-
-
+from config import *
+from scipy.signal import fftconvolve, resample_poly
+import time
+import seaborn as sns
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from matplotlib import animation
 
 fs = 2.88e6
 symb_rate = fs/20
 freq_offset = 20e3
+max_freq = 200
+min_freq = -200
+snr_db = 20
 
 def phase_detector_4(sample):
     if sample.real > 0:
@@ -18,92 +26,91 @@ def phase_detector_4(sample):
         b = -1.0
     return a * sample.imag - b * sample.real
 
-def CAF(incoming_signal, FS, symb_rate):
-    orig_len = len(incoming_signal)
-    delay = (301 - 1) //2 #group delay of FIR filter is always (N-1)/2 samples N is num taps
-    _, h = rrc_filter(0.4, 301, 1/symb_rate, FS)
-    incoming_signal = np.convolve(incoming_signal, h, mode = 'full')
-    incoming_signal = incoming_signal[delay : delay + orig_len]
+def mixing(signal, f, ip_val=1):
+    t = np.arange(len(signal)) / (SAMPLE_RATE * ip_val)
+    return signal * np.exp(1j * 2 * np.pi * f * t)
 
-    #create a list of frequencies 
-    freqs = np.arange(-250, 251, .5)#create a frequency list 1 - 100
-    '''
-    correlations = [
-    [...] correlation at -100 Hz
-    [...] correlation at -99 Hz
-    .
-    .
-    [...] correlation at 99 Hz
-    [...] correlation at 100 Hz
-    ]
-    '''
-    correlations = [] #create a correlation array that will store different correlations
-    max_correlations = [] #store the max value and index max_val 
+def correlate(signal, match_filter):
+    # Convolve filter with signal and extract highest correlation
+    energy_map = fftconvolve(signal, np.conj(np.flip(match_filter)), mode = 'same')
+    highest_correlation = np.max(np.abs(energy_map))    
+
+    return highest_correlation
+
+visited_freqs = []
+correlation_values = []
+def binary_search(rx_signal, match_filter, l_freq, r_freq):
+    # Base case: 
+    if l_freq >= r_freq:
+        return l_freq
     
-    for freq in freqs:
-        
-        #create a template at each frequency
-        sig_gen = SigGen(freq, 1.0, FS, symb_rate) # we create a signal with a certain frequency 
-        # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
-        start_sequence = sig_gen.start_sequence
-        _, start_waveform = sig_gen.generate_qpsk(start_sequence)
+    # get middle index of each segment when test frequency divided into 2
+    l_match_filter = mixing(match_filter, l_freq, INTERPOLATION_VAL)
+    r_match_filter = mixing(match_filter, r_freq, INTERPOLATION_VAL)
 
-        #then apply RRC to make a full RC filter to compare agianst
-        og_len = len(start_waveform)
-        start_waveform = np.convolve(start_waveform, h, mode = 'full')
-        start_waveform = start_waveform[delay:delay + og_len]
-        correlation = np.abs(np.convolve(incoming_signal, np.conj(np.flip(start_waveform)), mode = 'same'))
-        #plt.figure()
-        #plt.plot(correlation)
-        #plt.show()  
-        correlations.append(correlation) 
-        max_val = max(correlation)
-        max_correlations.append(max_val)
-   
-    #now we can interpret which had the highest energy correlation by parsing the _max_correlations
-    #print(f'max_correlations:{max_correlations}') 
-    best_correlation_index = max_correlations.index(max(max_correlations))
-    best_frequency = freqs[best_correlation_index]
+    l_energy = correlate(rx_signal, l_match_filter)
+    r_energy = correlate(rx_signal, r_match_filter)
 
-    #correct the signal
-    t = np.arange(len(incoming_signal))/fs
-    shifted_sig = incoming_signal*np.exp(-1j*2*np.pi*best_frequency*t)
+    visited_freqs.extend([l_freq, r_freq])
+    correlation_values.extend([l_energy, r_energy])
+
+    print(f"Energy at {l_freq} Hz: {l_energy}. Energy at {r_freq} Hz: {r_energy}.")
+    if r_energy > l_energy:
+        l_freq += (r_freq - l_freq) // 2 + 1
+        freq = binary_search(rx_signal, match_filter, l_freq, r_freq)
     
-    #now find start and end with our known markers
-   
-    sig_gen = SigGen(0, 1.0, FS, symb_rate) # if f = 0 this won't up mix so we'll get the baseband signal 
-    # 1 1 1 1 1 0 0 1 1 0 1 0 0 1 0 0 0 0 1 0 1 0 1 1 1 0 1 1 0 0 0 1
-    start_sequence = sig_gen.start_sequence
+    elif r_energy < l_energy:
+        r_freq -= (r_freq - l_freq) // 2 + 1
+        freq = binary_search(rx_signal, match_filter, l_freq, r_freq)
 
-    _, start_waveform = sig_gen.generate_qpsk(start_sequence)
-    start_orig_len = len(start_waveform)
-    start_waveform = np.convolve(start_waveform, h, mode = 'full')    
-    start_waveform = start_waveform[delay: delay + start_orig_len]
-
-    # 0 0 1 0 0 1 1 0 1 0 0 0 0 0 1 0 0 0 1 1 1 1 0 1 0 0 0 1 0 0 1 0
-    end_sequence = sig_gen.end_sequence
+    else:
+        # Offset exactly in between, choose middle freq
+        freq = l_freq + (r_freq - l_freq) // 2
     
-    _, end_waveform = sig_gen.generate_qpsk(end_sequence)
-    end_orig_len = len(end_waveform)
-    end_waveform = np.convolve(end_waveform, h, mode = 'full')    
-    end_waveform = end_waveform[delay: delay + end_orig_len]
-
-    #find start index by convolving signal with preamble
-    start_corr_sig = np.convolve(shifted_sig, np.conj(np.flip(start_waveform)), mode = 'same')
-
-    #find the end index 
-    end_corr_signal = np.convolve(shifted_sig, np.conj(np.flip(end_waveform)), mode = 'same')
-   
-    #get the index
-    start = np.argmax(np.abs(start_corr_sig)) - int((32) * (FS/symb_rate)) # If the preamble is 32 bits long, its 16 symbols, symbols * samples/symbol = samples
-    end = np.argmax(np.abs(end_corr_signal)) + int((8) * (FS/symb_rate))
-    print(f'start: {start}, end: {end}')
+    return freq
 
 
-    sig_ready = shifted_sig[start:end] 
+def cross_corr_caf(rx_signal):
+    # Generate QPSK wave of start marker
+    sig_gen = SigGen(0, 1.0)    
+    _, marker_filter = sig_gen.generate_qpsk(START_MARKER)
+
+    #Interpolate signal and match filter
+    ip_signal = resample_poly(rx_signal, INTERPOLATION_VAL, 1)
+    ip_filter = resample_poly(marker_filter, INTERPOLATION_VAL, 1)
+
+    strt = time.time()
+    # Binary search for frequency offset
+    freq_found = binary_search(ip_signal, ip_filter, min_freq, max_freq)
+
+    print(f"Total time for binary search: {time.time() - strt} s.")
+    print(f"Binary Search CAF: {freq_found}")
+
+    #Correlate one last time to get index
+    up_mixed_filter = mixing(ip_filter, freq_found, INTERPOLATION_VAL)
+    start_map = fftconvolve(ip_signal, np.conj(np.flip(up_mixed_filter)), mode = 'same')
+    start_idx = np.argmax(np.abs(start_map)) - int((32) * (SAMPLE_RATE * INTERPOLATION_VAL / SYMB_RATE))
 
 
-    return sig_ready, best_frequency
+    #Correlate with end marker match filter for end idx
+    _, end_filter = sig_gen.generate_qpsk(END_MARKER)
+    ip_end_filter = resample_poly(end_filter, INTERPOLATION_VAL, 1)
+    mixed_end_filter = mixing(ip_end_filter, freq_found, INTERPOLATION_VAL)
+    end_map = fftconvolve(ip_signal, np.conj(np.flip(mixed_end_filter)), mode = 'same')
+    end_idx = np.argmax(np.abs(end_map)) + int((32) * (SAMPLE_RATE * INTERPOLATION_VAL / SYMB_RATE))
+
+
+    # Reslice signal
+    print(f"Start: {start_idx} End: {end_idx}")
+    deci_signal = ip_signal[start_idx: end_idx:16]   
+
+
+    t = np.arange(len(deci_signal)) / SAMPLE_RATE
+    fixed_signal = deci_signal * np.exp(-1j * 2 * np.pi * freq_found * t)
+
+    return fixed_signal, freq_found
+
+
 def coarse_freq_recovery(qpsk_wave, order=4):
 
     qpsk_wave_r = qpsk_wave**4
@@ -151,7 +158,7 @@ def costas_loop(qpsk_wave, alpha, beta):
 def main():
 
     #Generate QPSK at carrier frequency
-    sig_gen = SigGen(freq = 900e6, amp = 1 ,sample_rate = fs, symbol_rate = symb_rate)
+    sig_gen = SigGen(freq = 900e6, amp = 1)
     bits = sig_gen.message_to_bits('hello there ' * 3)
     t, qpsk_wave = sig_gen.generate_qpsk(bits)
 
@@ -165,7 +172,7 @@ def main():
 
     print(f"Coarse Frequency Correction: {coarse_freq} Hz")
 
-    sig, frequency_CAF = CAF(coarse_fixed_sig, fs, symb_rate)
+    sig, frequency_CAF = cross_corr_caf(coarse_fixed_sig)
     print(f'CAF frequency Correction: {frequency_CAF} Hz')
     
     best_alpha = None
@@ -173,14 +180,16 @@ def main():
     min_error = float('inf')
     best_correction = None
 
-    alphas = np.arange(0, 0.01, 0.00005)
-    betas = np.arange(0, 0.00001, 0.00000005)
+    alphas = np.arange(0, 0.01, 0.001) #step 0.00005
+    betas = np.arange(0, 0.00001, 0.000001)#0.00000005
 
     print(f"Testing {len(alphas)} alphas and {len(betas)} betas.")
     print(f"Total number of test cases: {len(alphas) * len(betas)}.")
 
+    error_matrix = []
     counter = 0
     for a in alphas:
+        error_row = []
         for b in betas:
             fine_freq = costas_loop(sig, alpha=a, beta=b)
             total_correction = coarse_freq + frequency_CAF + fine_freq 
@@ -193,12 +202,79 @@ def main():
                 best_alpha = a
                 best_beta = b
                 best_correction = fine_freq
+            
+            error_row.append(error)
+        error_matrix.append(error_row)
+
+    error_matrix = np.array(error_matrix)
 
     print(f"Best alpha: {best_alpha}")
     print(f"Best beta: {best_beta}")
     print(f"Best Costas Correction {best_correction} Hz")
     print(f"Total correction: {best_correction + coarse_freq} Hz")
     print(f"Minimum error: {min_error} Hz")
+    
+    A, B = np.meshgrid(betas, alphas)  # Note: betas = X, alphas = Y
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(A, B, error_matrix, cmap='viridis')
+    ax.scatter(
+        best_beta, best_alpha, min_error,
+        color='red',
+        s=60,
+        marker='o',
+        label='Min Error',
+        edgecolor='black',
+        zorder=9
+    )
+    ax.plot3D(
+        [best_beta, best_beta],
+        [best_alpha, best_alpha],
+        [0, 1.5],  # test value
+        color='red',
+        linewidth=2,
+        linestyle='--',
+        zorder=10
+    )
+
+    ax.set_xlabel('Beta')
+    ax.set_ylabel('Alpha')
+    ax.set_zlabel('Error')
+    ax.set_title('Costas Loop Error Surface')
+    # Assuming you previously found the best alpha/beta/error
+    label_text = (
+        f"Best Alpha: {best_alpha:.3f}\n"
+        f"Best Beta: {best_beta:.6f}\n"
+        f"Min Error: {min_error:.6f}"
+    )
+
+    # Place text outside the data range (adjust X, Y, Z to fit)
+    fig.text(
+        0.1, 0.79,  # position in figure coords: x=85% from left, y=20% from bottom
+        f"Best Alpha: {best_alpha:.5f}\nBest Beta: {best_beta:.7f}\nMin Error: {min_error:.6f}",
+        fontsize=10,
+        bbox=dict(boxstyle='round,pad=0.3', fc='lightyellow', ec='blue', alpha=0.8)
+    )
+    #plt.show()
+
+    def rotate(angle):
+        ax.view_init(elev=30, azim=angle)
+
+    rot_anim = animation.FuncAnimation(fig, rotate, frames=np.arange(0, 360, 2), interval=100)
+    rot_anim.save("costas_loop_surface.gif", dpi=150, writer='pillow')
+
+
+    plt.show()
+
+
+
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(error_matrix, xticklabels=np.round(betas, 8), yticklabels=np.round(alphas, 5), cmap='mako', annot=False)
+    plt.xlabel('Beta')
+    plt.ylabel('Alpha')
+    plt.title('Costas Loop Error Heatmap')
+    plt.show()
+
 
 if __name__ == "__main__":
     main()
