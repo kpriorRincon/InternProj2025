@@ -155,6 +155,50 @@ ui.add_head_html('''
     .spacer {
         height: 60px; /* reserve space under the fixed bar */
     }
+                 
+    .card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px;
+    min-height: 32vh;
+    width: 70vw;
+    box-sizing: border-box;
+    margin: 0 auto;
+    }
+
+    .card {
+        background: rgba(255,255,255,0.65);
+        border-radius: 10px;
+        padding: 32px 24px;
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+    .card label {
+        background: rgba(255,255,255,0.92) !important;
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin-bottom: 6px;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .card:hover {
+        scale: 1.05;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 110vh;
+    width: 100vw;
+    box-sizing: border-box;
+}
     </style>
 ''')
 
@@ -175,9 +219,21 @@ with ui.element('div').classes('glass-bar'):
 ui.element('div').classes('spacer')
 
 #Main page content:
+with ui.element('div').classes('wrapper'):
+    with ui.element('div').classes('card-container'):
+        with ui.element('div').classes('card').on('click', lambda: ui.navigate.to('/SIMULATE')):
+            ui.image('media/simulate.png').force_reload()  # Ensure the image is always fresh
+            ui.label('Simulate a bent pipe communication system with a satellite and two ground stations.').style('text-align: center; font-size: 1.3em;')
 
+        with ui.element('div').classes('card').on('click', lambda: ui.navigate.to('/CONTROL')):
+            ui.image('media/control.png').force_reload()  # Ensure the image is always fresh
+            ui.label('Control software defined radios to send a message to a transponder and receive it back.').style('text-align: center;font-size: 1.3em;')
 
+        with ui.element('div').classes('card').on('click', lambda: ui.navigate.to('/ABOUT')):
+            ui.image('media/about.png').force_reload()  # Ensure the image is always fresh
+            ui.label('Learn more about the project and its authors.').style('text-align: center;font-size: 1.3em;')
 
+# Add a footer with a link to the GitHub repository
 
 
 # Simulate Page-------------------------------------------------------------------------------------------------------------------
