@@ -12,24 +12,24 @@ from config import *
 
 def run_receiver():
     # configure RTL-SDR
-    sdr = RtlSdr()
-    sdr.sample_rate = SAMPLE_RATE # Hz
-    sdr.center_freq = RX_REC_FREQ # Hz
-    sdr.freq_correction = PPM # PPM
-    sdr.gain = 'auto'
+    sdr = RtlSdr()                  # RTL-SDR object
+    sdr.sample_rate = SAMPLE_RATE   # sample rate in Hz
+    sdr.center_freq = RX_REC_FREQ   # center frequency in Hz
+    sdr.freq_correction = PPM       # how much to correct for frequency offset PPM
+    sdr.gain = 'auto'               # set gain to auto 
 
-    # sleep
+    # sleep to let the SDR settle
     time.sleep(1)
 
     # settings to run detector
-    detected = False
-    sps = SPS
-    N = sps * 1024
-    beta = EXCESS_BANDWIDTH
-    num_taps = NUMTAPS
-    symbol_rate = SYMB_RATE
+    detected = False        # flag to indicate if the signal is detected
+    sps = SPS               # samples per symbol
+    N = sps * 1024          # number of samples to read
+    beta = EXCESS_BANDWIDTH # excess bandwidth factor for the filter
+    num_taps = NUMTAPS      # number of taps for the filter
+    symbol_rate = SYMB_RATE # symbol rate calculated from sample rate and samples per symbol
 
-    # create transmit object for the start and end markers
+    # create transmit object and get the start and end markers
     transmit_obj = tp.transmit_processing(sps, sdr.sample_rate)
     match_start, match_end = transmit_obj.modulated_markers(beta, num_taps) 
 
