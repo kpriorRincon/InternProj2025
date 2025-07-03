@@ -144,7 +144,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
 
         plt.figure(figsize=(10, 6))
         plt.plot(freqs, fft_vals)
-        #plt.axvline(x=freq_tone * order, color='red', linestyle='--', label='Detected Tone')
+        plt.axvline(x=freq_tone * order, color='red', linestyle='--', label='Detected Tone')
         plt.legend()
         plt.xlim(-10e3, 100e3)
         plt.annotate(
@@ -164,7 +164,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.title('FFT of Signal Raised to 4th')
         # label at freq_tone
         
-        plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300, bbox_inches='tight')
+        plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300)
         plt.close()
 
 
