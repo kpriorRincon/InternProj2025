@@ -14,7 +14,7 @@ match_start, match_end = transmit_obj.modulated_markers(BETA, NUMTAPS)
 threshold = 8
 N = SPS * 1024
 
-def detector(samples):
+def detector(samples, prev_cut):
     import scipy.signal as signal
 
     """
@@ -184,11 +184,12 @@ def main():
     detector(raw_data)
 
 
-    cut = False
     i = 0
+    cut_sigs = None # if cut_sigs has stuff, loop through, if first half, 
+    #find end idx in cut pairs, if sec half, find start idx in cut pairs
     while i + N < len(raw_data):
         samples = raw_data[i: i + N]
-        messages, cut_signals = detector(samples, cut)
+        messages, cut_sigs = detector(samples, cut_sigs)
         i += N
     #while True: # Real time reading
     #    messages, cut_signals = detector(raw_data, cut)
