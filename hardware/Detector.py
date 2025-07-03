@@ -81,6 +81,7 @@ class Detector:
                 plt.ylabel('Amplitude')
                 plt.grid()
                 plt.savefig('raw_iq_samples.png')
+                #plt.show()
 
                 #plt.plot(np.fft.fftfreq(len(cor_start), 0/self.fs), 20*np.log10(np.fft.fft(cor_start)), label='Start Correlation')
                 #plt.plot(np.fft.fftfreq(len(cor_end), 0/self.fs), 20*np.log10(np.fft.fft(cor_end)), label='End Correlation')
@@ -101,7 +102,7 @@ class Detector:
                 plt.scatter(end_idx, np.abs(cor_end[end_idx]), s = 99, c = 'r', marker = '.')
                 #plt.axvline(x = end, linestyle = '--', color = 'r')
                 plt.savefig('correlation_plot.png')
-
+                #plt.show()
 
         # if the start index is greater than the end index signal not found, return default values
         if start_idx > end_idx or start < 0 or end > len(coarse_fixed):
