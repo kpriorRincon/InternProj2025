@@ -109,14 +109,18 @@ def detector(samples, prev_cut):
     signals_found = []
     signals_cut = []
 
+    for pairs in cut_peaks:
+        if pairs[0]:
+            signals_cut.append(('f', coarse_fixed[pairs[0]:]))
+        else:
+            #for i, old_pair in enumerate(prev_cut):
+            #if old_pair[0] == 's':
+            #        signals_found.append(('f', coarse_fixed[pairs[0]:]))
+            signals_cut.append(('s', coarse_fixed[:pairs[1]]))
+
     for pairs in sig_pairs:
         signals_found.append(coarse_fixed[pairs[0]:pairs[1]])
 
-    for pairs in cut_peaks:
-        if pairs[0]: 
-            signals_cut.append(('f', coarse_fixed[pairs[0]:]))
-        else:
-            signals_cut.append(('s', coarse_fixed[:pairs[1]]))
     
     messages = []
     for signal in signals_found:
@@ -180,8 +184,6 @@ def run_receiver():
 def main():
     raw_data = np.fromfile("test_data.bin", dtype=np.complex64)
     print(len(raw_data))
-
-    detector(raw_data)
 
 
     i = 0
