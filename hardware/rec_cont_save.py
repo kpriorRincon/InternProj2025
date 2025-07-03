@@ -82,7 +82,7 @@ except Exception as e:
 total_t = 0
 # run detection
 count = 0   # count cycles until detected
-open('test_data.bin', 'a')
+open('test_data.bin', 'wb').close()  # clear the file before writing
 while count < 10:
     count += 1  # increment cycle count
     # read samples from RTL-SDR
@@ -90,7 +90,10 @@ while count < 10:
     samples = sdr.read_samples(N)
 
     # save samples to an external file (optional) 
-    np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+    with open('test_data.bin', 'ab') as f:
+        # Convert samples to complex64 and write to file
+        f.write(np.array(samples, dtype=np.complex64).tobytes())
+    
     strt_t = time.time()
     # run detection
     
@@ -99,6 +102,9 @@ while count < 10:
 
 # error check
 print("Done saving samples")
+raw_data = np.fromfile("test_data.bin", dtype=np.complex64)
+print("Length of data: ", len(raw_data))
+print("Total time: ", total_t)
 
 # close sdr
 sdr.close()
