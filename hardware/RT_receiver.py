@@ -47,8 +47,8 @@ def detector(samples, prev_cut):
     cor_end = np.abs(signal.fftconvolve(coarse_fixed, np.conj(np.flip(match_end)), mode='same'))
     
 
-    start_peaks = signal.find_peaks(cor_start, distance=distance, height=20)[0]
-    end_peaks = signal.find_peaks(cor_end, distance=distance, height=20)[0]
+    start_peaks = signal.find_peaks(cor_start, distance=distance, height=30)[0]
+    end_peaks = signal.find_peaks(cor_end, distance=distance, height=30)[0]
 
     print(f"Start peaks {start_peaks}")
     print(f"End peaks {end_peaks}")
@@ -80,6 +80,8 @@ def detector(samples, prev_cut):
     start_peaks -= int(len(match_start) / 2)
     end_peaks += int(len(match_start) / 2)
 
+    start_peaks = [idx for idx in start_peaks if idx >= 0]
+    end_peaks = [idx for idx in end_peaks if idx <= N]
     sig_pairs = []
     cut_peaks = []
 
@@ -182,14 +184,14 @@ def run_receiver():
 
 
 def main():
-    raw_data = np.fromfile("test_data.bin", dtype=np.complex64)
+    raw_data = np.fromfile("test_data_old.bin", dtype=np.complex64)
     print(len(raw_data))
 
 
     i = 0
     cut_sigs = None # if cut_sigs has stuff, loop through, if first half, 
     #find end idx in cut pairs, if sec half, find start idx in cut pairs
-    while i + N < len(raw_data):
+    while i + N < len(raw_data) + 1:
         samples = raw_data[i: i + N]
         messages, cut_sigs = detector(samples, cut_sigs)
         i += N

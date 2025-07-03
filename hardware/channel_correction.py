@@ -368,7 +368,7 @@ def channel_handler(rx_signal):
     caf_fixed = cross_corr_caf(lpf_sig, True)
     costas_fixed = costas_loop(caf_fixed)
     bits_string, decoded_message, symbols = rp.work(costas_fixed, BETA, NUMTAPS)
-    
+    print(f"Decoded message: {decoded_message}")
     if DEBUG:
             plt.figure(figsize=(6, 6))
             plt.plot(np.real(symbols[64:-64]), np.imag(symbols[64:-64]), 'o')
