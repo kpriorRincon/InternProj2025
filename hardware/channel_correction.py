@@ -117,7 +117,10 @@ def costas_loop(qpsk_wave):
         plt.figure(figsize=(10, 6))
         plt.plot(freq_log,'.-')
         plt.title('Costas Loop Frequency Convergence')
-        plt.show()
+        plt.grid()
+        plt.xlabel('Loop Iteration Count')
+        plt.ylabel('Frequency (Hz)')
+        plt.savefig('media/costas_convergence.png')
         plt.close()
 
         plt.figure(figsize=(6, 6))
@@ -130,7 +133,7 @@ def costas_loop(qpsk_wave):
         plt.tight_layout()
         plt.grid(True)
         plt.title('Fine Frequency Synchronization (Costas Loop)')
-        plt.show()
+        plt.savefig('media/fine_correction.png')
         plt.close()
 
     return fixed_qpsk
@@ -204,7 +207,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.ylabel("Frequency Offset (Hz or bins)")
         plt.title("Binary Search Convergence on Frequency Offset")
         plt.grid(True)
-        plt.show()
+        plt.savefig('media/binary_search_convergence.png')
         plt.close()
 
     ip_signal = resample_poly(rx_signal, INTERPOLATION_VAL, 1)
@@ -221,7 +224,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.plot(np.abs(start_map))
         plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
         plt.ylabel('Correlation Magnitude')
-        plt.show()
+        plt.savefig('media/start_correlation.png')
         plt.close()
 
     #Correlate with end marker match filter for end idx
@@ -239,7 +242,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.plot(np.abs(end_map))
         plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
         plt.ylabel('Correlation Magnitude')
-        plt.show()
+        plt.savefig('media/end_correlation.png')
         plt.close()
 
         # Plot both correlations on top of the signal 
@@ -254,7 +257,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.ylabel('Correlation Magnitude')
         plt.legend()
         plt.grid(True)
-        plt.show()
+        plt.savefig('media/start_end_correlation.png')
         plt.close()
 
     # Reslice signal
@@ -270,7 +273,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.title('Output of CAF')
         plt.grid(True)
         plt.axis('equal')
-        plt.show()
+        plt.savefig('media/pre_phase_correction_constellation.png')
         plt.close()
 
     # Fix phase offset
@@ -313,7 +316,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.legend()
         plt.tight_layout()
         plt.plot(np.real(fixed_signal[1:]),np.imag(fixed_signal[1:]), 'o')
-        plt.show()
+        plt.savefig('media/phase_offset.png', dpi = 300)
         plt.close()
 
         # Plot the constellation after phase correction
@@ -326,7 +329,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.title('Constellation after Phase Correction')
         plt.grid(True)
         plt.axis('equal')
-        plt.show()
+        plt.savefig('media/phase_corrected_constellation.png')
         plt.close()
     return fixed_signal
 
@@ -355,7 +358,7 @@ def channel_handler(rx_signal):
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Coarse Frequency Synchronization')
-        plt.show()
+        plt.savefig('media/coarse_correction.png')
         plt.close()
 
     lpf_sig = lowpass_filter(rx_signal)
@@ -373,7 +376,7 @@ def channel_handler(rx_signal):
             plt.ylabel('Quadrature (Q)')
             plt.axis('equal')
             plt.tight_layout()
-            plt.show()
+            plt.savefig('media/clean_signal.png')
             plt.close()
 
     return bits_string, decoded_message
