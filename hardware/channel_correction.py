@@ -346,18 +346,19 @@ def channel_handler(rx_signal):
         plt.close()
 
     rp = receive_processing(int(SAMPLE_RATE/SYMB_RATE), SAMPLE_RATE)
-    course_fixed = coarse_freq_recovery(rx_signal)
+
     if DEBUG:
         plt.figure(figsize=(6, 6))
-        plt.plot(np.real(course_fixed[1:]), np.imag(course_fixed[1:]), 'b-', zorder = 1, label = 'oversampled signal')
-        plt.scatter(np.real(course_fixed[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(course_fixed[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
+        plt.plot(np.real(rx_signal[1:]), np.imag(rx_signal[1:]), 'b-', zorder = 1, label = 'oversampled signal')
+        plt.scatter(np.real(rx_signal[1::int(SAMPLE_RATE/SAMPLE_RATE)]),np.imag(rx_signal[1::int(SAMPLE_RATE/SAMPLE_RATE)]), s=10, color= 'red', zorder = 2, label = 'decimated signal')
         plt.legend()
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Coarse Frequency Synchronization')
         plt.show()
         plt.close()
-    lpf_sig = lowpass_filter(course_fixed)
+
+    lpf_sig = lowpass_filter(rx_signal)
 
     caf_fixed = cross_corr_caf(lpf_sig, True)
     costas_fixed = costas_loop(caf_fixed)

@@ -29,17 +29,17 @@ class Detector:
         print("Length of samples: ", len(samples))
         # normalize the samples
         # samples = (samples - np.min(samples)) / (np.max(np.abs(samples)) - np.min(samples))
-        samples = coarse_freq_recovery(samples)
+        coarse_fixed = coarse_freq_recovery(samples)
         # default returns 
         start = 0
-        end = len(samples) - 1
+        end = len(coarse_fixed) - 1
         detected = False
         
         # find the correlated signal
         # start cor
-        cor_start = np.abs(sig.fftconvolve(samples, np.conj(np.flip(match_start)), mode='same'))
+        cor_start = np.abs(sig.fftconvolve(coarse_fixed, np.conj(np.flip(match_start)), mode='same'))
         # end cor
-        cor_end = np.abs(sig.fftconvolve(samples, np.conj(np.flip(match_end)), mode='same'))
+        cor_end = np.abs(sig.fftconvolve(coarse_fixed, np.conj(np.flip(match_end)), mode='same'))
         
         # get start and end indices
         start = np.argmax(cor_start) - int(len(match_start) / 2)    # go back length of the start/end sequence
@@ -77,8 +77,8 @@ class Detector:
                 print("Length of end sequence: ", len(match_end))
 
                  # plot samples
-                plt.plot(np.real(samples), label = 'real')
-                plt.plot(np.imag(samples), label = 'imaginary')
+                plt.plot(np.real(coarse_fixed), label = 'real')
+                plt.plot(np.imag(coarse_fixed), label = 'imaginary')
                 plt.legend()
                 plt.title("Raw IQ Samples")
                 plt.xlabel('Time (samples)')
@@ -108,12 +108,10 @@ class Detector:
 
 
         # if the start index is greater than the end index signal not found, return default values
-        if start_idx > end_idx or start < 0 or end > len(samples):
+        if start_idx > end_idx or start < 0 or end > len(coarse_fixed):
             print("Start index greater than end...\nSignal not found...\nSet to defaults")
             start = 0
-            end = len(samples) - 1
+            end = len(coarse_fixed) - 1
             detected = False
-
-           
         
-        return detected, start, end
+        return detected, start, end, coarse_fixed
