@@ -36,40 +36,6 @@ match_start, match_end = transmit_obj.modulated_markers(beta, num_taps)
 # detector object
 detect_obj = d.Detector(sdr.sample_rate)
 
-# Spectrogram parameters
-fft_size = N
-hop_size = fft_size // 2
-spec_history = 100  # number of lines in spectrogram
-
-# Prepare plot
-fig, ax = plt.subplots()
-spec_data = np.zeros((spec_history, fft_size // 2))
-img = ax.imshow(spec_data, aspect='auto', origin='lower',
-                extent=[-(sdr.sample_rate / 2 / 1e6) / 2, (sdr.sample_rate / 2 / 1e6) / 2, -spec_history / 2, spec_history / 2],
-                cmap='viridis', vmin=-100, vmax=0)
-
-ax.set_xlabel("Frequency (MHz)")
-ax.set_ylabel("Time (frames)")
-ax.set_title("Baseband Spectrogram of RTL-SDR ")
-
-# Update function
-def update(frame):
-    samples = sdr.read_samples(fft_size)
-    windowed = samples * np.hanning(fft_size)
-    spectrum = np.fft.fft(windowed)
-    power = 20 * np.log10(np.abs(spectrum[:fft_size // 2]) + 1e-12)
-
-    global spec_data
-    spec_data = np.roll(spec_data, -1, axis=0)
-    spec_data[-1, :] = power
-    img.set_data(spec_data)
-    return [img]
-
-# run animation for the waterfall plot
-ani = animation.FuncAnimation(fig, update, interval=50, blit=True)
-plt.tight_layout()
-plt.show()
-
 # Test SDR connection before main loop
 try:
     test_samples = sdr.read_samples(1024)
@@ -82,7 +48,7 @@ except Exception as e:
 total_t = 0
 # run detection
 count = 0   # count cycles until detected
-open('test_data.bin', 'a')
+open('test_data.bin', 'wb').close()  # clear the file before writing
 while count < 10:
     count += 1  # increment cycle count
     # read samples from RTL-SDR
@@ -90,7 +56,10 @@ while count < 10:
     samples = sdr.read_samples(N)
 
     # save samples to an external file (optional) 
-    np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+    with open('test_data.bin', 'ab') as f:
+        # Convert samples to complex64 and write to file
+        f.write(np.array(samples, dtype=np.complex64).tobytes())
+    
     strt_t = time.time()
     # run detection
     
@@ -99,6 +68,9 @@ while count < 10:
 
 # error check
 print("Done saving samples")
+raw_data = np.fromfile("test_data.bin", dtype=np.complex64)
+print("Length of data: ", len(raw_data))
+print("Total time: ", total_t)
 
 # close sdr
 sdr.close()
