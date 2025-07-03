@@ -15,7 +15,10 @@ import matplotlib.pyplot as plt
 plt.figure(figsize=(10, 5))
 
 plt.plot(np.abs(start_auto), label='Start Auto-correlation')
-plt.title('Auto-correlation of Start')
+plt.title('Auto-correlation of Start Marker')
+plt.xlabel('Sample Index')
+plt.ylabel('Amplitude')
+plt.grid()
 
 plt.figure(figsize=(10, 5))
 
