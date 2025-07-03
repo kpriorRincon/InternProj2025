@@ -39,17 +39,19 @@ def lowpass_filter(raw_signal):
         fft_filtered = fftshift(np.abs(fft(filtered_sig)))
 
 
-        # Plot FFT comparison
-        plt.figure(figsize=(12, 5))
-        plt.plot(freqs / 1e6, 20 * np.log10(fft_raw + 1e-10), label='Before Filtering', alpha=0.7)
-        plt.plot(freqs / 1e6, 20 * np.log10(fft_filtered + 1e-10), label='After Filtering', alpha=0.7)
-        plt.title('Frequency Response of Signal (Before vs After Low-Pass FIR Filter)')
-        plt.xlabel('Frequency (MHz)')
-        plt.ylabel('Magnitude (dB)')
-        plt.grid(True)
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
+        if DEBUG:
+            # Plot FFT comparison
+            plt.figure(figsize=(12, 5))
+            plt.plot(freqs / 1e6, 20 * np.log10(fft_raw + 1e-10), label='Before Filtering', alpha=0.7)
+            plt.plot(freqs / 1e6, 20 * np.log10(fft_filtered + 1e-10), label='After Filtering', alpha=0.7)
+            plt.title('Frequency Response of Signal (Before vs After Low-Pass FIR Filter)')
+            plt.xlabel('Frequency (MHz)')
+            plt.ylabel('Magnitude (dB)')
+            plt.grid(True)
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig('media/lpf_fft.png')
+            plt.close()
 
 
         return filtered_sig
