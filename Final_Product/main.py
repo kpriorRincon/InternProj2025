@@ -1312,21 +1312,56 @@ def about_page():
             #right text
             # Add a project title at the top of the About page
             ui.label("Red Mountain Internship Project").style(
-                'font-size: 2.5em; font-weight: bold; margin-bottom: 1.5em; text-align: center; display: block; width: 100%;'
+                'font-size: 2.5em; font-weight: bold; margin-bottom: 0.5em; text-align: center; display: block; width: 100%;'
             )
-            ui.label("In Rincon Research Coorporation's Internship program in the summer of 2025 four bright interns from a variety of diciplines came together to simulate and realize a bent pipe communication system. ").style(
+            ui.label("In Rincon Research Coorporation's Internship program in the summer of 2025 four bright interns from a variety of diciplines came together to simulate and realize a bent pipe communication system. Bent pipe communication systems are often used in scenarios where line of sight between a transmitter and a receiver is obscured, or in the scenario where certain frequency bands are denied by an interferer. The task involved extensive research and experimentation with unfamiliar digital signal processing concepts including QPSK modulation, pulse shaping, finite impulse response filters, sampling theory, the cross ambiguity function (CAF), and detection. The experience was rewarding and the final product is nothing shy of cool.").style(
                 'font-size: 1.3em; margin-bottom: 2em; text-align: center; display: block; width: 100%;'
             )
     #add some spacer
     ui.element('div').classes('spacer')
 
-    #Simulation
-
-
+    # Simulation
+    with ui.row().style('width: 80%; justify-content: center; align-items: flex-start; margin: 0 auto;'):
+        with ui.column().style('width: 50%; align-items: flex-start;'):
+            ui.label("Simulation Overview").style(
+                'font-size: 2.5em; font-weight: bold; text-align: center; width: 100%;'
+            )
+            ui.label("Explore the digital simulation of a bent pipe satellite communication system.").style(
+                'font-size: 1.3em; text-align: center; width: 100%;'
+            )
+            ui.label(
+                "The simulation retrieves up-to-date TLE (Two-Line Element) data for recently launched satellites from CelesTrak, enabling dynamic visualization of satellite orbits and line-of-sight paths between ground stations and satellites. For each selected satellite, the system computes the time and geometry of closest approach, allowing users to choose a satellite as the transponder in a bent pipe communication scenario. Leveraging real orbital data, the simulation estimates time delays and Doppler shifts to create a realistic channel model. Users can interactively step through each stage of the communication link—from transmitter to satellite transponder and onward to the receiver—gaining insight into the physical and signal processing aspects of satellite communications."
+            ).style('font-size: 1.1em;')
+        with ui.column().style('width: 45%; align-items: flex-start;'):
+            ui.image('media/Sim_screenshot.png').style('width: 90%;')
+   
     #add some spacer
     ui.element('div').classes('spacer')
     
     #Control
+    with ui.row().style('width: 80%; justify-content: center; align-items: flex-start; margin: 0 auto;'):
+        with ui.column().style('width: 45%; align-items: flex-start;'):
+            ui.image('media/Sim_screenshot.png').style('width: 90%;')
+        with ui.column().style('width: 50%; align-items: flex-start;'):
+            ui.label("Control Overview").style(
+                'font-size: 2.5em; font-weight: bold; text-align: center; width: 100%;'
+            )
+            ui.label("Bring simulated results to the real world").style(
+                'font-size: 1.3em; text-align: center; width: 100%;'
+            )
+            ui.label("There are three devices as there are in the simulated scenario:"
+            ).style('font-size: 1.1em;')
+            with ui.row().style('width: 100%; justify-content: center; align-items: flex-start; margin-top: 2em;'):
+                with ui.column().style('width: 30%; align-items: center;'):
+                    ui.image('media/tx_device.png').style('width: 90%;')
+                    ui.label('Transmitter (Signal Hound)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
+                with ui.column().style('width: 30%; align-items: center;'):
+                    ui.image('media/repeater_device.png').style('width: 90%;')
+                    ui.label('Repeater(BladeRF)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
+                with ui.column().style('width: 30%; align-items: center;'):
+                    ui.image('media/rx_device.png').style('width: 90%;')
+                    ui.label('Receiver (RTL-SDR)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
+            ui.label('The user will input a message to be sent and an asynchronous message handler will communicate with devices on the same network to start transmitting.').style('font-size: 1.1em;')
 
     #add some spacer
     ui.element('div').classes('spacer')
