@@ -805,7 +805,7 @@ def simulate_page():
                 
                 tx_amp = np.sqrt(required_tx_power) #we want the amplitude
                 sig_gen = SigGen.SigGen(txFreq, amp = tx_amp)
-
+                global bits
                 bits = sig_gen.message_to_bits(mes) #note that this will add prefix and postfix to the bits associated wtih the message
 
                 t, qpsk_signal = sig_gen.generate_qpsk(bits)
@@ -986,8 +986,12 @@ def simulate_page():
                     # show the final constellation plot after all corrections
                     zoomable_image('media/clean_signal.png')
 
-                    # show the final recovered bits 
-                    #TODO
+                    # compute throughput
+                    global bits
+                    info_bit_ratio = (len(bits) - len(START_MARKER) - len(END_MARKER)) / len(bits)
+                    throughput = 2 * SYMB_RATE * info_bit_ratio # 2 bits per symbol * symbols_per_second = bits/s * info_bit_ratio = useful_bits/s
+                    #show the throughput
+                    ui.label(f'Calculated throughput: {throughput} bps').style('font-size: 1.5e; font-weight: bold; margin-top: 1em;')
                     #show the final recovered message 
                     ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
@@ -1354,17 +1358,18 @@ def about_page():
             with ui.row().style('width: 100%; justify-content: center; align-items: flex-start; margin-top: 2em;'):
                 with ui.column().style('width: 30%; align-items: center;'):
                     ui.image('media/tx_device.png').style('width: 90%;')
-                    ui.label('Transmitter (Signal Hound)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
+                    ui.label('Transmitter (VSG60A)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
                 with ui.column().style('width: 30%; align-items: center;'):
                     ui.image('media/repeater_device.png').style('width: 90%;')
-                    ui.label('Repeater(BladeRF)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
+                    ui.label('Repeater (BladeRF)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
                 with ui.column().style('width: 30%; align-items: center;'):
-                    ui.image('media/rx_device.png').style('width: 90%;')
+                    ui.image('media/rx_device.png').style('width: 60%;')
                     ui.label('Receiver (RTL-SDR)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
-            ui.label('The user will input a message to be sent and an asynchronous message handler will communicate with devices on the same network to start transmitting.').style('font-size: 1.1em;')
+            ui.label('The control page allows users to input a custom message for transmission. Once submitted, the message is modulated using QPSK and passed to an asynchronous message handler, which coordinates communication between three core devices: the transmitter, repeater, and receiver. The transmitter sends the modulated signal to the repeater, which amplifies and upconverts all incoming signals to a higher frequency. The receiver then detects the presence of the signal, applies channel correction, and demodulates the signal to recover the original message.').style('font-size: 1.1em;')
 
     #add some spacer
     ui.element('div').classes('spacer')
+    ui.label("Authors").style('font-size: 2.5em; font-weight: bold; text-align: center; width: 100%;')
     with ui.row().style('width: 100%; justify-content: center;'):
         ui.html('''       
     <div class="users">
@@ -1397,7 +1402,7 @@ def about_page():
     <div class="user">
         <div class="user-img-wrap">
           <div class="user-img">
-        <img src="/static/media/Kobe.JPG">
+        <img src="/static/media/Jorge.JPG">
           </div>
         </div>
         <div class="user-meta">
@@ -1448,7 +1453,7 @@ def about_page():
     <div class="user">
         <div class="user-img-wrap">
           <div class="user-img">
-        <img src="/static/media/Kobe.JPG">
+        <img src="/static/media/Trevor.jpeg">
           </div>
         </div>
         <div class="user-meta">
