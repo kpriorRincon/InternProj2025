@@ -247,6 +247,9 @@ def simulate_page():
     document.title = 'Simulation';
     </script>
     <style>
+    body {
+            background-color: #ecedef;
+            }
     .glass-bar {
         position: fixed;
         top: 0;
@@ -377,8 +380,15 @@ def simulate_page():
         ui.navigate.to('/Cesium_page')
 
 
-    ui.number(label='How many Satellites?', min = 1, max=10, step=1, on_change=update_text_boxes).style('width: 10%')
-    ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
+    with ui.row().style('justify-content: center; align-items: center; width: 100%; margin-top: 2em;'):
+        ui.number(
+            label='How many Satellites?', 
+            min=1, 
+            max=10, 
+            step=1, 
+            on_change=update_text_boxes
+        ).style('width: 18%; font-size: 1.3em;')
+        ui.button('Submit', on_click=submit, color='positive').style('margin-left: 2em; font-size: 1.1em;')
 
 
     @ui.page('/Cesium_page')
@@ -388,6 +398,9 @@ def simulate_page():
         document.title = 'Satellite View';
         </script>
         <style>
+        body {
+            background-color: #ecedef;
+            }
         .glass-bar {
             position: fixed;
             top: 0;
@@ -562,6 +575,9 @@ def simulate_page():
             document.title = 'Simulation';
             </script>
             <style>
+            body {
+            background-color: #ecedef;
+            }
             .glass-bar {
                 position: fixed;
                 top: 0;
@@ -640,8 +656,8 @@ def simulate_page():
             #these are for debug
             # ui.label(f'Satellite Position Vector: {sat_r}').style('font-size: 1.5em; font-weight: bold;')
             # ui.label(f'Satellite Velocity Vector: {sat_v}').style('font-size: 1.5em; font-weight: bold;')
-            ui.label("Doppler Shift Equation used from Randy L. Haupt's\nWireless Communications Systems: An Introduction").style('font-size: 1.5em; font-weight: bold; max-width: 440x; white-space: pre-line; word-break: break-word;')
-            ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
+            # ui.label("Doppler Shift Equation used from Randy L. Haupt's\nWireless Communications Systems: An Introduction").style('font-size: 1.5em; font-weight: bold; max-width: 440x; white-space: pre-line; word-break: break-word;')
+            # ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
             
             #get the position and velocity of the ground stations in inertial reference frame 
             tx_geocentric = tx_pos.at(time_crossing_skyfield)
@@ -665,22 +681,41 @@ def simulate_page():
             k_sr = (rx_r - sat_r) / np.linalg.norm(rx_r - sat_r)
 
             #user defined simulation parameters
-            message = ui.input(label='Enter Message', placeholder='hello world').style(
-                'width: 10%; margin-bottom: 1em; font-size: 1.1em;'
+            message = ui.input(label='Enter Message', placeholder='hello world').props('outlined dense rounded').style(
+                'width: 20%; margin-bottom: 1em; font-size: 1.1em;'
             )
-            ui.label('Desired transmit frequency (MHz)').style(
+            ui.label('Desired transmit frequency (902 to 918 MHz)').style(
                 'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
             )
-            desired_transmit_freq = ui.slider(min=902,max = 918, step=1).props('label-always').style('width: 10%')
+            with ui.row().style('align-items: center; width: 100%; gap: 0.5em;'):
+                desired_transmit_freq = ui.slider(min=902, max=918, step=1)\
+                    .props('label-always')\
+                    .style('width: 10%')
+
+                freq_input = ui.number(
+                    min=902, max=918, step=1, format='%d'
+                ).props('hide-spin-buttons outlined dense').style(
+                    'width: 6em; font-size: 0.9em;'
+                )
+
+                # Bind values
+                desired_transmit_freq.bind_value(freq_input)
+                freq_input.bind_value(desired_transmit_freq)
+
             
-            ui.label('Noise Floor (dBm)').style(
+            ui.label('Noise Floor (-120 to -60dBm)').style(
                 'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
             )
-            noise_power = ui.slider(min= -120, max = -60, step = 1).props('label-always').style('width: 10%')
+            with ui.row().style('align-items: center; width: 100%; gap: 0.5em;'):
+                noise_power = ui.slider(min= -120, max = -60, step = 1).props('label-always').style('width: 10%')
+                noise_input = ui.number(min= -120, max = -60, step = 1, format='%d').props('hide-spin-buttons outlined dense').style('width: 6em; font-size: 0.9em')
             
             ui.label('Desired SNR set to 20(dB)').style(
                 'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
             )
+            # Bind values
+            noise_power.bind_value(noise_input)
+            noise_input.bind_value(noise_power)
             
             doppler_container =  ui.column() # store labels in this doppler container so we can easily clear them when the start_simulation button is pressed again
             
@@ -986,14 +1021,16 @@ def simulate_page():
                     # show the final constellation plot after all corrections
                     zoomable_image('media/clean_signal.png')
 
-                    # compute throughput
-                    global bits
-                    info_bit_ratio = (len(bits) - len(START_MARKER) - len(END_MARKER)) / len(bits)
-                    throughput = 2 * SYMB_RATE * info_bit_ratio # 2 bits per symbol * symbols_per_second = bits/s * info_bit_ratio = useful_bits/s
-                    #show the throughput
-                    ui.label(f'Calculated throughput: {throughput} bps').style('font-size: 1.5e; font-weight: bold; margin-top: 1em;')
-                    #show the final recovered message 
-                    ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+                # compute throughput
+                global bits
+                info_bit_ratio = (len(bits) - len(START_MARKER) - len(END_MARKER)) / len(bits)
+                throughput = 2 * SYMB_RATE * info_bit_ratio # 2 bits per symbol * symbols_per_second = bits/s * info_bit_ratio = useful_bits/s
+                #show the throughput image
+                
+                #
+                ui.label(f'Calculated throughput: {throughput} bps').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+                #show the final recovered message 
+                ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
 
 
@@ -1345,7 +1382,7 @@ def about_page():
     #Control
     with ui.row().style('width: 80%; justify-content: center; align-items: flex-start; margin: 0 auto;'):
         with ui.column().style('width: 45%; align-items: flex-start;'):
-            ui.image('media/Sim_screenshot.png').style('width: 90%;')
+            ui.image('media/Sim_screenshot.png').style('width: 90%; height: 620px;')
         with ui.column().style('width: 50%; align-items: flex-start;'):
             ui.label("Control Overview").style(
                 'font-size: 2.5em; font-weight: bold; text-align: center; width: 100%;'
@@ -1453,7 +1490,7 @@ def about_page():
     <div class="user">
         <div class="user-img-wrap">
           <div class="user-img">
-        <img src="/static/media/Trevor.jpeg">
+        <img src="/static/media/Trevor_cropped.jpeg">
           </div>
         </div>
         <div class="user-meta">
