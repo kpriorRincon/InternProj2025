@@ -1102,25 +1102,98 @@ def control_page():
     ui.element('div').classes('spacer')
 
     #TODO instructions
+    with ui.row().style('justify-content: center; align-items: flex-end; width: 100%; gap: 5vw; margin-top: 4vh;'):
+        # Left phone (Sender)
+        with ui.column().style('background: #f5f5f7; border-radius: 32px; box-shadow: 0 4px 24px #bbb; width: 340px; min-height: 520px; padding: 24px 16px 16px 16px; position: relative;'):
+            ui.label('Transmitter').style('font-size: 1.2em; font-weight: bold; margin-bottom: 1em; text-align: center;')
+            # Message bubbles area (could be enhanced to show message history)
+            with ui.row().style('justify-content: flex-end; width: 100%; min-height: 340px;'):
+                pass  # Placeholder for message history
+            # Input row
+            with ui.row().style('width: 100%; align-items: center; margin-top: 2em;'):
+                text_input = ui.input(placeholder="Type a message...").props('rounded outlined dense').style('flex: 1; font-size: 1.1em;')
+                def handle_send():
+                    msg = text_input.value
+                    if not msg:
+                        ui.notify('Please enter a message to send.')
+                        return
+                    # Add message bubble to sender area
+                    with ui.row().style('justify-content: flex-end; width: 100%; min-height: 340px;'):
+                        ui.label(msg).style('background: #1976d2; color: white; border-radius: 16px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: right;')
+                    text_input.value = ""  # Clear input
+                    send_message(msg)
 
+                ui.button(on_click=handle_send)\
+                    .props('color=primary round dense icon="arrow_upward"').style('margin-left: 0.5em; width: 30px; height: 30px; font-size: 1.6em; background-color: #1976d2; color: white;')\
+                    .classes('q-btn--fab')
+
+        # Right phone (Receiver)
+        with ui.column().style('background: #f5f5f7; border-radius: 32px; box-shadow: 0 4px 24px #bbb; width: 340px; min-height: 520px; padding: 24px 16px 16px 16px; position: relative;'):
+            ui.label('Receiver').style('font-size: 1.2em; font-weight: bold; margin-bottom: 1em; text-align: center;')
+            # Message bubbles area (could be enhanced to show message history)
+            with ui.row().style('justify-content: flex-start; width: 100%; min-height: 340px;'):
+                pass  # Placeholder for message history
+            # 3-dot loading indicator
+            loading_dots = ui.html(
+                '''
+                <div style="display: flex; justify-content: flex-end; align-items: center; height: 40px; margin-top: 2em;">
+                    <span style="display: inline-block; width: 10px; height: 10px; margin: 0 2px; background: #bbb; border-radius: 50%; animation: bounce 1.2s infinite alternate;"></span>
+                    <span style="display: inline-block; width: 10px; height: 10px; margin: 0 2px; background: #bbb; border-radius: 50%; animation: bounce 1.2s 0.2s infinite alternate;"></span>
+                    <span style="display: inline-block; width: 10px; height: 10px; margin: 0 2px; background: #bbb; border-radius: 50%; animation: bounce 1.2s 0.4s infinite alternate;"></span>
+                </div>
+                <style>
+                @keyframes bounce {
+                    0% { transform: translateY(0);}
+                    100% { transform: translateY(-10px);}
+                }
+                </style>
+                '''
+            )
+            loading_dots.visible = False
+
+    # Replace loading_bar logic with loading_dots
+    async def send_message(message):
+        """Sends the message to the hardware and waits for a response."""
+        if not message:
+            ui.notify('Please enter a message to send.')
+            return
+        loading_dots.visible = True
+        await asyncio.sleep(0.1)  # give the UI time to update
+
+        #------
+        # insert command and control here
+        # Tell the blade to warm up
+        # Configure a file for the signal hound
+        # Start
+        #
+        #------
+
+        #placeholder for sending the message to the hardware DELTE THIS when ready
+        for i in range(100):
+            await asyncio.sleep(1)
+            print(f'{i}.Sending message: {message}')
+
+        loading_dots.visible = False
+        ui.notify('Message sent!')
+        return
     #Text input centered with submit button to the right 
-    with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
-        text_input = ui.input(placeholder="Enter a Message to Send").props('rounded outlined dense').style('width: 60%; font-size:20px;')
-        #when submit button is clicked have a loading bar until the hardware has sent and received the message 
-        submit_button = ui.button('Submit', on_click=lambda: send_message(text_input.value)).style('width: 20%;')
-    with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
+    # with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
+    #     text_input = ui.input(placeholder="Enter a Message to Send").props('rounded outlined dense').style('width: 60%; font-size:20px;')
+    #     #when submit button is clicked have a loading bar until the hardware has sent and received the message 
+    #     submit_button = ui.button('Submit', on_click=lambda: send_message(text_input.value)).style('width: 20%;')
+    # with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
 
-        #loading bar
-        loading_bar = ui.linear_progress(value = 'controlling hardware...').props('indeterminate color="primary"').style('width: 20%; height: 32px; margin-top: 20px; order: 2;')
-        #hide the loading bar initially
-        loading_bar.visible = False
+    #     #loading bar
+    #     loading_bar = ui.linear_progress(value = 'controlling hardware...').props('indeterminate color="primary"').style('width: 20%; height: 32px; margin-top: 20px; order: 2;')
+    #     #hide the loading bar initially
+    #     loading_bar.visible = False
     async def send_message(message):
         """Sends the message to the hardware and waits for a response."""
         #check if message is empty if it is notify the user and return
         if not message:
             ui.notify('Please enter a message to send.')
             return
-        loading_bar.visible = True
+        loading_dots.visible = True
         await asyncio.sleep(0.1)  # give the UI time to update
 
         #------
@@ -1137,7 +1210,7 @@ def control_page():
             await asyncio.sleep(1)
             print(f'{i}.Sending message: {message}')
 
-        loading_bar.visible = False
+        loading_dots.visible = False
         ui.notify('Message sent!')  # notify the user that the message was sent
         return
             
