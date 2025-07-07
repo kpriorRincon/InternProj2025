@@ -1102,13 +1102,23 @@ def control_page():
     ui.element('div').classes('spacer')
 
     with ui.row().style('justify-content: center; align-items: flex-end; width: 100%; gap: 5vw; margin-top: 4vh;'):
+        # Use a variable for min-height to ensure both columns match
+        phone_min_height = "520px"
+        phone_width = "340px"
+        phone_style = f'background: #f5f5f7; border-radius: 32px; box-shadow: 0 4px 24px #bbb; width: {phone_width}; min-height: {phone_min_height}; height: {phone_min_height}; padding: 24px 16px 16px 16px; position: relative; display: flex; flex-direction: column; justify-content: flex-end;'
+
         # Left phone (Sender)
-        with ui.column().style('background: #f5f5f7; border-radius: 32px; box-shadow: 0 4px 24px #bbb; width: 340px; min-height: 520px; padding: 24px 16px 16px 16px; position: relative;'):
-            ui.label('Transmitter').style('font-size: 1.2em; font-weight: bold; margin-bottom: 1em; text-align: center;')
+        with ui.column().style(phone_style):
+            with ui.column().style('align-items: center; width: 100%;'):
+                # Small circular "contact photo"
+                ui.image('media/TX_contact.png').style('width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-bottom: 0.01em; box-shadow: 0 4px 12px rgba(0,0,0,0.25);')
+                ui.label('Transmitter').style(
+                    'font-size: 1.1em; margin-bottom: 1em; text-align: center; font-family: "SF Pro", "SF Pro Display", "San Francisco", "Segoe UI", "Arial", sans-serif;'
+                )
             # Message bubbles area (could be enhanced to show message history)
-            with ui.row().style('justify-content: flex-end; width: 100%; min-height: 340px;'):
+            with ui.row().style('justify-content: flex-end; width: 100%; min-height: 240px; flex: 1;'):
                 message_bubble = ui.label('No messages yet...').style(
-                    'background: #007AFF; color: white; border-radius: 32px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: right;'
+                    'background: #007AFF; color: white; border-radius: 32px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: right; font-family: "SF Pro", "SF Pro Display", "San Francisco", "Segoe UI", "Arial", sans-serif;'
                 )
                 message_bubble.visible = False  # Hide initially
             # Input row
@@ -1129,24 +1139,41 @@ def control_page():
                     .classes('q-btn--fab')
 
         # Right phone (Receiver)
-        with ui.column().style('background: #f5f5f7; border-radius: 32px; box-shadow: 0 4px 24px #bbb; width: 340px; min-height: 520px; padding: 24px 16px 16px 16px; position: relative;'):
-            ui.label('Receiver').style('font-size: 1.2em; font-weight: bold; margin-bottom: 1em; text-align: center;')
+        with ui.column().style(phone_style):
+            with ui.column().style('align-items: center; width: 100%;'):
+                # Small circular "contact photo"
+                ui.image('media/RX_contact.png').style('width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-bottom: 0.01em; box-shadow: 0 4px 12px rgba(0,0,0,0.25);')
+                ui.label('Receiver').style('font-size: 1.1em; margin-bottom: 1em; text-align: center; font-family: "SF Pro", "SF Pro Display", "San Francisco", "Segoe UI", "Arial", sans-serif;')
             # Message bubbles area (could be enhanced to show message history)
-            with ui.row().style('justify-content: flex-start; width: 100%; min-height: 340px;'):
+            with ui.row().style('justify-content: flex-start; width: 100%; min-height: 340px; flex: 1;'):
                 # 3-dot loading indicator
-                received_bubble = ui.label('Waiting for messages...').style('background: #747474; color: white; border-radius: 32px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: left;')
+                received_bubble = ui.label('Waiting for messages...').style(
+                    'background: #747474; color: white; border-radius: 32px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: left; font-family: "SF Pro", "SF Pro Display", "San Francisco", "Segoe UI", "Arial", sans-serif;'
+                )
                 received_bubble.visible = False  # Hide initially
+                # Create a "bubble" for loading dots, styled like the received_bubble
                 loading_dots = ui.html(
                     '''
-                    <div style="display: flex; justify-content: flex-end; align-items: center; height: 40px; margin-top: 2em;">
-                        <span style="display: inline-block; width: 10px; height: 10px; margin: 0 2px; background: #bbb; border-radius: 50%; animation: bounce 1.2s infinite alternate;"></span>
-                        <span style="display: inline-block; width: 10px; height: 10px; margin: 0 2px; background: #bbb; border-radius: 50%; animation: bounce 1.2s 0.2s infinite alternate;"></span>
-                        <span style="display: inline-block; width: 10px; height: 10px; margin: 0 2px; background: #bbb; border-radius: 50%; animation: bounce 1.2s 0.4s infinite alternate;"></span>
+                    <div style="background: #747474; color: white; border-radius: 32px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: left; display: flex; align-items: center; min-height: 24px; height: 40px; justify-content: center;">
+                        <span class="dot1" style="display: inline-block; width: 8px; height: 8px; aspect-ratio: 1 / 1; margin: 0 3px; background: #bbb; border-radius: 50%; animation: bounce1 1.2s infinite alternate;"></span>
+                        <span class="dot2" style="display: inline-block; width: 8px; height: 8px; aspect-ratio: 1 / 1; margin: 0 3px; background: #888; border-radius: 50%; animation: bounce2 1.2s 0.2s infinite alternate;"></span>
+                        <span class="dot3" style="display: inline-block; width: 8px; height: 8px; aspect-ratio: 1 / 1; margin: 0 3px; background: #444; border-radius: 50%; animation: bounce3 1.2s 0.4s infinite alternate;"></span>
                     </div>
                     <style>
-                    @keyframes bounce {
-                        0% { transform: translateY(0);}
-                        100% { transform: translateY(-10px);}
+                    @keyframes bounce1 {
+                        0% { transform: translateY(0); background: #bbb;}
+                        50% { background: #eee;}
+                        100% { transform: translateY(-2px); background: #bbb;}
+                    }
+                    @keyframes bounce2 {
+                        0% { transform: translateY(0); background: #888;}
+                        50% { background: #ccc;}
+                        100% { transform: translateY(-2px); background: #888;}
+                    }
+                    @keyframes bounce3 {
+                        0% { transform: translateY(0); background: #444;}
+                        50% { background: #999;}
+                        100% { transform: translateY(-2px); background: #444;}
                     }
                     </style>
                     '''
@@ -1156,6 +1183,7 @@ def control_page():
     # Replace loading_bar logic with loading_dots
     async def send_message(message):
         """Sends the message to the hardware and waits for a response."""
+        received_bubble.visible = False #start the receive bubble as hidden
         if not message:
             ui.notify('Please enter a message to send.')
             return
@@ -1424,8 +1452,9 @@ def about_page():
     
     #Control
     with ui.row().style('width: 80%; justify-content: center; align-items: flex-start; margin: 0 auto;'):
-        with ui.column().style('width: 45%; align-items: flex-start;'):
-            ui.image('media/Sim_screenshot.png').style('width: 90%; height: 620px;')
+        with ui.column().style('width: 45%; align-items: center; '):
+            #wrap the image in a row so we can center it
+            ui.image('media/Control_Interface.png').style('width: 90%; margin-top: 9em;').force_reload()
         with ui.column().style('width: 50%; align-items: flex-start;'):
             ui.label("Control Overview").style(
                 'font-size: 2.5em; font-weight: bold; text-align: center; width: 100%;'
