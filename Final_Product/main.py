@@ -1189,13 +1189,8 @@ def control_page():
         loading_dots.visible = True
         await asyncio.sleep(0.1)  # give the UI time to update
 
-        #------
-        # insert command and control here
-        # Tell the blade to warm up
-        # Configure a file for the signal hound
-        # Start
-        #
-        #------
+        
+        backend_transmit(message)
 
         #DELTE WHEN READY
         for i in range(5):
