@@ -136,19 +136,19 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
         self.blocks_throttle_0_0.set_sample_rate(self.samp_rate)
         self.soapy_bladerf_sink_0.set_sample_rate(0, self.samp_rate)
-        self.soapy_bladerf_source_0.set_sample_rate(0, self.samp_rate)
         self.vsg60_iqin_0.set_srate(self.samp_rate)
+        self.soapy_bladerf_source_0.set_sample_rate(0, self.samp_rate)
+        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
 
     def get_freq_tx(self):
         return self.freq_tx
 
     def set_freq_tx(self, freq_tx):
         self.freq_tx = freq_tx
-        self.soapy_bladerf_source_0.set_frequency(0, self.freq_tx)
         self.vsg60_iqin_0.set_frequency(self.freq_tx)
+        self.soapy_bladerf_source_0.set_frequency(0, self.freq_tx)
 
     def get_freq_rx(self):
         return self.freq_rx
