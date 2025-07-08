@@ -1,0 +1,21 @@
+id: marker_mod
+label: marker_mod
+category: '[GRC Hier Blocks]'
+
+parameters: []
+
+inputs: []
+
+outputs: []
+
+templates:
+    imports: 'from marker_mod import marker_mod  # grc-generated hier_block'
+    make: 'marker_mod()
+
+        self.connect(self.${id})'
+    callbacks: []
+
+documentation: /home/empire/Documents/InternProj2025/GNU_Radio/GRC Files/marker_mod.py
+grc_source: /home/empire/Documents/InternProj2025/GNU_Radio/GRC Files/marker_mod.grc
+
+file_format: 1
