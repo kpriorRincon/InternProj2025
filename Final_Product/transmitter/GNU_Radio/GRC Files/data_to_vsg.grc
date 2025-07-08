@@ -9,7 +9,7 @@ options:
     description: ''
     gen_cmake: 'On'
     gen_linking: dynamic
-    generate_options: qt_gui
+    generate_options: no_gui
     hier_block_src_path: '.:'
     id: data_to_vsg
     max_nouts: '0'
@@ -42,7 +42,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [776, 136.0]
+    coordinate: [408, 20.0]
     rotation: 0
     state: enabled
 - name: freq_tx
@@ -54,7 +54,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [672, 136.0]
+    coordinate: [304, 20.0]
     rotation: 0
     state: enabled
 - name: samp_rate
@@ -66,7 +66,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [568, 136.0]
+    coordinate: [200, 20.0]
     rotation: 0
     state: enabled
 - name: blocks_file_source_0
@@ -88,7 +88,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [704, 344.0]
+    coordinate: [336, 236.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle_0
@@ -107,7 +107,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [952, 376.0]
+    coordinate: [584, 268.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle_0_0
@@ -126,7 +126,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [904, 560.0]
+    coordinate: [536, 444.0]
     rotation: 0
     state: enabled
 - name: soapy_bladerf_sink_0
@@ -146,7 +146,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1160, 568.0]
+    coordinate: [792, 456.0]
     rotation: 0
     state: enabled
 - name: soapy_bladerf_source_0
@@ -168,7 +168,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [632, 552.0]
+    coordinate: [264, 436.0]
     rotation: 0
     state: enabled
 - name: vsg60_iqin_0
@@ -185,7 +185,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1176, 256.0]
+    coordinate: [808, 148.0]
     rotation: 0
     state: enabled
 
