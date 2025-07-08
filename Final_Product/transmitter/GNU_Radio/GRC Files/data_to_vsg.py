@@ -20,16 +20,14 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
-from PyQt5 import Qt
-from gnuradio import qtgui
-from gnuradio.filter import firdes
-import sip
 from gnuradio import blocks
 import pmt
 from gnuradio import gr
+from gnuradio.filter import firdes
 from gnuradio.fft import window
 import sys
 import signal
+from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
@@ -77,104 +75,52 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 2.88e6
-        self.freq_tx = freq_tx = 905e6
+        self.freq_tx = freq_tx = 910e6
         self.freq_rx = freq_rx = 920e6
 
         ##################################################
         # Blocks
         ##################################################
-        self.vsg60_iqin_1 = vsg60.iqin(freq_tx, 0, samp_rate, False)
-        self.soapy_bladerf_source_1 = None
+        self.vsg60_iqin_0 = vsg60.iqin(freq_tx, 0, samp_rate, False)
+        self.soapy_bladerf_source_0 = None
         dev = 'driver=bladerf'
         stream_args = ''
         tune_args = ['']
         settings = ['']
 
-        self.soapy_bladerf_source_1 = soapy.source(dev, "fc32", 1, '',
+        self.soapy_bladerf_source_0 = soapy.source(dev, "fc32", 1, '',
                                   stream_args, tune_args, settings)
-        self.soapy_bladerf_source_1.set_sample_rate(0, samp_rate)
-        self.soapy_bladerf_source_1.set_bandwidth(0, 0.0)
-        self.soapy_bladerf_source_1.set_frequency(0, freq_tx)
-        self.soapy_bladerf_source_1.set_frequency_correction(0, 0)
-        self.soapy_bladerf_source_1.set_gain(0, min(max(30, -1.0), 60.0))
-        self.soapy_bladerf_sink_1 = None
+        self.soapy_bladerf_source_0.set_sample_rate(0, samp_rate)
+        self.soapy_bladerf_source_0.set_bandwidth(0, 0.0)
+        self.soapy_bladerf_source_0.set_frequency(0, freq_tx)
+        self.soapy_bladerf_source_0.set_frequency_correction(0, 0)
+        self.soapy_bladerf_source_0.set_gain(0, min(max(30.0, -1.0), 60.0))
+        self.soapy_bladerf_sink_0 = None
         dev = 'driver=bladerf'
         stream_args = ''
         tune_args = ['']
         settings = ['']
 
-        self.soapy_bladerf_sink_1 = soapy.sink(dev, "fc32", 1, '',
+        self.soapy_bladerf_sink_0 = soapy.sink(dev, "fc32", 1, '',
                                   stream_args, tune_args, settings)
-        self.soapy_bladerf_sink_1.set_sample_rate(0, samp_rate)
-        self.soapy_bladerf_sink_1.set_bandwidth(0, 0.0)
-        self.soapy_bladerf_sink_1.set_frequency(0, freq_rx)
-        self.soapy_bladerf_sink_1.set_frequency_correction(0, 0)
-        self.soapy_bladerf_sink_1.set_gain(0, min(max(40, 17.0), 73.0))
-        self.qtgui_time_sink_x_1 = qtgui.time_sink_c(
-            1024, #size
-            samp_rate, #samp_rate
-            "", #name
-            1, #number of inputs
-            None # parent
-        )
-        self.qtgui_time_sink_x_1.set_update_time(0.10)
-        self.qtgui_time_sink_x_1.set_y_axis(-1, 1)
-
-        self.qtgui_time_sink_x_1.set_y_label('Amplitude', "")
-
-        self.qtgui_time_sink_x_1.enable_tags(True)
-        self.qtgui_time_sink_x_1.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
-        self.qtgui_time_sink_x_1.enable_autoscale(False)
-        self.qtgui_time_sink_x_1.enable_grid(False)
-        self.qtgui_time_sink_x_1.enable_axis_labels(True)
-        self.qtgui_time_sink_x_1.enable_control_panel(False)
-        self.qtgui_time_sink_x_1.enable_stem_plot(False)
-
-
-        labels = ['Signal 1', 'Signal 2', 'Signal 3', 'Signal 4', 'Signal 5',
-            'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
-        widths = [1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1]
-        colors = ['blue', 'red', 'green', 'black', 'cyan',
-            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0, 1.0, 1.0]
-        styles = [1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1]
-        markers = [-1, -1, -1, -1, -1,
-            -1, -1, -1, -1, -1]
-
-
-        for i in range(2):
-            if len(labels[i]) == 0:
-                if (i % 2 == 0):
-                    self.qtgui_time_sink_x_1.set_line_label(i, "Re{{Data {0}}}".format(i/2))
-                else:
-                    self.qtgui_time_sink_x_1.set_line_label(i, "Im{{Data {0}}}".format(i/2))
-            else:
-                self.qtgui_time_sink_x_1.set_line_label(i, labels[i])
-            self.qtgui_time_sink_x_1.set_line_width(i, widths[i])
-            self.qtgui_time_sink_x_1.set_line_color(i, colors[i])
-            self.qtgui_time_sink_x_1.set_line_style(i, styles[i])
-            self.qtgui_time_sink_x_1.set_line_marker(i, markers[i])
-            self.qtgui_time_sink_x_1.set_line_alpha(i, alphas[i])
-
-        self._qtgui_time_sink_x_1_win = sip.wrapinstance(self.qtgui_time_sink_x_1.qwidget(), Qt.QWidget)
-        self.top_layout.addWidget(self._qtgui_time_sink_x_1_win)
-        self.blocks_throttle_2 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
-        self.blocks_throttle_1 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
-        self.blocks_file_source_1 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/empire/Documents/InternProj2025/Final_Product/transmitter/data_for_sighound.bin', True, 0, 0)
-        self.blocks_file_source_1.set_begin_tag(pmt.PMT_NIL)
+        self.soapy_bladerf_sink_0.set_sample_rate(0, samp_rate)
+        self.soapy_bladerf_sink_0.set_bandwidth(0, 0.0)
+        self.soapy_bladerf_sink_0.set_frequency(0, freq_rx)
+        self.soapy_bladerf_sink_0.set_frequency_correction(0, 0)
+        self.soapy_bladerf_sink_0.set_gain(0, min(max(40, 17.0), 73.0))
+        self.blocks_throttle_0_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
+        self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/empire/Documents/InternProj2025/hardware/data_for_sighound.bin', True, 0, 0)
+        self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_file_source_1, 0), (self.blocks_throttle_1, 0))
-        self.connect((self.blocks_throttle_1, 0), (self.qtgui_time_sink_x_1, 0))
-        self.connect((self.blocks_throttle_1, 0), (self.vsg60_iqin_1, 0))
-        self.connect((self.blocks_throttle_2, 0), (self.soapy_bladerf_sink_1, 0))
-        self.connect((self.soapy_bladerf_source_1, 0), (self.blocks_throttle_2, 0))
+        self.connect((self.blocks_file_source_0, 0), (self.blocks_throttle_0, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.vsg60_iqin_0, 0))
+        self.connect((self.blocks_throttle_0_0, 0), (self.soapy_bladerf_sink_0, 0))
+        self.connect((self.soapy_bladerf_source_0, 0), (self.blocks_throttle_0_0, 0))
 
 
     def closeEvent(self, event):
@@ -190,27 +136,26 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.blocks_throttle_1.set_sample_rate(self.samp_rate)
-        self.soapy_bladerf_sink_1.set_sample_rate(0, self.samp_rate)
-        self.soapy_bladerf_source_1.set_sample_rate(0, self.samp_rate)
-        self.vsg60_iqin_1.set_srate(self.samp_rate)
-        self.blocks_throttle_2.set_sample_rate(self.samp_rate)
-        self.qtgui_time_sink_x_1.set_samp_rate(self.samp_rate)
+        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
+        self.blocks_throttle_0_0.set_sample_rate(self.samp_rate)
+        self.soapy_bladerf_sink_0.set_sample_rate(0, self.samp_rate)
+        self.soapy_bladerf_source_0.set_sample_rate(0, self.samp_rate)
+        self.vsg60_iqin_0.set_srate(self.samp_rate)
 
     def get_freq_tx(self):
         return self.freq_tx
 
     def set_freq_tx(self, freq_tx):
         self.freq_tx = freq_tx
-        self.soapy_bladerf_source_1.set_frequency(0, self.freq_tx)
-        self.vsg60_iqin_1.set_frequency(self.freq_tx)
+        self.soapy_bladerf_source_0.set_frequency(0, self.freq_tx)
+        self.vsg60_iqin_0.set_frequency(self.freq_tx)
 
     def get_freq_rx(self):
         return self.freq_rx
 
     def set_freq_rx(self, freq_rx):
         self.freq_rx = freq_rx
-        self.soapy_bladerf_sink_1.set_frequency(0, self.freq_rx)
+        self.soapy_bladerf_sink_0.set_frequency(0, self.freq_rx)
 
 
 
