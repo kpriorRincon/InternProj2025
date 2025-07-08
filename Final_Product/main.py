@@ -22,6 +22,7 @@ import time
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
+import asyncssh
 plt.rcParams.update({
     'axes.titlesize': 20,
     'axes.labelsize': 16,      # X and Y axis label size
@@ -269,7 +270,7 @@ def simulate_page():
         box-sizing: border-box;
         color: white;
     }
-
+GNU_Radio/testing/run_file_test.bash
     .glass-bar .item {
         display: flex;
         align-items: center;
@@ -1180,6 +1181,7 @@ def control_page():
                 loading_dots.visible = False
 
     # Replace loading_bar logic with loading_dots
+    
     async def send_message(message):
         """Sends the message to the hardware and waits for a response."""
         received_bubble.visible = False #start the receive bubble as hidden
@@ -1189,13 +1191,17 @@ def control_page():
         loading_dots.visible = True
         await asyncio.sleep(0.1)  # give the UI time to update
 
-        
-        backend_transmit(message)
+        try: 
+            ssh_host = 'empire@empire'
+            command = f'./transmit.sh "{message}"'
+            async with asyncssh.connect('empire', username = 'empire', known_hosts=None) as conn:
+                result = await conn.run(command, check=True)
+                
 
-        #DELTE WHEN READY
-        for i in range(5):
-            await asyncio.sleep(1)
-            print(f'{i}.Sending message: {message}')
+        # #DELTE WHEN READY
+        # for i in range(5):
+        #     await asyncio.sleep(1)
+        #     print(f'{i}.Sending message: {message}')
 
         loading_dots.visible = False
         #note this decoded message will be replaced with the actual decoded message
