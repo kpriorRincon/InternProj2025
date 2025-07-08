@@ -38,7 +38,6 @@ import Sig_Gen as SigGen
 import Channel as Channel
 from config import *
 from binary_search_caf import channel_handler
-
 from satellite_czml import satellite_czml # See Readme for mor information this class must be modified
 #downgrade pygeoif: pip install pygeoif==0.7.0
 
