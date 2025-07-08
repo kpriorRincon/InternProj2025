@@ -54,17 +54,17 @@ while count < 10:
     # read samples from RTL-SDR
     samples = None
     samples = sdr.read_samples(N)
+    strt_t = time.time()
 
     # save samples to an external file (optional) 
     with open('test_data.bin', 'ab') as f:
         # Convert samples to complex64 and write to file
         f.write(np.array(samples, dtype=np.complex64).tobytes())
-    
-    strt_t = time.time()
+    print(f"time to read: {time.time() - strt_t}")
     # run detection
     
-    total_t = time.time() - strt_t
-    #detected, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+total_t = time.time() - strt_t
+#detected, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 # error check
 print("Done saving samples")

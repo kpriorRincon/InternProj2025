@@ -12,7 +12,7 @@ from channel_correction import *
 # configure RTL-SDR
 sdr = RtlSdr()
 sdr.sample_rate = 2.88e6 # Hz
-sdr.center_freq = 905e6 # Hz
+sdr.center_freq = 920e6 # Hz
 sdr.freq_correction = 60 # PPM
 sdr.gain = 'auto'
 

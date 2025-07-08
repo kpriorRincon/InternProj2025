@@ -108,7 +108,7 @@ anim = FuncAnimation(fig, animate, frames=len(positions), interval=50, blit=Fals
 plt.tight_layout()
 
 # To save as gif (optional)
-# anim.save('correlation_animation.gif', writer='pillow', fps=20)
+anim.save('correlation_animation.gif', writer='pillow', fps=20)
 
 # Show the animation
 plt.show()
