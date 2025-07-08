@@ -1,5 +1,5 @@
 from config import *
-import Final_Product.transmitter.transmit_processing as tp
+import transmit_processing as tp
 import sys
 #get the message from sys argv
 if len(sys.argv) < 2:
