@@ -13,6 +13,7 @@ match_start, match_end = transmit_obj.modulated_markers(BETA, NUMTAPS)
 
 threshold = 8
 N = SPS * 1024
+BOUNDS = 100
 
 def detector(samples, prev_cut):
     import scipy.signal as signal
@@ -31,7 +32,6 @@ def detector(samples, prev_cut):
     - end: end index of the message
     """
     distance = len(match_start) * 2
-    print("Length of samples: ", len(samples))
     # normalize the samples
     # samples = (samples - np.min(samples)) / (np.max(np.abs(samples)) - np.min(samples))
     coarse_fixed = coarse_freq_recovery(samples)
@@ -47,8 +47,8 @@ def detector(samples, prev_cut):
     cor_end = np.abs(signal.fftconvolve(coarse_fixed, np.conj(np.flip(match_end)), mode='same'))
     
 
-    start_peaks = signal.find_peaks(cor_start, distance=distance, height=30)[0]
-    end_peaks = signal.find_peaks(cor_end, distance=distance, height=30)[0]
+    start_peaks = signal.find_peaks(cor_start, distance=distance, height=50)[0]
+    end_peaks = signal.find_peaks(cor_end, distance=distance, height=50)[0]
 
     print(f"Start peaks {start_peaks}")
     print(f"End peaks {end_peaks}")
@@ -77,8 +77,11 @@ def detector(samples, prev_cut):
     #plt.axvline(x = end, linestyle = '--', color = 'r')
     plt.show()
 
-    start_peaks -= int(len(match_start) / 2)
-    end_peaks += int(len(match_start) / 2)
+    # Add extra samples around data for channel correction
+    # Edge cases: if start or end are close to bounds of buffer
+    #   Have check where if goes below zero or above max, set them to that
+    start_peaks -= int(len(match_start) / 2) + BOUNDS
+    end_peaks += int(len(match_start) / 2) + BOUNDS
 
     start_peaks = [idx for idx in start_peaks if idx >= 0]
     end_peaks = [idx for idx in end_peaks if idx <= N]
@@ -105,20 +108,26 @@ def detector(samples, prev_cut):
         if i not in used_ends:
             cut_peaks.append((None, end))
     
-    print(sig_pairs)
-    print(cut_peaks)
+    print(f"Signal pairs: {sig_pairs}")
+    print(f"Cut pairs: {cut_peaks}")
 
     signals_found = []
     signals_cut = []
 
-    for pairs in cut_peaks:
-        if pairs[0]:
+    print(prev_cut)
+    for i, pairs in enumerate(cut_peaks):
+        if pairs[0]: # Cut signal is first half signal (end of buffer)
             signals_cut.append(('f', coarse_fixed[pairs[0]:]))
-        else:
-            #for i, old_pair in enumerate(prev_cut):
-            #if old_pair[0] == 's':
-            #        signals_found.append(('f', coarse_fixed[pairs[0]:]))
-            signals_cut.append(('s', coarse_fixed[:pairs[1]]))
+        else: # Cut signal is second half (beginning of buffer) so call prev_cut signal
+            for j, old_pair in enumerate(prev_cut):
+                if old_pair[0] == 'f':
+                    fixed_signal = old_pair[1] + coarse_fixed[pairs[1]]
+                    signals_found.append(fixed_signal)
+                    print(i)
+                    cut_peaks.pop(i)
+                    prev_cut.pop(j)
+                    # remove pair from cut_peaks
+            # Second half will never be used in future iter
 
     for pairs in sig_pairs:
         signals_found.append(coarse_fixed[pairs[0]:pairs[1]])
@@ -192,9 +201,13 @@ def main():
     cut_sigs = None # if cut_sigs has stuff, loop through, if first half, 
     #find end idx in cut pairs, if sec half, find start idx in cut pairs
     while i + N < len(raw_data) + 1:
+        print(f"Window #{(i // N) + 1}")
         samples = raw_data[i: i + N]
+        str_t = time.time()
         messages, cut_sigs = detector(samples, cut_sigs)
         i += N
+        print(f"Total T: {time.time() - str_t}")
+        
     #while True: # Real time reading
     #    messages, cut_signals = detector(raw_data, cut)
 
@@ -207,4 +220,7 @@ if __name__ == "__main__":
     main()
 
 
-
+# Notes:
+# Not even 
+# Length of signal ~ 3880
+# Losing around 1574 - 1644 samples

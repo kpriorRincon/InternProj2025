@@ -91,6 +91,28 @@ blocks:
     coordinate: [320, 220.0]
     rotation: 0
     state: disabled
+- name: blocks_file_source_1
+  id: blocks_file_source
+  parameters:
+    affinity: ''
+    alias: ''
+    begin_tag: pmt.PMT_NIL
+    comment: ''
+    file: /home/empire/Documents/InternProj2025/hardware/data_for_sighound.bin
+    length: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    repeat: 'True'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [80, 204.0]
+    rotation: 0
+    state: true
 - name: blocks_throttle_0
   id: blocks_throttle
   parameters:
@@ -128,7 +150,45 @@ blocks:
     bus_structure: null
     coordinate: [520, 440.0]
     rotation: 0
-    state: enabled
+    state: disabled
+- name: blocks_throttle_1
+  id: blocks_throttle
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [304, 236.0]
+    rotation: 0
+    state: true
+- name: blocks_throttle_2
+  id: blocks_throttle
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [352, 396.0]
+    rotation: 0
+    state: true
 - name: qtgui_freq_sink_x_0
   id: qtgui_freq_sink_x
   parameters:
@@ -485,6 +545,103 @@ blocks:
     coordinate: [776, 516.0]
     rotation: 0
     state: disabled
+- name: qtgui_time_sink_x_1
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: ''
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'False'
+    gui_hint: ''
+    label1: Signal 1
+    label10: Signal 10
+    label2: Signal 2
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: '""'
+    nconnections: '1'
+    size: '1024'
+    srate: samp_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '1'
+    ymin: '-1'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [496, 108.0]
+    rotation: 0
+    state: true
 - name: soapy_bladerf_sink_0
   id: soapy_bladerf_sink
   parameters:
@@ -504,7 +661,27 @@ blocks:
     bus_structure: null
     coordinate: [776, 448.0]
     rotation: 0
-    state: enabled
+    state: disabled
+- name: soapy_bladerf_sink_1
+  id: soapy_bladerf_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq_rx
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '40'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [552, 400.0]
+    rotation: 0
+    state: true
 - name: soapy_bladerf_source_0
   id: soapy_bladerf_source
   parameters:
@@ -526,7 +703,29 @@ blocks:
     bus_structure: null
     coordinate: [248, 432.0]
     rotation: 0
-    state: enabled
+    state: disabled
+- name: soapy_bladerf_source_1
+  id: soapy_bladerf_source
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: '0.0'
+    center_freq: freq_tx
+    comment: ''
+    dev_args: ''
+    freq_correction: '0'
+    gain: '30'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [120, 388.0]
+    rotation: 0
+    state: true
 - name: vsg60_iqin_0
   id: vsg60_iqin
   parameters:
@@ -544,16 +743,38 @@ blocks:
     coordinate: [792, 132.0]
     rotation: 0
     state: disabled
+- name: vsg60_iqin_1
+  id: vsg60_iqin
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    frequency: freq_tx
+    level: '0'
+    repeat: 'False'
+    srate: samp_rate
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [504, 212.0]
+    rotation: 0
+    state: true
 
 connections:
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
+- [blocks_file_source_1, '0', blocks_throttle_1, '0']
 - [blocks_throttle_0, '0', qtgui_freq_sink_x_0, '0']
 - [blocks_throttle_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_throttle_0, '0', vsg60_iqin_0, '0']
 - [blocks_throttle_0_0, '0', qtgui_freq_sink_x_0_0, '0']
 - [blocks_throttle_0_0, '0', qtgui_time_sink_x_0_0, '0']
 - [blocks_throttle_0_0, '0', soapy_bladerf_sink_0, '0']
+- [blocks_throttle_1, '0', qtgui_time_sink_x_1, '0']
+- [blocks_throttle_1, '0', vsg60_iqin_1, '0']
+- [blocks_throttle_2, '0', soapy_bladerf_sink_1, '0']
 - [soapy_bladerf_source_0, '0', blocks_throttle_0_0, '0']
+- [soapy_bladerf_source_1, '0', blocks_throttle_2, '0']
 
 metadata:
   file_format: 1

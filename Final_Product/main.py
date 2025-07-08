@@ -247,6 +247,9 @@ def simulate_page():
     document.title = 'Simulation';
     </script>
     <style>
+    body {
+            background-color: #ecedef;
+            }
     .glass-bar {
         position: fixed;
         top: 0;
@@ -377,8 +380,15 @@ def simulate_page():
         ui.navigate.to('/Cesium_page')
 
 
-    ui.number(label='How many Satellites?', min = 1, max=10, step=1, on_change=update_text_boxes).style('width: 10%')
-    ui.button('Submit', on_click=submit, color='positive').style('order: 3;')
+    with ui.row().style('justify-content: center; align-items: center; width: 100%; margin-top: 2em;'):
+        ui.number(
+            label='How many Satellites?', 
+            min=1, 
+            max=10, 
+            step=1, 
+            on_change=update_text_boxes
+        ).style('width: 18%; font-size: 1.3em;')
+        ui.button('Submit', on_click=submit, color='positive').style('margin-left: 2em; font-size: 1.1em;')
 
 
     @ui.page('/Cesium_page')
@@ -388,6 +398,9 @@ def simulate_page():
         document.title = 'Satellite View';
         </script>
         <style>
+        body {
+            background-color: #ecedef;
+            }
         .glass-bar {
             position: fixed;
             top: 0;
@@ -562,6 +575,9 @@ def simulate_page():
             document.title = 'Simulation';
             </script>
             <style>
+            body {
+            background-color: #ecedef;
+            }
             .glass-bar {
                 position: fixed;
                 top: 0;
@@ -640,8 +656,8 @@ def simulate_page():
             #these are for debug
             # ui.label(f'Satellite Position Vector: {sat_r}').style('font-size: 1.5em; font-weight: bold;')
             # ui.label(f'Satellite Velocity Vector: {sat_v}').style('font-size: 1.5em; font-weight: bold;')
-            ui.label("Doppler Shift Equation used from Randy L. Haupt's\nWireless Communications Systems: An Introduction").style('font-size: 1.5em; font-weight: bold; max-width: 440x; white-space: pre-line; word-break: break-word;')
-            ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
+            # ui.label("Doppler Shift Equation used from Randy L. Haupt's\nWireless Communications Systems: An Introduction").style('font-size: 1.5em; font-weight: bold; max-width: 440x; white-space: pre-line; word-break: break-word;')
+            # ui.image('../Phys_Sim/media/doppler_eqn.png').style('width: 20%')
             
             #get the position and velocity of the ground stations in inertial reference frame 
             tx_geocentric = tx_pos.at(time_crossing_skyfield)
@@ -665,22 +681,41 @@ def simulate_page():
             k_sr = (rx_r - sat_r) / np.linalg.norm(rx_r - sat_r)
 
             #user defined simulation parameters
-            message = ui.input(label='Enter Message', placeholder='hello world').style(
-                'width: 10%; margin-bottom: 1em; font-size: 1.1em;'
+            message = ui.input(label='Enter Message', placeholder='hello world').props('outlined dense rounded').style(
+                'width: 20%; margin-bottom: 1em; font-size: 1.1em;'
             )
-            ui.label('Desired transmit frequency (MHz)').style(
+            ui.label('Desired transmit frequency (902 to 918 MHz)').style(
                 'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
             )
-            desired_transmit_freq = ui.slider(min=902,max = 918, step=1).props('label-always').style('width: 10%')
+            with ui.row().style('align-items: center; width: 100%; gap: 0.5em;'):
+                desired_transmit_freq = ui.slider(min=902, max=918, step=1)\
+                    .props('label-always')\
+                    .style('width: 10%')
+
+                freq_input = ui.number(
+                    min=902, max=918, step=1, format='%d'
+                ).props('hide-spin-buttons outlined dense').style(
+                    'width: 6em; font-size: 0.9em;'
+                )
+
+                # Bind values
+                desired_transmit_freq.bind_value(freq_input)
+                freq_input.bind_value(desired_transmit_freq)
+
             
-            ui.label('Noise Floor (dBm)').style(
+            ui.label('Noise Floor (-120 to -60dBm)').style(
                 'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
             )
-            noise_power = ui.slider(min= -120, max = -60, step = 1).props('label-always').style('width: 10%')
+            with ui.row().style('align-items: center; width: 100%; gap: 0.5em;'):
+                noise_power = ui.slider(min= -120, max = -60, step = 1).props('label-always').style('width: 10%')
+                noise_input = ui.number(min= -120, max = -60, step = 1, format='%d').props('hide-spin-buttons outlined dense').style('width: 6em; font-size: 0.9em')
             
             ui.label('Desired SNR set to 20(dB)').style(
                 'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
             )
+            # Bind values
+            noise_power.bind_value(noise_input)
+            noise_input.bind_value(noise_power)
             
             doppler_container =  ui.column() # store labels in this doppler container so we can easily clear them when the start_simulation button is pressed again
             
@@ -805,7 +840,7 @@ def simulate_page():
                 
                 tx_amp = np.sqrt(required_tx_power) #we want the amplitude
                 sig_gen = SigGen.SigGen(txFreq, amp = tx_amp)
-
+                global bits
                 bits = sig_gen.message_to_bits(mes) #note that this will add prefix and postfix to the bits associated wtih the message
 
                 t, qpsk_signal = sig_gen.generate_qpsk(bits)
@@ -986,10 +1021,16 @@ def simulate_page():
                     # show the final constellation plot after all corrections
                     zoomable_image('media/clean_signal.png')
 
-                    # show the final recovered bits 
-                    #TODO
-                    #show the final recovered message 
-                    ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+                # compute throughput
+                global bits
+                info_bit_ratio = (len(bits) - len(START_MARKER) - len(END_MARKER)) / len(bits)
+                throughput = 2 * SYMB_RATE * info_bit_ratio # 2 bits per symbol * symbols_per_second = bits/s * info_bit_ratio = useful_bits/s
+                #show the throughput image
+                
+                #
+                ui.label(f'Calculated throughput: {throughput} bps').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+                #show the final recovered message 
+                ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
 
 
@@ -1060,26 +1101,93 @@ def control_page():
     #add some spacer to content doesn't go under the fixed bar
     ui.element('div').classes('spacer')
 
-    #TODO instructions
+    with ui.row().style('justify-content: center; align-items: flex-end; width: 100%; gap: 5vw; margin-top: 4vh;'):
+        # Use a variable for min-height to ensure both columns match
+        phone_min_height = "520px"
+        phone_width = "340px"
+        phone_style = f'background: #f5f5f7; border-radius: 32px; box-shadow: 0 4px 24px #bbb; width: {phone_width}; min-height: {phone_min_height}; height: {phone_min_height}; padding: 24px 16px 16px 16px; position: relative; display: flex; flex-direction: column; justify-content: flex-end;'
 
-    #Text input centered with submit button to the right 
-    with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
-        text_input = ui.input(placeholder="Enter a Message to Send").props('rounded outlined dense').style('width: 60%; font-size:20px;')
-        #when submit button is clicked have a loading bar until the hardware has sent and received the message 
-        submit_button = ui.button('Submit', on_click=lambda: send_message(text_input.value)).style('width: 20%;')
-    with ui.row().style('justify-content: center; align-items: center; width: 100%;'):
+        # Left phone (Sender)
+        with ui.column().style(phone_style):
+            with ui.column().style('align-items: center; width: 100%;'):
+                # Small circular "contact photo"
+                ui.image('media/TX_contact.png').style('width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-bottom: 0.01em; box-shadow: 0 4px 12px rgba(0,0,0,0.25);')
+                ui.label('Transmitter').style(
+                    'font-size: 1.1em; margin-bottom: 1em; text-align: center; font-family: "SF Pro", "SF Pro Display", "San Francisco", "Segoe UI", "Arial", sans-serif;'
+                )
+            # Message bubbles area (could be enhanced to show message history)
+            with ui.row().style('justify-content: flex-end; width: 100%; min-height: 240px; flex: 1;'):
+                message_bubble = ui.label('No messages yet...').style(
+                    'background: #007AFF; color: white; border-radius: 32px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: right; font-family: "SF Pro", "SF Pro Display", "San Francisco", "Segoe UI", "Arial", sans-serif;'
+                )
+                message_bubble.visible = False  # Hide initially
+            # Input row
+            with ui.row().style('width: 100%; align-items: center; margin-top: 2em;'):
+                text_input = ui.input(placeholder="Type a message...").props('rounded outlined dense').style('flex: 1; font-size: 1.1em;')
+                async def handle_send():
+                    msg = text_input.value
+                    if not msg:
+                        ui.notify('Please enter a message to send.')
+                        return
+                    message_bubble.text = msg  # Update message bubble
+                    message_bubble.visible = True  # Show message bubble
+                    text_input.value = ""  # Clear input
+                    await send_message(msg)
 
-        #loading bar
-        loading_bar = ui.linear_progress(value = 'controlling hardware...').props('indeterminate color="primary"').style('width: 20%; height: 32px; margin-top: 20px; order: 2;')
-        #hide the loading bar initially
-        loading_bar.visible = False
+                ui.button(on_click=handle_send)\
+                    .props('color=primary round dense icon="arrow_upward"').style('margin-left: 0.3em; width: 20px; height: 20px; font-size: 1.3em; background-color: #1976d2; color: white;')\
+                    .classes('q-btn--fab')
+
+        # Right phone (Receiver)
+        with ui.column().style(phone_style):
+            with ui.column().style('align-items: center; width: 100%;'):
+                # Small circular "contact photo"
+                ui.image('media/RX_contact.png').style('width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-bottom: 0.01em; box-shadow: 0 4px 12px rgba(0,0,0,0.25);')
+                ui.label('Receiver').style('font-size: 1.1em; margin-bottom: 1em; text-align: center; font-family: "SF Pro", "SF Pro Display", "San Francisco", "Segoe UI", "Arial", sans-serif;')
+            # Message bubbles area (could be enhanced to show message history)
+            with ui.row().style('justify-content: flex-start; width: 100%; min-height: 340px; flex: 1;'):
+                # 3-dot loading indicator
+                received_bubble = ui.label('Waiting for messages...').style(
+                    'background: #747474; color: white; border-radius: 32px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: left; font-family: "SF Pro", "SF Pro Display", "San Francisco", "Segoe UI", "Arial", sans-serif;'
+                )
+                received_bubble.visible = False  # Hide initially
+                # Create a "bubble" for loading dots, styled like the received_bubble
+                loading_dots = ui.html(
+                    '''
+                    <div style="background: #747474; color: white; border-radius: 32px; padding: 8px 16px; margin: 4px 0; font-size: 1.1em; max-width: 70%; text-align: left; display: flex; align-items: center; min-height: 24px; height: 40px; justify-content: center;">
+                        <span class="dot1" style="display: inline-block; width: 8px; height: 8px; aspect-ratio: 1 / 1; margin: 0 3px; background: #bbb; border-radius: 50%; animation: bounce1 1.2s infinite alternate;"></span>
+                        <span class="dot2" style="display: inline-block; width: 8px; height: 8px; aspect-ratio: 1 / 1; margin: 0 3px; background: #888; border-radius: 50%; animation: bounce2 1.2s 0.2s infinite alternate;"></span>
+                        <span class="dot3" style="display: inline-block; width: 8px; height: 8px; aspect-ratio: 1 / 1; margin: 0 3px; background: #444; border-radius: 50%; animation: bounce3 1.2s 0.4s infinite alternate;"></span>
+                    </div>
+                    <style>
+                    @keyframes bounce1 {
+                        0% { transform: translateY(0); background: #bbb;}
+                        50% { background: #eee;}
+                        100% { transform: translateY(-2px); background: #bbb;}
+                    }
+                    @keyframes bounce2 {
+                        0% { transform: translateY(0); background: #888;}
+                        50% { background: #ccc;}
+                        100% { transform: translateY(-2px); background: #888;}
+                    }
+                    @keyframes bounce3 {
+                        0% { transform: translateY(0); background: #444;}
+                        50% { background: #999;}
+                        100% { transform: translateY(-2px); background: #444;}
+                    }
+                    </style>
+                    '''
+                )
+                loading_dots.visible = False
+
+    # Replace loading_bar logic with loading_dots
     async def send_message(message):
         """Sends the message to the hardware and waits for a response."""
-        #check if message is empty if it is notify the user and return
+        received_bubble.visible = False #start the receive bubble as hidden
         if not message:
             ui.notify('Please enter a message to send.')
             return
-        loading_bar.visible = True
+        loading_dots.visible = True
         await asyncio.sleep(0.1)  # give the UI time to update
 
         #------
@@ -1090,14 +1198,18 @@ def control_page():
         #
         #------
 
-        #placeholder for sending the message to the hardware DELTE THIS when  when ready
-        
-        for i in range(100):
+        #DELTE WHEN READY
+        for i in range(5):
             await asyncio.sleep(1)
             print(f'{i}.Sending message: {message}')
 
-        loading_bar.visible = False
-        ui.notify('Message sent!')  # notify the user that the message was sent
+        loading_dots.visible = False
+        #note this decoded message will be replaced with the actual decoded message
+        decoded_message = 'example decoded message'
+        #  after you get the decoded message from the hardware put it into the received_bubble
+        received_bubble.text = f'{decoded_message}'  # Update received bubble
+        received_bubble.visible = True
+        ui.notify('Message sent!')
         return
             
 
@@ -1312,24 +1424,61 @@ def about_page():
             #right text
             # Add a project title at the top of the About page
             ui.label("Red Mountain Internship Project").style(
-                'font-size: 2.5em; font-weight: bold; margin-bottom: 1.5em; text-align: center; display: block; width: 100%;'
+                'font-size: 2.5em; font-weight: bold; margin-bottom: 0.5em; text-align: center; display: block; width: 100%;'
             )
-            ui.label("In Rincon Research Coorporation's Internship program in the summer of 2025 four bright interns from a variety of diciplines came together to simulate and realize a bent pipe communication system. ").style(
+            ui.label("In Rincon Research Coorporation's Internship program in the summer of 2025 four bright interns from a variety of diciplines came together to simulate and realize a bent pipe communication system. Bent pipe communication systems are often used in scenarios where line of sight between a transmitter and a receiver is obscured, or in the scenario where certain frequency bands are denied by an interferer. The task involved extensive research and experimentation with unfamiliar digital signal processing concepts including QPSK modulation, pulse shaping, finite impulse response filters, sampling theory, the cross ambiguity function (CAF), and detection. The experience was rewarding and the final product is nothing shy of cool.").style(
                 'font-size: 1.3em; margin-bottom: 2em; text-align: center; display: block; width: 100%;'
             )
     #add some spacer
     ui.element('div').classes('spacer')
 
-    #Simulation
-
-
+    # Simulation
+    with ui.row().style('width: 80%; justify-content: center; align-items: flex-start; margin: 0 auto;'):
+        with ui.column().style('width: 50%; align-items: flex-start;'):
+            ui.label("Simulation Overview").style(
+                'font-size: 2.5em; font-weight: bold; text-align: center; width: 100%;'
+            )
+            ui.label("Explore the digital simulation of a bent pipe satellite communication system.").style(
+                'font-size: 1.3em; text-align: center; width: 100%;'
+            )
+            ui.label(
+                "The simulation retrieves up-to-date TLE (Two-Line Element) data for recently launched satellites from CelesTrak, enabling dynamic visualization of satellite orbits and line-of-sight paths between ground stations and satellites. For each selected satellite, the system computes the time and geometry of closest approach, allowing users to choose a satellite as the transponder in a bent pipe communication scenario. Leveraging real orbital data, the simulation estimates time delays and Doppler shifts to create a realistic channel model. Users can interactively step through each stage of the communication link—from transmitter to satellite transponder and onward to the receiver—gaining insight into the physical and signal processing aspects of satellite communications."
+            ).style('font-size: 1.1em;')
+        with ui.column().style('width: 45%; align-items: flex-start;'):
+            ui.image('media/Sim_screenshot.png').style('width: 90%;')
+   
     #add some spacer
     ui.element('div').classes('spacer')
     
     #Control
+    with ui.row().style('width: 80%; justify-content: center; align-items: flex-start; margin: 0 auto;'):
+        with ui.column().style('width: 45%; align-items: center; '):
+            #wrap the image in a row so we can center it
+            ui.image('media/Control_Interface.png').style('width: 90%; margin-top: 9em;').force_reload()
+        with ui.column().style('width: 50%; align-items: flex-start;'):
+            ui.label("Control Overview").style(
+                'font-size: 2.5em; font-weight: bold; text-align: center; width: 100%;'
+            )
+            ui.label("Bring simulated results to the real world").style(
+                'font-size: 1.3em; text-align: center; width: 100%;'
+            )
+            ui.label("There are three devices as there are in the simulated scenario:"
+            ).style('font-size: 1.1em;')
+            with ui.row().style('width: 100%; justify-content: center; align-items: flex-start; margin-top: 2em;'):
+                with ui.column().style('width: 30%; align-items: center;'):
+                    ui.image('media/tx_device.png').style('width: 90%;')
+                    ui.label('Transmitter (VSG60A)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
+                with ui.column().style('width: 30%; align-items: center;'):
+                    ui.image('media/repeater_device.png').style('width: 90%;')
+                    ui.label('Repeater (BladeRF)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
+                with ui.column().style('width: 30%; align-items: center;'):
+                    ui.image('media/rx_device.png').style('width: 60%;')
+                    ui.label('Receiver (RTL-SDR)').style('font-size: 1.2em; font-weight: bold; margin-top: 0.5em;')
+            ui.label('The control page allows users to input a custom message for transmission. Once submitted, the message is modulated using QPSK and passed to an asynchronous message handler, which coordinates communication between three core devices: the transmitter, repeater, and receiver. The transmitter sends the modulated signal to the repeater, which amplifies and upconverts all incoming signals to a higher frequency. The receiver then detects the presence of the signal, applies channel correction, and demodulates the signal to recover the original message.').style('font-size: 1.1em;')
 
     #add some spacer
     ui.element('div').classes('spacer')
+    ui.label("Authors").style('font-size: 2.5em; font-weight: bold; text-align: center; width: 100%;')
     with ui.row().style('width: 100%; justify-content: center;'):
         ui.html('''       
     <div class="users">
@@ -1362,7 +1511,7 @@ def about_page():
     <div class="user">
         <div class="user-img-wrap">
           <div class="user-img">
-        <img src="/static/media/Kobe.JPG">
+        <img src="/static/media/Jorge.JPG">
           </div>
         </div>
         <div class="user-meta">
@@ -1413,7 +1562,7 @@ def about_page():
     <div class="user">
         <div class="user-img-wrap">
           <div class="user-img">
-        <img src="/static/media/Kobe.JPG">
+        <img src="/static/media/Trevor_cropped.jpeg">
           </div>
         </div>
         <div class="user-meta">
