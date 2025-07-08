@@ -270,7 +270,6 @@ def simulate_page():
         box-sizing: border-box;
         color: white;
     }
-GNU_Radio/testing/run_file_test.bash
     .glass-bar .item {
         display: flex;
         align-items: center;
@@ -1196,7 +1195,7 @@ def control_page():
         try: 
             ssh_host = 'empire@empire'
             command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && ./transmit.bash "{message}"'
-            async with asyncssh.connect('empire', username = 'empire', known_hosts=None) as conn:
+            async with asyncssh.connect('empire', username = 'empire', password='password', known_hosts=None) as conn:
                 result = await conn.run(command, check=True)
         except (OSError, asyncssh.Error) as e:
             ui.notify(f'SSH error: {e}')
