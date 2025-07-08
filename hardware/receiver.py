@@ -8,12 +8,13 @@ import receive_processing as rp
 import time
 import transmit_processing as tp
 from channel_correction import *
+from config import *
 
 # configure RTL-SDR
 sdr = RtlSdr()
-sdr.sample_rate = 2.88e6 # Hz
-sdr.center_freq = 920e6 # Hz
-sdr.freq_correction = 60 # PPM
+sdr.sample_rate = SAMPLE_RATE # Hz
+sdr.center_freq = RX_REC_FREQ # Hz
+sdr.freq_correction = PPM # PPM
 sdr.gain = 'auto'
 
 # sleep
@@ -21,12 +22,12 @@ time.sleep(1)
 
 # settings to run detector
 detected = False
-sps = 20
-N = 20 * 1024
+sps = SPS
+N = sps * 1024
 start = 0
 end = N - 1
-beta = 0.35
-num_taps = 101
+beta = BETA
+num_taps = NUMTAPS
 symbol_rate = sdr.sample_rate / sps
 
 # create transmit object for the start and end markers
