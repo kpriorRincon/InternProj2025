@@ -1196,8 +1196,11 @@ def control_page():
             command = f'./transmit.sh "{message}"'
             async with asyncssh.connect('empire', username = 'empire', known_hosts=None) as conn:
                 result = await conn.run(command, check=True)
-                
-
+        except (OSError, asyncssh.Error) as e:
+            ui.notify(f'SSH error: {e}')
+            loading_dots.visible = False
+            return
+        
         # #DELTE WHEN READY
         # for i in range(5):
         #     await asyncio.sleep(1)
@@ -1209,7 +1212,7 @@ def control_page():
         #  after you get the decoded message from the hardware put it into the received_bubble
         received_bubble.text = f'{decoded_message}'  # Update received bubble
         received_bubble.visible = True
-        ui.notify('Message sent!')
+        #ui.notify('Message sent!')
         return
             
 
