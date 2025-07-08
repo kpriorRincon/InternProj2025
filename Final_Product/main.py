@@ -248,8 +248,8 @@ def simulate_page():
     </script>
     <style>
     body {
-            background-color: #ecedef;
-            }
+        background-color: #ecedef;
+    }
     .glass-bar {
         position: fixed;
         top: 0;
@@ -1193,20 +1193,20 @@ def control_page():
         loading_dots.visible = True
         await asyncio.sleep(0.1)  # give the UI time to update
 
-        try: 
-            ssh_host = 'empire@empire'
-            command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && ./transmit.bash "{message}"'
-            async with asyncssh.connect('empire', username = 'empire', known_hosts=None) as conn:
-                result = await conn.run(command, check=True)
-        except (OSError, asyncssh.Error) as e:
-            ui.notify(f'SSH error: {e}')
-            loading_dots.visible = False
-            return
+        # try: 
+        #     ssh_host = 'empire@empire'
+        #     command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && ./transmit.bash "{message}"'
+        #     async with asyncssh.connect('empire', username = 'empire', known_hosts=None) as conn:
+        #         result = await conn.run(command, check=True)
+        # except (OSError, asyncssh.Error) as e:
+        #     ui.notify(f'SSH error: {e}')
+        #     loading_dots.visible = False
+        #     return
         
         # #DELTE WHEN READY
-        # for i in range(5):
-        #     await asyncio.sleep(1)
-        #     print(f'{i}.Sending message: {message}')
+        for i in range(5):
+            await asyncio.sleep(1)
+            print(f'{i}.Sending message: {message}')
 
         loading_dots.visible = False
         #note this decoded message will be replaced with the actual decoded message
