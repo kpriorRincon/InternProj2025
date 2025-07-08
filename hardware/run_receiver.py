@@ -25,7 +25,7 @@ def run_receiver():
     detected = False        # flag to indicate if the signal is detected
     sps = SPS               # samples per symbol
     N = sps * 1024          # number of samples to read
-    beta = EXCESS_BANDWIDTH # excess bandwidth factor for the filter
+    beta = BETA # excess bandwidth factor for the filter
     num_taps = NUMTAPS      # number of taps for the filter
     symbol_rate = SYMB_RATE # symbol rate calculated from sample rate and samples per symbol
 
