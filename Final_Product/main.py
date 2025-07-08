@@ -1038,6 +1038,8 @@ GNU_Radio/testing/run_file_test.bash
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
+    #initiate rtl-sdr
+
     ui.add_head_html('''
             <script>
             document.title = 'Simulation';
@@ -1193,7 +1195,7 @@ def control_page():
 
         try: 
             ssh_host = 'empire@empire'
-            command = f'./transmit.sh "{message}"'
+            command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && ./transmit.bash "{message}"'
             async with asyncssh.connect('empire', username = 'empire', known_hosts=None) as conn:
                 result = await conn.run(command, check=True)
         except (OSError, asyncssh.Error) as e:
