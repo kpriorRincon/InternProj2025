@@ -126,7 +126,7 @@ def main(top_block_cls=data_to_vsg, options=None):
 
     tb.start()
     #run for the fixed duration
-    run_duration = 3 # in seconds
+    run_duration = 30 # in seconds
     time.sleep(run_duration)
     tb.stop()
     tb.wait()
