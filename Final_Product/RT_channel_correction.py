@@ -7,6 +7,9 @@ from numpy.fft import fft, fftfreq, fftshift
 from Sig_Gen import SigGen, rrc_filter
 from config import *
 from transmit_processing import transmit_processing
+
+from crc import Calculator, Crc8
+
 DEBUG = False
 freq_offset = 20000
 time_delay = 0.00232
@@ -19,6 +22,8 @@ tp = transmit_processing(SPS, SYMB_RATE)
 marker_filter, end_filter = tp.modulated_markers(BETA, NUMTAPS)
 ip_filter = resample_poly(marker_filter, INTERPOLATION_VAL, 1)
 ip_end_filter = resample_poly(end_filter, INTERPOLATION_VAL, 1)
+# initialize the CRC calculator
+calculator = Calculator(Crc8.CCITT, optimized=True)
 
 
 bw = SYMB_RATE * (BETA + 1)
@@ -450,5 +455,17 @@ def channel_handler(rx_signal):
             plt.tight_layout()
             plt.savefig('media/clean_signal.png')
             plt.close()
+
+    # CRC Check
+    byte_data = int(bits_string, 2).to_bytes((len(bits_string) + 7) // 8, 'big')# convert the bit string to bytes
+    check = calculator.checksum(byte_data)
+
+    print("Remainder: ", check)
+    if check == 0:
+        print("Data is valid...")
+        print(f"Bits: {bits_string}")
+        print(f"Message: {decoded_string}")
+    else:
+        print("Data is invalid...\nAborting...")
 
     return bits_string
