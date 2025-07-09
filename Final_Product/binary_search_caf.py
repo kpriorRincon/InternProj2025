@@ -371,7 +371,7 @@ def cross_corr_caf(rx_signal):
         plt.legend()
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
-        plt.title('Constelation Plot After CAF')
+        plt.title('Constellation Plot After CAF')
         plt.grid(True)
         plt.axis('equal')
         plt.savefig('media/pre_phase_correction_constellation.png', dpi = 300, bbox_inches='tight')
