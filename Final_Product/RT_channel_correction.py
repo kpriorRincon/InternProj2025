@@ -95,8 +95,7 @@ def demodulator(qpsk_sig):
     bits = ''.join(str(bit) for bit in bits)
     # convert the bits into a string
     
-    decoded_string = ''.join(chr(int(bits[i*8:i*8+8],2)) for i in range(len(bits)//8))
-    return bits, decoded_string
+    return bits
 
 
 def coarse_freq_recovery(qpsk_wave, order=4):
@@ -431,7 +430,9 @@ def channel_handler(rx_signal):
     #strt_t = temp
     rrc_signal = RRC_filter(caf_fixed)
     symbols = decimate(rrc_signal, SPS)
-    bits_string, decoded_message = demodulator(symbols)
+    bits_string = demodulator(symbols)
+
+    decoded_string = ''.join(chr(int(bits_string[i*8:i*8+8],2)) for i in range(len(bits_string)//8))
 
     temp = time.time()
     #print(f"Time for decode: {temp - strt_t}")
@@ -450,4 +451,4 @@ def channel_handler(rx_signal):
             plt.savefig('media/clean_signal.png')
             plt.close()
 
-    return bits_string, decoded_message
+    return bits_string

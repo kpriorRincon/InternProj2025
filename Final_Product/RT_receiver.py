@@ -10,7 +10,7 @@ from rtlsdr import *
 import queue
 import threading
 import signal
-import asyncio
+import zmq
 #transmit_obj = tp.transmit_processing(int(SAMPLE_RATE/SYMB_RATE), SAMPLE_RATE)
 #match_start, match_end = transmit_obj.modulated_markers(BETA, NUMTAPS) 
 
@@ -285,12 +285,37 @@ def rtlsdr_handler():
     get_message.start()
 
     init_RTL_SDR()
+
+def zmq_rtlsdr():
+    context = zmq.Context()
+    socket = context.socket(zmq.REP)
+    socket.bind("tcp://*:5555")
+
+    print("Server listening on port 5555...")
     
+    listening = threading.Thread(init_RTL_SDR())
+    listening.start()
+
+    # Have rtl-sdr listen entire time but will just flush out incoming data until this flag raised
+    while True:
+        message = socket.recv_string()
+
+        if message == "SEND":
+            print(f"Request received: {message}")
+            global listen
+            listen = True
+            
+            # run block that checks queue, for messages
+
+        socket.send_string(f'Wassup brotha. You sent this? "{message}"')
+
+    # 
 def main():
     
+    zmq_rtlsdr()
     #with open('iq_dump.bin', 'wb'):
     #    pass  # just open and close to truncate file
-
+    """
     # Gracefully close threads when CTRL + C pressed
     signal.signal(signal.SIGINT, signal_handler)
 
@@ -306,7 +331,7 @@ def main():
 
     #while sdr_rx.is_alive() or get_message.is_alive():
     #    time.sleep(0.01)
-    """
+    
     raw_data = np.fromfile("iq_dump.bin", dtype=np.complex64)
     print("Length of data in file: ", len(raw_data))
 
