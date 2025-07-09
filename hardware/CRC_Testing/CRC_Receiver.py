@@ -76,9 +76,10 @@ check = calculator.checksum(byte_data)
 
 print("Remainder: ", check)
 if check == 0:
+    data = byte_data[:-2].decode('ascii')
     print("Data is valid...")
     print(f"Bits: {bits_string}")
-    print(f"Message: {decoded_message}")
+    print(f"Message: {data}")
 else:
     print("Data is invalid...\nAborting...")
 
