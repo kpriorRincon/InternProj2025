@@ -10,9 +10,17 @@ print("Data: ", data)
 
 # calculate what to append to the end of the data
 calculator = Calculator(Crc8.CCITT)
-expected = calculator.checksum(data)
-print("CRC-8: ", expected)
+code = calculator.checksum(data)
+print("CRC-8: ", code)
 
 # append the crc-8 to the data
-data = data + bytes([expected])
+data = data + bytes([code])
 print("Data with CRC-8 appended: ", data)
+
+# error check
+check = calculator.checksum(data)
+print("Remainder: ", check)
+if check == 0:
+    print("Data is valid...\nStart Processing...")
+else:
+    print("Data is invalid...\nAborting...")
