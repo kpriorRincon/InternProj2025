@@ -390,19 +390,19 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.close()
     return fixed_signal
 
-def crc_detection(decoded_string):
-    byte_data = int(decoded_string, 2).to_bytes((len(decoded_string) + 7) // 8, 'big')# convert the bit string to bytes
+def crc_detection(bit_string):
+    byte_data = int(bit_string, 2).to_bytes((len(bit_string) + 7) // 8, 'big')# convert the bit string to bytes
     check = calculator.checksum(byte_data)
 
-    print("Remainder: ", check)
+    #print("Remainder: ", check)
     if check == 0:
-        print("Data is valid...")
+        #print("Data is valid...")
         decoded_string = byte_data[:-1].decode()
         #print(f"Bits: {bit_string}")
-        print(f"Message: {decoded_string}")
+        #print(f"Message: {decoded_string}")
         return decoded_string
     else:
-        print("Data is invalid...\nAborting...")
+        #print("Data is invalid...\nAborting...")
         return None
 
 def channel_handler(rx_signal):
@@ -452,6 +452,7 @@ def channel_handler(rx_signal):
     symbols = decimate(rrc_signal, SPS)
     bits_string = demodulator(symbols)
 
+    #print(len(bits_string))
     decoded_string = ''.join(chr(int(bits_string[i*8:i*8+8],2)) for i in range(len(bits_string)//8))
 
     temp = time.time()
@@ -472,6 +473,8 @@ def channel_handler(rx_signal):
             plt.close()
 
     # CRC Check
-    message = crc_detection(decoded_string)
+    #print(decoded_string)
+    #print(len(decoded_string))
+    message = crc_detection(bits_string)
 
     return message

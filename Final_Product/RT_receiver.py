@@ -328,7 +328,7 @@ def zmq_rtlsdr():
             listen = True
             message = retrieve_valid_message()
             listen = False
-            socket.send_string(f'message')
+            socket.send_string(f'{message}')
             # run block that checks queue, for messages
 
         else:
