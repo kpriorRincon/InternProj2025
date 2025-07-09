@@ -10,7 +10,6 @@
 
 from gnuradio import blocks
 import pmt
-import time
 import sys
 from gnuradio import gr
 from gnuradio.filter import firdes
@@ -22,6 +21,7 @@ from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
 from gnuradio import soapy
 import vsg60
+import time
 # For PyQt6
 
 
@@ -114,28 +114,23 @@ class data_to_vsg(gr.top_block):
 
 def main(top_block_cls=data_to_vsg, options=None):
     tb = top_block_cls()
+    
 
     def sig_handler(sig=None, frame=None):
         tb.stop()
         tb.wait()
-
         sys.exit(0)
 
     signal.signal(signal.SIGINT, sig_handler)
     signal.signal(signal.SIGTERM, sig_handler)
 
     tb.start()
-
-    try:
-        input('Press Enter to quit: ')
-    except EOFError:
-        pass
+    #run for the fixed duration
+    run_duration = 3 # in seconds
+    time.sleep(run_duration)
     tb.stop()
     tb.wait()
 
 
 if __name__ == '__main__':
-    start_time = time.time()
-    while(time.time() - start_time) < 3:
-        main()
-    sys.exit()
+    main()
