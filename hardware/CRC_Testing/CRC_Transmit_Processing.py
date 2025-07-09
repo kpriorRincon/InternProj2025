@@ -266,7 +266,7 @@ class transmit_processing:
         zeros = np.zeros(len(data)*3, dtype=np.complex64)
         data = np.append(data, zeros)
         
-        # save data to a file for transmission
+        # save data to a file for testing
         data.tofile("data_for_sighound.bin")
         
         return bits_string, data		
