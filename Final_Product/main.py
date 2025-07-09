@@ -19,19 +19,13 @@ This file, when run, creates a graphical user interface (GUI) that offers the us
 from nicegui import ui, app
 import os
 import time
-from multiprocessing import Process, active_children
+import zmq, zmq.asyncio
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
 import asyncssh
-plt.rcParams.update({
-    'axes.titlesize': 20,
-    'axes.labelsize': 16,      # X and Y axis label size
-    'xtick.labelsize': 14,     # X tick label size
-    'ytick.labelsize': 14,     # Y tick label size
-    'legend.fontsize': 14,     # Legend font size
-    'figure.titlesize': 22     # Figure suptitle size
-})
+
+
 from datetime import datetime, timezone, timedelta
 # function I made to get current TLE data
 from get_TLE import get_up_to_date_TLE
@@ -39,13 +33,12 @@ from get_TLE import get_up_to_date_TLE
 import Sig_Gen as SigGen
 import Channel as Channel
 from config import *
-from RT_receiver import *
 from binary_search_caf import channel_handler
 from satellite_czml import satellite_czml # See Readme for mor information this class must be modified
 #downgrade pygeoif: pip install pygeoif==0.7.0
-
 from skyfield.api import load, wgs84, EarthSatellite
 import pathlib
+
 saved_tles = get_up_to_date_TLE()  # get the most up to date TLE
 # define the position of the transmitter and receiver
 tx_pos = wgs84.latlon(39.586389, -104.828889, elevation_m=1600)  # Kobe's seat at Rincon
@@ -61,7 +54,23 @@ recovered_message = None # this will be set in the simulation page when we recov
 required_rep_power = None # this will be set in the simulation page when we calculate the required repeater power  
 txFreq = None
 bits = None
+#matplotlib rc
+plt.rcParams.update({
+    'axes.titlesize': 20,
+    'axes.labelsize': 16,      # X and Y axis label size
+    'xtick.labelsize': 14,     # X tick label size
+    'ytick.labelsize': 14,     # Y tick label size
+    'legend.fontsize': 14,     # Legend font size
+    'figure.titlesize': 22     # Figure suptitle size
+})
+# get this files working directory
+html_directory = os.path.dirname(__file__) #get the directory you're in
+# add the files available
+app.add_static_files('/static', html_directory)
 
+def inject_head_style():
+    with open('html_head.html') as f:
+        ui.add_head_html(f.read())
 # Enhanced CSS for hover zoom effect in flex containers
 ui.add_css('''
 .thumbnail {
@@ -244,54 +253,7 @@ with ui.element('div').classes('wrapper'):
 # Simulate Page-------------------------------------------------------------------------------------------------------------------
 @ui.page('/SIMULATE')
 def simulate_page():
-    ui.add_head_html('''
-    <script>
-    document.title = 'Simulation';
-    </script>
-    <style>
-    body {
-        background-color: #ecedef;
-    }
-    .glass-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        min-width: 100vw;
-        height: 60px;
-        display: flex;
-        gap: 20px;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(10px);
-        background: rgba(0, 0, 0, 0.4);
-        -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        z-index: 1000;
-        padding: 0 30px;
-        box-sizing: border-box;
-        color: white;
-    }
-    .glass-bar .item {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        gap: 8px;
-        font-size: 18px;
-        color: white;
-        transition: background 0.2s;
-    }
-
-    .glass-bar .item:hover {
-        scale: 1.05;
-    }
-
-    .spacer {
-        height: 60px; /* reserve space under the fixed bar */
-    } 
-                     
-    </style>''')
-
+    inject_head_style()
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
             ui.icon('home')
@@ -394,54 +356,7 @@ def simulate_page():
 
     @ui.page('/Cesium_page')
     def Cesium_page():
-        ui.add_head_html('''
-        <script>
-        document.title = 'Satellite View';
-        </script>
-        <style>
-        body {
-            background-color: #ecedef;
-            }
-        .glass-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            min-width: 100vw;
-            height: 60px;
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.4);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            z-index: 1000;
-            padding: 0 30px;
-            box-sizing: border-box;
-            color: white;
-        }
-
-        .glass-bar .item {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            gap: 8px;
-            font-size: 18px;
-            color: white;
-            transition: background 0.2s;
-        }
-
-        .glass-bar .item:hover {
-            scale: 1.05;
-        }
-
-        .spacer {
-            height: 60px; /* reserve space under the fixed bar */
-        } 
-                        
-        </style>''')
+        inject_head_style()
         with ui.element('div').classes('glass-bar'):
             with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
                 ui.icon('home')
@@ -554,10 +469,6 @@ def simulate_page():
                         </div>
                     """)
             
-            # get this files working directory
-            html_directory = os.path.dirname(__file__) #get the directory you're in
-            # add the files available
-            app.add_static_files('/static', html_directory)
 
         #cesium page take up the right 70 percent of the page
         ui.html(
@@ -570,55 +481,7 @@ def simulate_page():
 
         @ui.page('/simulation_page')
         def simulation_page(): 
-            
-            ui.add_head_html('''
-            <script>
-            document.title = 'Simulation';
-            </script>
-            <style>
-            body {
-            background-color: #ecedef;
-            }
-            .glass-bar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                min-width: 100vw;
-                height: 60px;
-                display: flex;
-                gap: 20px;
-                align-items: center;
-                justify-content: center;
-                backdrop-filter: blur(10px);
-                background: rgba(0, 0, 0, 0.4);
-                -webkit-backdrop-filter: blur(10px);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-                z-index: 1000;
-                padding: 0 30px;
-                box-sizing: border-box;
-                color: white;
-            }
-
-            .glass-bar .item {
-                display: flex;
-                align-items: center;
-                cursor: pointer;
-                gap: 8px;
-                font-size: 18px;
-                color: white;
-                transition: background 0.2s;
-            }
-
-            .glass-bar .item:hover {
-                scale: 1.05;
-            }
-
-            .spacer {
-                height: 60px; /* reserve space under the fixed bar */
-            }        
-        </style>          
-            ''')
+            inject_head_style()
             with ui.element('div').classes('glass-bar'):
                 with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
                     ui.icon('home')
@@ -1034,93 +897,24 @@ def simulate_page():
                 ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
 
-
-def start_rtl():
-    init_RTL_SDR()
-start = False
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
-    global running, start, sdr
-    running = True
-    #initialize receiver
-    #we want it to run all the time while the control page is open
-    #when you press control c sets running flag to false 
-    #debug
-    print("Active children:", active_children())
+    inject_head_style()
 
-    RTL_process = Process(target=start_rtl, daemon=True)
-    #nice gui started the process twice
-    if not start:
-        RTL_process.start()
-        start = True
-    print('made it here')
-    ui.add_head_html('''
-            <script>
-            document.title = 'Simulation';
-            </script>
-            <style>
-            .glass-bar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                min-width: 100vw;
-                height: 60px;
-                display: flex;
-                gap: 20px;
-                align-items: center;
-                justify-content: center;
-                backdrop-filter: blur(10px);
-                background: rgba(0, 0, 0, 0.4);
-                -webkit-backdrop-filter: blur(10px);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-                z-index: 1000;
-                padding: 0 30px;
-                box-sizing: border-box;
-                color: white;
-            }
-
-            .glass-bar .item {
-                display: flex;
-                align-items: center;
-                cursor: pointer;
-                gap: 8px;
-                font-size: 18px;
-                color: white;
-                transition: background 0.2s;
-            }
-
-            .glass-bar .item:hover {
-                scale: 1.05;
-            }
-
-            .spacer {
-                height: 60px; /* reserve space under the fixed bar */
-            }        
-        </style>          
-            ''')
-    def set_run():
-        running = False
-        start = False
-        if RTL_process.is_alive():
-            for p in active_children():
-                p.terminate()
-            sdr.close()
-        print("Active children:", active_children())
     with ui.element('div').classes('glass-bar'):
-        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'), set_run())):
+        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'))):
             ui.icon('home')
             ui.label('Home')
-        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/SIMULATE'),set_run())):
+        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/SIMULATE'))):
             ui.icon('code')
             ui.label('Simulation')
 
-        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/CONTROL'), set_run())):
+        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/CONTROL'))):
             ui.icon('settings')
             ui.label('Control')
 
-        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/ABOUT'), set_run())):
+        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/ABOUT'))):
             ui.icon('info')
             ui.label('About')
     #add some spacer to content doesn't go under the fixed bar
@@ -1217,18 +1011,29 @@ def control_page():
 
         try: 
             ssh_host = 'empire@empire'
-            command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && ./transmit.bash "{message}"'
+            command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && nohup ./transmit.bash "{message}" > output.log 2>&1 &'
             async with asyncssh.connect('empire', username = 'empire', password='password', known_hosts=None) as conn:
-                result = await conn.run(command, check=True)
+                await conn.run(command, check=True)
         except (OSError, asyncssh.Error) as e:
             ui.notify(f'SSH error: {e}')
             loading_dots.visible = False
             return
         
+        #ZMQ request to the receiver (same LAN IP or host name)
+        try: 
+            context = zmq.asyncio.Context()
+            Rx = context.socket(zmq.REQ)
+            Rx.connect('tcp://10.232.62.2:5555') # Receiver IP + port 5555
+            await Rx.send_string("SEND")
+            decoded_message = await Rx.recv_string()
+        except:
+            ui.notify(f'ZMQ error: {e}')
+            loading_dots.visible = False
+            return
+        
         loading_dots.visible = False
-        #note this decoded message will be replaced with the actual decoded message
-        decoded_message = 'example decoded message'
-        #  after you get the decoded message from the hardware put it into the received_bubble
+        
+        # put the message here
         received_bubble.text = f'{decoded_message}'  # Update received bubble
         received_bubble.visible = True
         #ui.notify('Message sent!')
@@ -1243,11 +1048,12 @@ def about_page():
     # Serve the media folder statically so images can be accessed via /static/media/...
     media_dir = pathlib.Path(__file__).parent / "media"
     app.add_static_files('/static/media', str(media_dir))
-
-    ui.add_head_html('''Final_Product/transmitter/transmit_processing.py.1/css/all.min.css">
+    ui.add_head_html('''
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
             <script>
             document.title = 'About';
-            </script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-yvLqEXxCzCyxUeHkMgPh3/jtdMELH7BykTbk+8vwFpD2Z6jszD0Q5YQ3fvLRvAVNsmF29eEobTVE+q6d+pc+xg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            </script>         
             <style>
             .glass-bar {
                 position: fixed;

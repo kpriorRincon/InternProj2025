@@ -176,7 +176,7 @@ class transmit_processing:
         """
         
         # user input to bytes
-        byte_data = bytes(message, "ascii")
+        byte_data = message.encode('utf-8')
         print("Message in bytes: ", byte_data)
 
         # calculate CRC-8 for the message
@@ -261,10 +261,6 @@ class transmit_processing:
         _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
         data = np.convolve(upsampled_symbols, h, 'same')
         data = data.astype(np.complex64)
-
-        # append zeros so there is space between packets
-        zeros = np.zeros(len(data)*3, dtype=np.complex64)
-        data = np.append(data, zeros)
         
         # save data to a file for testing
         data.tofile("data_for_sighound.bin")

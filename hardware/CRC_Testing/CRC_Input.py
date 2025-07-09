@@ -27,19 +27,21 @@ print("Data to send: ", bits_out)
 
 # decode the received data
 bits_in, decoded_message, symbols = rp.work(data, beta, N)
+byte_data = int(decoded_message, 2).to_bytes((len(decoded_message) + 7) // 8, 'big')# convert the bit string to bytes
+print("Bytes: ", byte_data)
 
 # error check
 timer = time.time()
-check = calculator.checksum(data)
+check = calculator.checksum(byte_data)
 print("Time to run CRC check: ", time.time() - timer)
 print("Remainder: ", check)
 if check == 0:
     print("Data is valid...")
     # print the results
     print("Message Sent: ", message)
-    print("Message Received: ", decoded_message)
+    print("Message Received: ", byte_data[:-1].decode('utf-8'))
     print("Bits Sent: ", bits_out)
     print("Bits Received: ", bits_in)
 else:
-    print("Message Received: ", decoded_message)
+    print("Message Received: ", byte_data.decode('utf-8'))
     print("Data is invalid...\nAborting...")

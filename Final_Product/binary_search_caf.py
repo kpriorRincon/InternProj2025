@@ -371,7 +371,7 @@ def cross_corr_caf(rx_signal):
         plt.legend()
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
-        plt.title('Constelation Plot After CAF')
+        plt.title('Constellation Plot After CAF')
         plt.grid(True)
         plt.axis('equal')
         plt.savefig('media/pre_phase_correction_constellation.png', dpi = 300, bbox_inches='tight')
@@ -385,7 +385,7 @@ def cross_corr_caf(rx_signal):
     h_norm = np.mean(h / np.abs(h))
     print(f'Phase offset found: {np.rad2deg(np.angle(h_norm))}')
 
-    create_animation = True
+    create_animation = False
     if DEBUG and create_animation: 
         import matplotlib.animation as animation
         angle_to_rotate = np.angle(h_norm)
