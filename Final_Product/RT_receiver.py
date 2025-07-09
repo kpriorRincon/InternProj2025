@@ -174,8 +174,6 @@ def callback_d(samples, rtlsdr_obj):
     if running:
         strt_t = time.time()
         messages, cut_sigs = detector(samples, cut_sigs)
-        if listen:
-            print("here")
         if messages and listen:
             try:
                 message_queue.put_nowait(messages.copy())
@@ -186,9 +184,8 @@ def callback_d(samples, rtlsdr_obj):
                 print(messages)
     
     else:
-        print("Here")
         sdr.cancel_read_async()
-
+        print("Closing sdr async read")
 
 def writer_thread():
     with open('iq_dump.bin', 'ab') as f:
@@ -218,14 +215,6 @@ def retrieve_valid_message():
         
         return message
 
-def signal_handler(sig, frame):
-    global running
-    running = False
-    #try: 
-    #    sdr.cancel_read_async()
-    #except Exception as e:
-     #   print(f"[WARN] Could not cancel read: {e}")
-    #sys.exit(0)
 
 def sdr_worker():
     try:
@@ -277,20 +266,31 @@ def init_RTL_SDR():
     """
         
     #messages, cut_sigs = detector(samples, cut_sigs)
-    #print("here")
+
     #sdr.read_samples_async(callback, 1024)
 
 
     sdr.close()
+    print("closing sdr")
+
+listening = None
 
 def rx_close_handler():
     # call when leave or exit out of page
     global running
     running = False
+def signal_handler(sig, frame):
+    global running
+    running = False
 
-get_message = threading.Thread(target=retrieve_message_thread, daemon=True)
+    #try: 
+    #    sdr.cancel_read_async()
+    #except Exception as e:
+     #   print(f"[WARN] Could not cancel read: {e}")
+    #sys.exit(0)
+
+
 def rtlsdr_handler():
-    global get_message
     #signal_handler should close threads when page is left or exited out
     # all its really doing is setting running Flag to false
     signal.signal(signal.SIGINT, signal_handler)
@@ -303,6 +303,7 @@ def rtlsdr_handler():
     init_RTL_SDR()
 
 def zmq_rtlsdr():
+    print("start")
     signal.signal(signal.SIGINT, signal_handler)
 
     context = zmq.Context()
@@ -310,13 +311,16 @@ def zmq_rtlsdr():
     socket.bind("tcp://*:5555")
 
     print("Server listening on port 5555...")
-    
+    global listening
     listening = threading.Thread(init_RTL_SDR())
     listening.start()
 
     # Have rtl-sdr listen entire time but will just flush out incoming data until this flag raised
-    while True:
-        command = socket.recv_string()
+    while running:
+        try:
+            command = socket.recv_string(flags=zmq.NOBLOCK)
+        except zmq.Again:
+            continue
 
         if command == "SEND":
             print(f"Request received: {command}")
@@ -330,7 +334,7 @@ def zmq_rtlsdr():
         else:
             socket.send_string(f'Unknown command: "{command}"')
 
-
+    print("we out")
     # 
 def main():
     

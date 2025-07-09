@@ -68,9 +68,11 @@ html_directory = os.path.dirname(__file__) #get the directory you're in
 # add the files available
 app.add_static_files('/static', html_directory)
 
-def inject_head_style():
+def inject_head_style(page_name):
     with open('html_head.html') as f:
-        ui.add_head_html(f.read())
+        head =f"<script> document.title = '{page_name}';"
+        head = "'''" + head + f.read()
+        ui.add_head_html(head)
 # Enhanced CSS for hover zoom effect in flex containers
 ui.add_css('''
 .thumbnail {
