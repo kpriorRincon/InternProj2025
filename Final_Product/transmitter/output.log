@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/home/empire/Documents/InternProj2025/Final_Product/transmitter/gen_iq.py", line 2, in <module>
+    import transmit_processing as tp
+  File "/home/empire/Documents/InternProj2025/Final_Product/transmitter/transmit_processing.py", line 3, in <module>
+    from crc import Calculator, Crc8
+ModuleNotFoundError: No module named 'crc'
+[INFO] bladerf_open_with_devinfo()
+[INFO] bladerf_get_serial() = 3c53c4d9bf6e4fb4b01b25b6f6d3c54a
+[INFO] setSampleRate(Rx, 0, 4.000000 MHz), actual = 4.000000 MHz
+[INFO] setSampleRate(Tx, 0, 4.000000 MHz), actual = 4.000000 MHz
+[INFO] setSampleRate(Rx, 0, 2.880000 MHz), actual = 2.880000 MHz
+[WARNING @ host/libraries/libbladeRF/src/bladerf.c:569] Setting gain mode to manual
+[INFO] setSampleRate(Tx, 0, 2.880000 MHz), actual = 2.880000 MHz
+[WARNING @ host/libraries/libbladeRF/src/streaming/sync.c:206] Requested buffer size 4096 samples (12288 bytes) is invalid. Adjusting to 8192 samples (24576 bytes).
+[WARNING @ host/libraries/libbladeRF/src/streaming/sync.c:206] Requested buffer size 4096 samples (12288 bytes) is invalid. Adjusting to 8192 samples (24576 bytes).
+[INFO] bladerf_close()
+
+API Version: 1.0.9
+Serial Number: 20230295

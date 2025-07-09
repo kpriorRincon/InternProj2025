@@ -70,14 +70,15 @@ class transmit_processing:
         """
  
         # convert message to binary
-        message_binary = ''.join(format(ord(char), '08b') for char in message)
+        message_binary = message
+        # ''.join(format(ord(char), '08b') for char in message)
 
         # add start and end markers to the bitstream
         message_binary = ''.join(str(bit) for bit in self.start_sequence) + message_binary + ''.join(str(bit) for bit in self.end_sequence)
     
         # coverts bit sequence from a string to a list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
-
+        print(f'len of bit sequence{len(bit_sequence)}and the sequence:{bit_sequence}')
         return bit_sequence
     
     # function to map bits to QPSK symbols
@@ -213,7 +214,7 @@ class transmit_processing:
         """
         
         # user input to bytes
-        byte_data = bytes(message, "ascii")
+        byte_data = message.encode('utf-8')
         print("Message in bytes: ", byte_data)
 
         # calculate CRC-8 for the message
@@ -227,7 +228,6 @@ class transmit_processing:
 
         # turn into a bit string
         bit_string = ''.join(format(byte, '08b') for byte in to_send)
-
         return bit_string
     
     def work(self, message, beta, N): 
@@ -246,8 +246,8 @@ class transmit_processing:
         # start_sequence, end_sequence = self.generate_markers()
 
         # add CRC to the message
-        bits_string = self.add_crc(message)
-        bits = self.message_to_bits(bits_string)
+        byte_string = self.add_crc(message)
+        bits = self.message_to_bits(byte_string)
 
         # map to QPSK symbols
         symbols = self.qpsk_mapping(bits)
@@ -260,6 +260,7 @@ class transmit_processing:
         Ts = 1 / symbol_rate
         _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
         data = np.convolve(upsampled_symbols, h, 'same')
+        print(f'length of data: {len(data)}')
         data = data.astype(np.complex64)
 
         # append zeros so there is space between packets
@@ -269,4 +270,14 @@ class transmit_processing:
         # save data to a file for testing
         data.tofile("data_for_sighound.bin")
         
-        return bits_string, data		
+        return byte_string, data		
+
+
+def main():
+    message = "hello"
+    sps = 20
+    sample_rate = 2e6
+    tp=transmit_processing(sps, sample_rate)
+    tp.work(message, 0.3, 101)
+if __name__ == '__main__':
+    main()

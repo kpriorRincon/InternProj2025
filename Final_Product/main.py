@@ -68,9 +68,11 @@ html_directory = os.path.dirname(__file__) #get the directory you're in
 # add the files available
 app.add_static_files('/static', html_directory)
 
-def inject_head_style():
+def inject_head_style(page_name):
     with open('html_head.html') as f:
-        ui.add_head_html(f.read())
+        head =f"<script> document.title = '{page_name}';"
+        head = "'''" + head + f.read()
+        ui.add_head_html(head)
 # Enhanced CSS for hover zoom effect in flex containers
 ui.add_css('''
 .thumbnail {
@@ -253,7 +255,7 @@ with ui.element('div').classes('wrapper'):
 # Simulate Page-------------------------------------------------------------------------------------------------------------------
 @ui.page('/SIMULATE')
 def simulate_page():
-    inject_head_style()
+    inject_head_style('simulate')
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
             ui.icon('home')
@@ -356,7 +358,7 @@ def simulate_page():
 
     @ui.page('/Cesium_page')
     def Cesium_page():
-        inject_head_style()
+        inject_head_style('Cesium')
         with ui.element('div').classes('glass-bar'):
             with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
                 ui.icon('home')
@@ -481,7 +483,7 @@ def simulate_page():
 
         @ui.page('/simulation_page')
         def simulation_page(): 
-            inject_head_style()
+            inject_head_style('simulation_page')
             with ui.element('div').classes('glass-bar'):
                 with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
                     ui.icon('home')
@@ -900,7 +902,7 @@ def simulate_page():
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
-    inject_head_style()
+    inject_head_style('Control')
 
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'))):
@@ -1021,6 +1023,7 @@ def control_page():
         
         #ZMQ request to the receiver (same LAN IP or host name)
         try: 
+            print('did we get here')
             context = zmq.asyncio.Context()
             Rx = context.socket(zmq.REQ)
             Rx.connect('tcp://10.232.62.2:5555') # Receiver IP + port 5555

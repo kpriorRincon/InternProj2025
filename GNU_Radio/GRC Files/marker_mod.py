@@ -20,18 +20,21 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
+from PyQt5 import Qt
+from gnuradio import qtgui
+from gnuradio.filter import firdes
+import sip
 from gnuradio import blocks
 from gnuradio import customModule
 from gnuradio import filter
-from gnuradio.filter import firdes
 from gnuradio import gr
 from gnuradio.fft import window
 import sys
 import signal
-from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+import PyQt5
 import numpy as np
 
 
@@ -74,11 +77,11 @@ class marker_mod(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.num_taps = num_taps = int(40)
+        self.num_taps = num_taps = int(101)
         self.sps = sps = 4
         self.group_delay = group_delay = int(num_taps/2)
         self.skip = skip = int((group_delay/2)*(sps/2))
-        self.samp_rate = samp_rate = 32000
+        self.samp_rate = samp_rate = 2.88e6
         self.marker_offset = marker_offset = tuple([0]*(int(skip/2)+1))
         self.marker = marker = (1,1,1,1,1,0,0,1,1,0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,1,0,1,1,0,0,0,1)
         self.data = data = (0,1,0,0,1,0,0,0,0,1,1,0,0,1,0,1,0,1,1,0,1,1,0,0,0,1,1,0,1,1,0,0,0,1,1,0,1,1,1,1,0,0,1,0,0,0,0,0,0,1,0,1,0,1,1,1,0,1,1,0,1,1,1,1,0,1,1,1,0,0,1,0,0,1,1,0,1,1,0,0,0,1,1,0,0,1,0,0,0,0,1,0,0,0,0,1)
@@ -95,23 +98,155 @@ class marker_mod(gr.top_block, Qt.QWidget):
                 samp_rate/sps,
                 alpha,
                 num_taps))
+        self.qtgui_time_sink_x_1 = qtgui.time_sink_c(
+            448, #size
+            samp_rate, #samp_rate
+            "After RRC", #name
+            1, #number of inputs
+            None # parent
+        )
+        self.qtgui_time_sink_x_1.set_update_time(0.10)
+        self.qtgui_time_sink_x_1.set_y_axis(-1, 1)
+
+        self.qtgui_time_sink_x_1.set_y_label('Amplitude', "")
+
+        self.qtgui_time_sink_x_1.enable_tags(True)
+        self.qtgui_time_sink_x_1.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.qtgui_time_sink_x_1.enable_autoscale(False)
+        self.qtgui_time_sink_x_1.enable_grid(False)
+        self.qtgui_time_sink_x_1.enable_axis_labels(True)
+        self.qtgui_time_sink_x_1.enable_control_panel(False)
+        self.qtgui_time_sink_x_1.enable_stem_plot(False)
+
+
+        labels = ['Real', 'Imaginary', 'Signal 3', 'Signal 4', 'Signal 5',
+            'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ['blue', 'red', 'green', 'black', 'cyan',
+            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+        styles = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        markers = [-1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1]
+
+
+        for i in range(2):
+            if len(labels[i]) == 0:
+                if (i % 2 == 0):
+                    self.qtgui_time_sink_x_1.set_line_label(i, "Re{{Data {0}}}".format(i/2))
+                else:
+                    self.qtgui_time_sink_x_1.set_line_label(i, "Im{{Data {0}}}".format(i/2))
+            else:
+                self.qtgui_time_sink_x_1.set_line_label(i, labels[i])
+            self.qtgui_time_sink_x_1.set_line_width(i, widths[i])
+            self.qtgui_time_sink_x_1.set_line_color(i, colors[i])
+            self.qtgui_time_sink_x_1.set_line_style(i, styles[i])
+            self.qtgui_time_sink_x_1.set_line_marker(i, markers[i])
+            self.qtgui_time_sink_x_1.set_line_alpha(i, alphas[i])
+
+        self._qtgui_time_sink_x_1_win = sip.wrapinstance(self.qtgui_time_sink_x_1.qwidget(), Qt.QWidget)
+        self.top_grid_layout.addWidget(self._qtgui_time_sink_x_1_win, 1, 0, 1, 1)
+        for r in range(1, 2):
+            self.top_grid_layout.setRowStretch(r, 1)
+        for c in range(0, 1):
+            self.top_grid_layout.setColumnStretch(c, 1)
+        self.qtgui_time_sink_x_0 = qtgui.time_sink_c(
+            448, #size
+            samp_rate, #samp_rate
+            "Before RRC", #name
+            1, #number of inputs
+            None # parent
+        )
+        self.qtgui_time_sink_x_0.set_update_time(0.10)
+        self.qtgui_time_sink_x_0.set_y_axis(-1, 1)
+
+        self.qtgui_time_sink_x_0.set_y_label('Amplitude', "")
+
+        self.qtgui_time_sink_x_0.enable_tags(True)
+        self.qtgui_time_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.qtgui_time_sink_x_0.enable_autoscale(False)
+        self.qtgui_time_sink_x_0.enable_grid(False)
+        self.qtgui_time_sink_x_0.enable_axis_labels(True)
+        self.qtgui_time_sink_x_0.enable_control_panel(False)
+        self.qtgui_time_sink_x_0.enable_stem_plot(False)
+
+
+        labels = ['Real', 'Imaginary', 'Signal 3', 'Signal 4', 'Signal 5',
+            'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ['blue', 'red', 'green', 'black', 'cyan',
+            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+        styles = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        markers = [-1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1]
+
+
+        for i in range(2):
+            if len(labels[i]) == 0:
+                if (i % 2 == 0):
+                    self.qtgui_time_sink_x_0.set_line_label(i, "Re{{Data {0}}}".format(i/2))
+                else:
+                    self.qtgui_time_sink_x_0.set_line_label(i, "Im{{Data {0}}}".format(i/2))
+            else:
+                self.qtgui_time_sink_x_0.set_line_label(i, labels[i])
+            self.qtgui_time_sink_x_0.set_line_width(i, widths[i])
+            self.qtgui_time_sink_x_0.set_line_color(i, colors[i])
+            self.qtgui_time_sink_x_0.set_line_style(i, styles[i])
+            self.qtgui_time_sink_x_0.set_line_marker(i, markers[i])
+            self.qtgui_time_sink_x_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
+        self.top_grid_layout.addWidget(self._qtgui_time_sink_x_0_win, 0, 0, 1, 1)
+        for r in range(0, 1):
+            self.top_grid_layout.setRowStretch(r, 1)
+        for c in range(0, 1):
+            self.top_grid_layout.setColumnStretch(c, 1)
+        self.qtgui_grbackground_0 = None
+        if "default" != 'default':
+            bkcolor="background-color: default;"
+        else:
+            bkcolor=""
+
+        styleSht = self.styleSheet()
+
+        if len('') > 0:
+            bkgnd="background-image: url(" + '' + "); background-repeat: repeat_n; background-position: " + "center" + ";"
+        else:
+            bkgnd = ''
+
+        styleSht += "QWidget{" + bkgnd + bkcolor + "}"
+
+        self.setStyleSheet(styleSht)
+        self.customModule_upsampler_0_0_0 = customModule.upsampler(sps)
         self.customModule_upsampler_0_0 = customModule.upsampler(sps)
+        self.customModule_QPSK_Modulator_0_0_0 = customModule.QPSK_Modulator()
         self.customModule_QPSK_Modulator_0_0 = customModule.QPSK_Modulator()
-        self.blocks_vector_source_x_1 = blocks.vector_source_i(marker+marker_offset, False, 1, [])
+        self.blocks_vector_source_x_1_0 = blocks.vector_source_i(marker+data+data, False, 1, [])
+        self.blocks_vector_source_x_1 = blocks.vector_source_i(marker+data+data+marker_offset, False, 1, [])
+        self.blocks_throttle_0_0_0 = blocks.throttle(gr.sizeof_int*1, samp_rate,True)
         self.blocks_throttle_0_0 = blocks.throttle(gr.sizeof_int*1, samp_rate,True)
         self.blocks_skiphead_0_0 = blocks.skiphead(gr.sizeof_gr_complex*1, skip)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, '/home/empire/Documents/InternProj2025/GNU_Radio/testing/bits_read_in.bin', False)
-        self.blocks_file_sink_0.set_unbuffered(False)
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_skiphead_0_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.blocks_skiphead_0_0, 0), (self.qtgui_time_sink_x_1, 0))
         self.connect((self.blocks_throttle_0_0, 0), (self.customModule_QPSK_Modulator_0_0, 0))
+        self.connect((self.blocks_throttle_0_0_0, 0), (self.customModule_QPSK_Modulator_0_0_0, 0))
         self.connect((self.blocks_vector_source_x_1, 0), (self.blocks_throttle_0_0, 0))
+        self.connect((self.blocks_vector_source_x_1_0, 0), (self.blocks_throttle_0_0_0, 0))
         self.connect((self.customModule_QPSK_Modulator_0_0, 0), (self.customModule_upsampler_0_0, 0))
+        self.connect((self.customModule_QPSK_Modulator_0_0_0, 0), (self.customModule_upsampler_0_0_0, 0))
         self.connect((self.customModule_upsampler_0_0, 0), (self.root_raised_cosine_filter_1_0, 0))
+        self.connect((self.customModule_upsampler_0_0_0, 0), (self.qtgui_time_sink_x_0, 0))
         self.connect((self.root_raised_cosine_filter_1_0, 0), (self.blocks_skiphead_0_0, 0))
 
 
@@ -159,6 +294,9 @@ class marker_mod(gr.top_block, Qt.QWidget):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.blocks_throttle_0_0.set_sample_rate(self.samp_rate)
+        self.blocks_throttle_0_0_0.set_sample_rate(self.samp_rate)
+        self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
+        self.qtgui_time_sink_x_1.set_samp_rate(self.samp_rate)
         self.root_raised_cosine_filter_1_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, self.samp_rate/self.sps, self.alpha, self.num_taps))
 
     def get_marker_offset(self):
@@ -166,20 +304,23 @@ class marker_mod(gr.top_block, Qt.QWidget):
 
     def set_marker_offset(self, marker_offset):
         self.marker_offset = marker_offset
-        self.blocks_vector_source_x_1.set_data(self.marker+self.marker_offset, [])
+        self.blocks_vector_source_x_1.set_data(self.marker+self.data+self.data+self.marker_offset, [])
 
     def get_marker(self):
         return self.marker
 
     def set_marker(self, marker):
         self.marker = marker
-        self.blocks_vector_source_x_1.set_data(self.marker+self.marker_offset, [])
+        self.blocks_vector_source_x_1.set_data(self.marker+self.data+self.data+self.marker_offset, [])
+        self.blocks_vector_source_x_1_0.set_data(self.marker+self.data+self.data, [])
 
     def get_data(self):
         return self.data
 
     def set_data(self, data):
         self.data = data
+        self.blocks_vector_source_x_1.set_data(self.marker+self.data+self.data+self.marker_offset, [])
+        self.blocks_vector_source_x_1_0.set_data(self.marker+self.data+self.data, [])
 
     def get_alpha(self):
         return self.alpha
