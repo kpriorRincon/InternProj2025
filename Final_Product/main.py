@@ -19,7 +19,7 @@ This file, when run, creates a graphical user interface (GUI) that offers the us
 from nicegui import ui, app
 import os
 import time
-from multiprocessing import Process
+from multiprocessing import Process, active_children
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1037,20 +1037,23 @@ def simulate_page():
 
 def start_rtl():
     init_RTL_SDR()
-
+start = False
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
-    global running
+    global running, start
     running = True
     #initialize receiver
     #we want it to run all the time while the control page is open
     #when you press control c sets running flag to false 
-
+    #debug
+    print("Active children:", active_children())
 
     RTL_process = Process(target=start_rtl, daemon=True)
-    RTL_process.start()
-
+    #nice gui started the process twice
+    if not start:
+        RTL_process.start()
+        start = True
     print('made it here')
     ui.add_head_html('''
             <script>
@@ -1099,7 +1102,11 @@ def control_page():
             ''')
     def set_run():
         running = False
+        start = False
+        for p in active_children():
+            p.terminate()
 
+        print("Active children:", active_children())
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'), set_run())):
             ui.icon('home')
