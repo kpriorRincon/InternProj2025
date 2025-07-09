@@ -80,8 +80,8 @@ class Detector:
                 plt.xlabel('Time (samples)')
                 plt.ylabel('Amplitude')
                 plt.grid()
-                plt.savefig('raw_iq_samples.png')
-                #plt.show()
+                #plt.savefig('raw_iq_samples.png')
+                plt.show()
 
                 #plt.plot(np.fft.fftfreq(len(cor_start), 0/self.fs), 20*np.log10(np.fft.fft(cor_start)), label='Start Correlation')
                 #plt.plot(np.fft.fftfreq(len(cor_end), 0/self.fs), 20*np.log10(np.fft.fft(cor_end)), label='End Correlation')
@@ -90,7 +90,7 @@ class Detector:
                 plt.plot(np.abs(cor_start), label='start')
                 plt.grid()
                 plt.legend()
-                plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
+                # plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
                 #plt.axvline(y = start, linestyle = '--', color = 'r')
                 plt.scatter(start_idx, np.abs(cor_start[start_idx]), s = 99, c = 'r', marker = '.')
                 
@@ -98,14 +98,14 @@ class Detector:
                 plt.plot(np.abs(cor_end), label='end')
                 plt.grid()
                 plt.legend()
-                plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
+                # plt.axhline(y = self.threshold, linestyle = '--', color = 'g')
                 plt.scatter(end_idx, np.abs(cor_end[end_idx]), s = 99, c = 'r', marker = '.')
                 #plt.axvline(x = end, linestyle = '--', color = 'r')
-                plt.savefig('correlation_plot.png')
-                #plt.show()
+                #plt.savefig('correlation_plot.png')
+                plt.show()
 
         # if the start index is greater than the end index signal not found, return default values
-        if start_idx > end_idx or start < 0 or end > len(coarse_fixed):
+        if start_idx > end_idx or start < 0 or end > len(samples) or (end - start) > 3*len(match_start):
             print("Start index greater than end...\nSignal not found...\nSet to defaults")
             start = 0
             end = len(coarse_fixed) - 1

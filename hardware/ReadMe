@@ -1,0 +1,2 @@
+sudo apt install rtl-sdr
+sudo pip install pyrtlsdr

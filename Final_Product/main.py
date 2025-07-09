@@ -22,6 +22,7 @@ import time
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
+import asyncssh
 plt.rcParams.update({
     'axes.titlesize': 20,
     'axes.labelsize': 16,      # X and Y axis label size
@@ -38,7 +39,6 @@ import Sig_Gen as SigGen
 import Channel as Channel
 from config import *
 from binary_search_caf import channel_handler
-
 from satellite_czml import satellite_czml # See Readme for mor information this class must be modified
 #downgrade pygeoif: pip install pygeoif==0.7.0
 
@@ -248,8 +248,8 @@ def simulate_page():
     </script>
     <style>
     body {
-            background-color: #ecedef;
-            }
+        background-color: #ecedef;
+    }
     .glass-bar {
         position: fixed;
         top: 0;
@@ -270,7 +270,6 @@ def simulate_page():
         box-sizing: border-box;
         color: white;
     }
-
     .glass-bar .item {
         display: flex;
         align-items: center;
@@ -1038,6 +1037,8 @@ def simulate_page():
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
+    #initiate rtl-sdr
+
     ui.add_head_html('''
             <script>
             document.title = 'Simulation';
@@ -1181,6 +1182,7 @@ def control_page():
                 loading_dots.visible = False
 
     # Replace loading_bar logic with loading_dots
+    
     async def send_message(message):
         """Sends the message to the hardware and waits for a response."""
         received_bubble.visible = False #start the receive bubble as hidden
@@ -1190,18 +1192,20 @@ def control_page():
         loading_dots.visible = True
         await asyncio.sleep(0.1)  # give the UI time to update
 
-        #------
-        # insert command and control here
-        # Tell the blade to warm up
-        # Configure a file for the signal hound
-        # Start
-        #
-        #------
-
-        #DELTE WHEN READY
-        for i in range(5):
-            await asyncio.sleep(1)
-            print(f'{i}.Sending message: {message}')
+        try: 
+            ssh_host = 'empire@empire'
+            command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && ./transmit.bash "{message}"'
+            async with asyncssh.connect('empire', username = 'empire', password='password', known_hosts=None) as conn:
+                result = await conn.run(command, check=True)
+        except (OSError, asyncssh.Error) as e:
+            ui.notify(f'SSH error: {e}')
+            loading_dots.visible = False
+            return
+        
+        # #DELTE WHEN READY
+        # for i in range(5):
+        #     await asyncio.sleep(1)
+        #     print(f'{i}.Sending message: {message}')
 
         loading_dots.visible = False
         #note this decoded message will be replaced with the actual decoded message
@@ -1209,7 +1213,7 @@ def control_page():
         #  after you get the decoded message from the hardware put it into the received_bubble
         received_bubble.text = f'{decoded_message}'  # Update received bubble
         received_bubble.visible = True
-        ui.notify('Message sent!')
+        #ui.notify('Message sent!')
         return
             
 

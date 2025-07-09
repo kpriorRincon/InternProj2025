@@ -385,6 +385,45 @@ def cross_corr_caf(rx_signal):
     h_norm = np.mean(h / np.abs(h))
     print(f'Phase offset found: {np.rad2deg(np.angle(h_norm))}')
 
+    create_animation = True
+    if DEBUG and create_animation: 
+        import matplotlib.animation as animation
+        angle_to_rotate = np.angle(h_norm)
+        #frequency correct the signal
+        t = np.arange(len(deci_signal)) / SAMPLE_RATE
+        sig_to_rotate = deci_signal * np.exp(-1j * 2 * np.pi * freq_found * t)
+        def animate(i):
+            plt.clf()
+            phase_step = angle_to_rotate * min(i,119) / 120
+
+            #rotate the signal
+            rotated_signal = sig_to_rotate * np.exp(-1j * phase_step)
+            
+            #plot oversampled signal path (continuous trace)
+            plt.plot(np.real(rotated_signal), np.imag(rotated_signal), 'b-', zorder=1, label = 'oversampled signal')
+            
+            #plot decimated symbols (red or green depending on step)
+            symbol_points = rotated_signal[1::int(SAMPLE_RATE/ SYMB_RATE)]
+            if i >= 119:
+                #show green dots for final corrected signal
+                plt.scatter(np.real(symbol_points), np.imag(symbol_points), s=20, color = 'lime', zorder=3, label='decimated signal')
+            else:
+                #show red dots during correction
+                plt.scatter(np.real(symbol_points), np.imag(symbol_points), s = 10, color = 'red', zorder = 2, label = 'decimated signal')
+
+            plt.legend(loc='upper right')
+            plt.xlabel('In-Phase (I)')
+            plt.ylabel('Quadrature (Q)')
+            plt.title('Constellation After Phase Correction')
+            plt.grid(True)
+            plt.tight_layout()
+            plt.axis('equal')
+
+        fig = plt.figure(figsize=(6, 6))
+        ani = animation.FuncAnimation(fig, animate, frames = 140, interval = 50, repeat = False)
+        ani.save('media/phase_correction_animation.gif', writer='pillow')
+            
+        
     deci_signal /= h_norm
 
     t = np.arange(len(deci_signal)) / SAMPLE_RATE
@@ -429,7 +468,7 @@ def cross_corr_caf(rx_signal):
         plt.legend()
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
-        plt.title('Constellation after Phase Correction')
+        plt.title('Constellation After Phase Correction')
         plt.grid(True)
         plt.axis('equal')
         plt.savefig('media/phase_corrected_constellation.png', dpi = 300, bbox_inches='tight')

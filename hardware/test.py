@@ -1,12 +1,12 @@
 import transmit_processing as transmit_processing
 import receive_processing as receive_processing 
 import numpy as np
-
+from config import *
 message = input('Enter your message: \n')
 sps = 20
 sample_rate = 2.88e6
-beta = 0.35
-N = 101
+beta = BETA
+N = NUMTAPS
 
 tp = transmit_processing.transmit_processing(sps, sample_rate)
 rp = receive_processing.receive_processing(sps, sample_rate)
