@@ -213,7 +213,7 @@ class transmit_processing:
         """
         
         # user input to bytes
-        byte_data = bytes(message, "ascii")
+        byte_data = message.encode('utf-8')
         print("Message in bytes: ", byte_data)
 
         # calculate CRC-8 for the message
@@ -246,8 +246,8 @@ class transmit_processing:
         # start_sequence, end_sequence = self.generate_markers()
 
         # add CRC to the message
-        bits_string = self.add_crc(message)
-        bits = self.message_to_bits(bits_string)
+        byte_string = self.add_crc(message)
+        bits = self.message_to_bits(byte_string)
 
         # map to QPSK symbols
         symbols = self.qpsk_mapping(bits)
@@ -269,4 +269,4 @@ class transmit_processing:
         # save data to a file for testing
         data.tofile("data_for_sighound.bin")
         
-        return bits_string, data		
+        return byte_string, data		
