@@ -284,7 +284,9 @@ def rtlsdr_handler():
     get_message.start()
 
     init_RTL_SDR()
-    
+
+def zmq_rtlsdr():
+    context = zmq.Context()
 def main():
     
     #with open('iq_dump.bin', 'wb'):
