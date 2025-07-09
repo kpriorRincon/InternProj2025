@@ -1041,7 +1041,7 @@ start = False
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
-    global running, start
+    global running, start, sdr
     running = True
     #initialize receiver
     #we want it to run all the time while the control page is open
@@ -1103,9 +1103,10 @@ def control_page():
     def set_run():
         running = False
         start = False
-        for p in active_children():
-            p.terminate()
-
+        if RTL_process.is_alive():
+            for p in active_children():
+                p.terminate()
+            sdr.close()
         print("Active children:", active_children())
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'), set_run())):
