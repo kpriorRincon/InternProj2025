@@ -10,6 +10,8 @@
 
 from gnuradio import blocks
 import pmt
+import time
+import sys
 from gnuradio import gr
 from gnuradio.filter import firdes
 from gnuradio.fft import window
@@ -21,8 +23,7 @@ from gnuradio import eng_notation
 from gnuradio import soapy
 import vsg60
 # For PyQt6
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
-from PyQt6.QtCore import QTimer
+
 
 
 class data_to_vsg(gr.top_block):
@@ -81,11 +82,6 @@ class data_to_vsg(gr.top_block):
         self.connect((self.blocks_throttle_0_0, 0), (self.soapy_bladerf_sink_0, 0))
         self.connect((self.soapy_bladerf_source_0, 0), (self.blocks_throttle_0_0, 0))
 
-        # Add this at the end of your __init__ method in qpsk_signal_processing class
-        self.close_timer = QTimer()
-        self.close_timer.setSingleShot(True)
-        self.close_timer.timeout.connect(self.close)
-        self.close_timer.start(3000)  # 30 seconds
 
     def get_samp_rate(self):
         return self.samp_rate
@@ -139,4 +135,7 @@ def main(top_block_cls=data_to_vsg, options=None):
 
 
 if __name__ == '__main__':
-    main()
+    start_time = time.time()
+    while(time.time - start_time < 3):
+        main()
+    sys.exit()
