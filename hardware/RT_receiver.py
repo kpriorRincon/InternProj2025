@@ -10,17 +10,18 @@ from config import *
 from rtlsdr import *
 import queue
 import threading
-
+import signal
+import sys
 #transmit_obj = tp.transmit_processing(int(SAMPLE_RATE/SYMB_RATE), SAMPLE_RATE)
 #match_start, match_end = transmit_obj.modulated_markers(BETA, NUMTAPS) 
 
 threshold = 8
 N = SPS * 1024
 BOUNDS = 100
-QUEUE_SIZE = 100
-
+QUEUE_SIZE = 25000
+running = True
 cut_sigs = None # if cut_sigs has stuff, loop through, if first half, 
-
+sdr = None
 
 def detector(samples, prev_cut):
     import scipy.signal as signal
@@ -143,7 +144,8 @@ def detector(samples, prev_cut):
     #print(f"Finding peak time: {time.time() - strt_t}")
 
     messages = []
-
+    if signals_found:
+        print(f"Sig pairs: {sig_pairs}")
     for signal in signals_found:
         strt_t = time.time()
         messages.append(channel_handler(signal))
@@ -154,7 +156,9 @@ def detector(samples, prev_cut):
 
 # messages is list of decoded messages
 # signals_cut is list of tuples (f or first half, s for second half, cut signal)
+message_queue = queue.Queue(maxsize=QUEUE_SIZE)
 iq_queue = queue.Queue(maxsize=QUEUE_SIZE)
+
 FORMAT = np.complex64
 
 def callback(samples, rtlsdr_obj):
@@ -165,17 +169,57 @@ def callback(samples, rtlsdr_obj):
 
 def callback_d(samples, rtlsdr_obj):
     global cut_sigs
-    _, cut_sigs = detector(samples, cut_sigs)
+    if running:
+        strt_t = time.time()
+        messages, cut_sigs = detector(samples, cut_sigs)
+        try:
+            message_queue.put_nowait(messages.copy())
+        except queue.Full:
+            print("Warning dropped a block!")
+        print(f"Total callback time: {time.time() - strt_t}")
+    
+    else:
+        print("Here")
+        sdr.cancel_read_async()
+
 
 def writer_thread():
     with open('iq_dump.bin', 'ab') as f:
-        while True:
+        while running:
             data = iq_queue.get()
             if data is None:
                 break  # Exit signal
             f.write(data.astype(FORMAT).tobytes())
 
-def run_RTL_SDR():
+def retrieve_message_thread():
+    while running:
+        try:
+            data = message_queue.get(timeout=0.5)
+        except queue.Empty:
+            continue
+        for message in data:
+            print(f"Decoded message2: {message}")
+
+    print("Exiting thread")
+
+def signal_handler(sig, frame):
+    global running
+    running = False
+    #try: 
+    #    sdr.cancel_read_async()
+    #except Exception as e:
+     #   print(f"[WARN] Could not cancel read: {e}")
+    #sys.exit(0)
+
+def sdr_worker():
+    try:
+        sdr.read_samples_async(callback_d, N)
+    except Exception as e:
+        print(f"[SDR Worker] Error: {e}")
+
+    
+def init_RTL_SDR():
+    global sdr
     # configure RTL-SDR
     sdr = RtlSdr()                  # RTL-SDR object
     sdr.sample_rate = SAMPLE_RATE   # sample rate in Hz
@@ -185,12 +229,6 @@ def run_RTL_SDR():
 
     # sleep to let the SDR settle
     time.sleep(1)
-
-    # settings to run detector
-    detected = False        # flag to indicate if the signal is detected
-    sps = SPS               # samples per symbol
-
-    # create transmit object and get the start and end markers
 
     # Test SDR connection before main loop
     try:
@@ -210,24 +248,64 @@ def run_RTL_SDR():
     #find end idx in cut pairs, if sec half, find start idx in cut pairs
 
     sdr.read_samples_async(callback_d, N)
-    #messages, cut_sigs = detector(samples, cut_sigs)
 
+    """
+    try:
+        sdr.read_samples_async(callback_d, N)
+    except KeyboardInterrupt:
+        global running
+        running = False
+        try:
+            sdr.cancel_read_async()
+        except Exception as e:
+            print(f"[WARN] Could not cancel read: {e}")
+    """
+        
+    #messages, cut_sigs = detector(samples, cut_sigs)
+    #print("here")
     #sdr.read_samples_async(callback, 1024)
 
 
     sdr.close()
 
+def rx_close_handler():
+    # call when leave or exit out of page
+    global running
+    running = False
 
+def rtlsdr_handler():
+    #signal_handler should close threads when page is left or exited out
+    # all its really doing is setting running Flag to false
+    signal.signal(signal.SIGINT, signal_handler)
+
+    # Reading message queue thread
+    #Async thread that has box continuously read queue
+    get_message = threading.Thread(target=retrieve_message_thread, daemon=True)
+    get_message.start()
+
+    init_RTL_SDR()
+    
 def main():
     
     #with open('iq_dump.bin', 'wb'):
     #    pass  # just open and close to truncate file
 
-    #writer = threading.Thread(target=writer_thread, daemon=True)
-    #writer.start()
-    run_RTL_SDR()
-    return
-    
+    # Gracefully close threads when CTRL + C pressed
+    signal.signal(signal.SIGINT, signal_handler)
+
+    # Reading message queue thread
+    get_message = threading.Thread(target=retrieve_message_thread, daemon=True)
+    get_message.start()
+
+    init_RTL_SDR()
+
+    while get_message.is_alive():
+        print("hereb")
+        time.sleep(0.1)
+
+    #while sdr_rx.is_alive() or get_message.is_alive():
+    #    time.sleep(0.01)
+    """
     raw_data = np.fromfile("iq_dump.bin", dtype=np.complex64)
     print("Length of data in file: ", len(raw_data))
 
@@ -249,7 +327,7 @@ def main():
 
     #print("Raw data loaded from file:\n", raw_data)
     #bits_string, decoded_message = channel_handler(raw_data)
-
+    """
 
 if __name__ == "__main__":
     main()

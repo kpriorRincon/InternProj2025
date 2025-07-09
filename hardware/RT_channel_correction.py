@@ -437,7 +437,8 @@ def channel_handler(rx_signal):
     temp = time.time()
     #print(f"Time for decode: {temp - strt_t}")
 
-    print(f"Decoded message: {decoded_message}")
+    #print(f"Decoded message: {decoded_message}")
+    
     if DEBUG:
             plt.figure(figsize=(6, 6))
             plt.plot(np.real(symbols[64:-64]), np.imag(symbols[64:-64]), 'o')
