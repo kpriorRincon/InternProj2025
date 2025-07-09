@@ -21,7 +21,7 @@ QUEUE_SIZE = 25000
 running = True
 cut_sigs = None # if cut_sigs has stuff, loop through, if first half, 
 sdr = None
-
+listen = False
 def detector(samples, prev_cut):
     import scipy.signal as signal
 
@@ -148,7 +148,9 @@ def detector(samples, prev_cut):
         pass
     for signal in signals_found:
         strt_t = time.time()
-        messages.append(channel_handler(signal))
+        received_message = channel_handler(signal)
+        if received_message:
+            messages.append(received_message)
         #print(f"time for one channel handler: {time.time() - strt_t}")
         #input()
 
@@ -172,13 +174,16 @@ def callback_d(samples, rtlsdr_obj):
     if running:
         strt_t = time.time()
         messages, cut_sigs = detector(samples, cut_sigs)
-        try:
-            message_queue.put_nowait(messages.copy())
-        except queue.Full:
-            print("Warning dropped a block!")
-        if messages:
-            print(f"Total callback time: {time.time() - strt_t}")
-            print(messages)
+        if listen:
+            print("here")
+        if messages and listen:
+            try:
+                message_queue.put_nowait(messages.copy())
+            except queue.Full:
+                print("Warning dropped a block!")
+            if messages:
+                print(f"Total callback time: {time.time() - strt_t}")
+                print(messages)
     
     else:
         print("Here")
@@ -203,6 +208,15 @@ def retrieve_message_thread():
             print(f"Decoded message2: {message}")
 
     print("Exiting thread")
+
+def retrieve_valid_message():
+    while True:
+        try:
+            message = message_queue.get(timeout=0.5)
+        except queue.Empty:
+            continue
+        
+        return message
 
 def signal_handler(sig, frame):
     global running
@@ -274,7 +288,9 @@ def rx_close_handler():
     global running
     running = False
 
+get_message = threading.Thread(target=retrieve_message_thread, daemon=True)
 def rtlsdr_handler():
+    global get_message
     #signal_handler should close threads when page is left or exited out
     # all its really doing is setting running Flag to false
     signal.signal(signal.SIGINT, signal_handler)
@@ -287,6 +303,8 @@ def rtlsdr_handler():
     init_RTL_SDR()
 
 def zmq_rtlsdr():
+    signal.signal(signal.SIGINT, signal_handler)
+
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     socket.bind("tcp://*:5555")
@@ -298,16 +316,20 @@ def zmq_rtlsdr():
 
     # Have rtl-sdr listen entire time but will just flush out incoming data until this flag raised
     while True:
-        message = socket.recv_string()
+        command = socket.recv_string()
 
-        if message == "SEND":
-            print(f"Request received: {message}")
+        if command == "SEND":
+            print(f"Request received: {command}")
             global listen
             listen = True
-            
+            message = retrieve_valid_message()
+            listen = False
+            socket.send_string(f'message')
             # run block that checks queue, for messages
 
-        socket.send_string(f'Wassup brotha. You sent this? "{message}"')
+        else:
+            socket.send_string(f'Unknown command: "{command}"')
+
 
     # 
 def main():
