@@ -1015,7 +1015,7 @@ def control_page():
             ssh_host = 'empire@empire'
             command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && nohup ./transmit.bash "{message}" > output.log 2>&1 &'
             async with asyncssh.connect('empire', username = 'empire', password='password', known_hosts=None) as conn:
-                process = await conn.create_process()
+                await conn.create_process()
         except (OSError, asyncssh.Error) as e:
             ui.notify(f'SSH error: {e}')
             loading_dots.visible = False
