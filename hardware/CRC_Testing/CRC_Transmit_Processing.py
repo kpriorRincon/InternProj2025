@@ -176,7 +176,7 @@ class transmit_processing:
         """
         
         # user input to bytes
-        byte_data = bytes(message, "ascii")
+        byte_data = message.encode('utf-8')
         print("Message in bytes: ", byte_data)
 
         # calculate CRC-8 for the message

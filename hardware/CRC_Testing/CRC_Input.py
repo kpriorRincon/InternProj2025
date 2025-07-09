@@ -39,11 +39,9 @@ if check == 0:
     print("Data is valid...")
     # print the results
     print("Message Sent: ", message)
-    decoded_message = byte_data.decode()
-    print("Message Received: ", decoded_message)
+    print("Message Received: ", byte_data[:-1].decode('utf-8'))
     print("Bits Sent: ", bits_out)
     print("Bits Received: ", bits_in)
 else:
-    decoded_message = byte_data.decode()
-    print("Message Received: ", decoded_message)
+    print("Message Received: ", byte_data.decode('utf-8'))
     print("Data is invalid...\nAborting...")
