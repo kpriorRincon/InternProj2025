@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.signal import fftconvolve,  max_len_seq
+from crc import Calculator, Crc8
 
 class transmit_processing:
     
@@ -163,6 +164,35 @@ class transmit_processing:
                 h[i] = numerator / denominator
         return t, h/np.sqrt(np.sum(h**2))  # Normalize to get unity gain
     
+    def add_crc(self, message):
+        """
+        Add CRC-8 to the message
+        
+        Parameters:
+        - message: String message to which CRC-8 will be added
+        
+        Returns:
+        - to_send: Byte data with CRC-8 appended
+        """
+        
+        # user input to bytes
+        byte_data = bytes(message, "ascii")
+        print("Message in bytes: ", byte_data)
+
+        # calculate CRC-8 for the message
+        calculator = Calculator(Crc8.CCITT)
+        crc_code = calculator.checksum(byte_data)
+        print("CRC-8: ", crc_code)
+
+        # append the crc-8 to the message
+        to_send = byte_data + bytes([crc_code])
+        print("Data with CRC-8 appended: ", to_send)
+
+        # turn into a bit string
+        bit_string = ''.join(format(byte, '08b') for byte in to_send)
+
+        return bit_string
+    
     # function that modulates the start and end markers of the signal 
     def modulated_markers(self, beta, N):
         """
@@ -215,24 +245,28 @@ class transmit_processing:
         """
         # start_sequence, end_sequence = self.generate_markers()
 
-        bits = self.message_to_bits(message)
-        
-        bits_string = ''.join(str(b) for b in bits)
+        # add CRC to the message
+        bits_string = self.add_crc(message)
+        bits = self.message_to_bits(bits_string)
 
+        # map to QPSK symbols
         symbols = self.qpsk_mapping(bits)
 
+        # upsample the symbols
         upsampled_symbols = self.insert_zeros(self.sps, symbols)
 
+        # pulse shaping using the RRC filter
         symbol_rate = self.sample_rate / self.sps
         Ts = 1 / symbol_rate
-
         _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
         data = np.convolve(upsampled_symbols, h, 'same')
         data = data.astype(np.complex64)
 
+        # append zeros so there is space between packets
         zeros = np.zeros(len(data)*3, dtype=np.complex64)
         data = np.append(data, zeros)
-
+        
+        # save data to a file for transmission
         data.tofile("data_for_sighound.bin")
         
         return bits_string, data		

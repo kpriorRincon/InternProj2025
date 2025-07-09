@@ -19,6 +19,7 @@ This file, when run, creates a graphical user interface (GUI) that offers the us
 from nicegui import ui, app
 import os
 import time
+from multiprocessing import Process, active_children
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,6 +39,7 @@ from get_TLE import get_up_to_date_TLE
 import Sig_Gen as SigGen
 import Channel as Channel
 from config import *
+from RT_receiver import *
 from binary_search_caf import channel_handler
 from satellite_czml import satellite_czml # See Readme for mor information this class must be modified
 #downgrade pygeoif: pip install pygeoif==0.7.0
@@ -1033,12 +1035,26 @@ def simulate_page():
 
 
 
-
+def start_rtl():
+    init_RTL_SDR()
+start = False
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
-    #initiate rtl-sdr
+    global running, start, sdr
+    running = True
+    #initialize receiver
+    #we want it to run all the time while the control page is open
+    #when you press control c sets running flag to false 
+    #debug
+    print("Active children:", active_children())
 
+    RTL_process = Process(target=start_rtl, daemon=True)
+    #nice gui started the process twice
+    if not start:
+        RTL_process.start()
+        start = True
+    print('made it here')
     ui.add_head_html('''
             <script>
             document.title = 'Simulation';
@@ -1084,19 +1100,27 @@ def control_page():
             }        
         </style>          
             ''')
+    def set_run():
+        running = False
+        start = False
+        if RTL_process.is_alive():
+            for p in active_children():
+                p.terminate()
+            sdr.close()
+        print("Active children:", active_children())
     with ui.element('div').classes('glass-bar'):
-        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
+        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'), set_run())):
             ui.icon('home')
             ui.label('Home')
-        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/SIMULATE')):
+        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/SIMULATE'),set_run())):
             ui.icon('code')
             ui.label('Simulation')
 
-        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/CONTROL')):
+        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/CONTROL'), set_run())):
             ui.icon('settings')
             ui.label('Control')
 
-        with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
+        with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/ABOUT'), set_run())):
             ui.icon('info')
             ui.label('About')
     #add some spacer to content doesn't go under the fixed bar
@@ -1181,8 +1205,7 @@ def control_page():
                 )
                 loading_dots.visible = False
 
-    # Replace loading_bar logic with loading_dots
-    
+
     async def send_message(message):
         """Sends the message to the hardware and waits for a response."""
         received_bubble.visible = False #start the receive bubble as hidden
@@ -1202,11 +1225,6 @@ def control_page():
             loading_dots.visible = False
             return
         
-        # #DELTE WHEN READY
-        # for i in range(5):
-        #     await asyncio.sleep(1)
-        #     print(f'{i}.Sending message: {message}')
-
         loading_dots.visible = False
         #note this decoded message will be replaced with the actual decoded message
         decoded_message = 'example decoded message'
@@ -1226,8 +1244,7 @@ def about_page():
     media_dir = pathlib.Path(__file__).parent / "media"
     app.add_static_files('/static/media', str(media_dir))
 
-    ui.add_head_html('''
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    ui.add_head_html('''Final_Product/transmitter/transmit_processing.py.1/css/all.min.css">
             <script>
             document.title = 'About';
             </script>

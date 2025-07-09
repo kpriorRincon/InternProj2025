@@ -101,7 +101,7 @@ blocks:
     comment: ''
     dev_args: ''
     freq_correction: '0'
-    gain: '40'
+    gain: '20'
     samp_rate: samp_rate
     type: fc32
   states:
@@ -121,7 +121,7 @@ blocks:
     comment: ''
     dev_args: ''
     freq_correction: '0'
-    gain: '30.0'
+    gain: '10'
     maxoutbuf: '0'
     minoutbuf: '0'
     samp_rate: samp_rate

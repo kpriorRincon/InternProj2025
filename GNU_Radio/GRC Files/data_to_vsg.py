@@ -94,7 +94,7 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
         self.soapy_bladerf_source_0.set_bandwidth(0, 0.0)
         self.soapy_bladerf_source_0.set_frequency(0, freq_tx)
         self.soapy_bladerf_source_0.set_frequency_correction(0, 0)
-        self.soapy_bladerf_source_0.set_gain(0, min(max(30.0, -1.0), 60.0))
+        self.soapy_bladerf_source_0.set_gain(0, min(max(10, -1.0), 60.0))
         self.soapy_bladerf_sink_0 = None
         dev = 'driver=bladerf'
         stream_args = ''
@@ -107,7 +107,7 @@ class data_to_vsg(gr.top_block, Qt.QWidget):
         self.soapy_bladerf_sink_0.set_bandwidth(0, 0.0)
         self.soapy_bladerf_sink_0.set_frequency(0, freq_rx)
         self.soapy_bladerf_sink_0.set_frequency_correction(0, 0)
-        self.soapy_bladerf_sink_0.set_gain(0, min(max(40, 17.0), 73.0))
+        self.soapy_bladerf_sink_0.set_gain(0, min(max(20, 17.0), 73.0))
         self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/empire/Documents/InternProj2025/hardware/data_for_sighound.bin', True, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
 
