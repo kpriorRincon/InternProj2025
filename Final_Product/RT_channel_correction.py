@@ -397,7 +397,7 @@ def crc_detection(decoded_string):
     print("Remainder: ", check)
     if check == 0:
         print("Data is valid...")
-        decoded_string = byte_data[:-2].decode()
+        decoded_string = byte_data[:-1].decode()
         #print(f"Bits: {bit_string}")
         print(f"Message: {decoded_string}")
         return decoded_string
