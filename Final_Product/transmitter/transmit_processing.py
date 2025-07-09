@@ -70,7 +70,8 @@ class transmit_processing:
         """
  
         # convert message to binary
-        message_binary = ''.join(format(ord(char), '08b') for char in message)
+        message_binary = message
+        # ''.join(format(ord(char), '08b') for char in message)
 
         # add start and end markers to the bitstream
         message_binary = ''.join(str(bit) for bit in self.start_sequence) + message_binary + ''.join(str(bit) for bit in self.end_sequence)
@@ -270,3 +271,13 @@ class transmit_processing:
         data.tofile("data_for_sighound.bin")
         
         return byte_string, data		
+
+
+def main():
+    message = "hello"
+    sps = 20
+    sample_rate = 2e6
+    tp=transmit_processing(sps, sample_rate)
+    tp.work(message, 0.3, 101)
+if __name__ == '__main__':
+    main()
