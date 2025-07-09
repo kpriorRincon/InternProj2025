@@ -78,7 +78,7 @@ class transmit_processing:
     
         # coverts bit sequence from a string to a list of integers
         bit_sequence = [int(bit) for bit in message_binary.strip()]
-
+        print(f'len of bit sequence{len(bit_sequence)}and the sequence:{bit_sequence}')
         return bit_sequence
     
     # function to map bits to QPSK symbols
@@ -228,7 +228,6 @@ class transmit_processing:
 
         # turn into a bit string
         bit_string = ''.join(format(byte, '08b') for byte in to_send)
-
         return bit_string
     
     def work(self, message, beta, N): 
@@ -261,6 +260,7 @@ class transmit_processing:
         Ts = 1 / symbol_rate
         _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
         data = np.convolve(upsampled_symbols, h, 'same')
+        print(f'length of data: {len(data)}')
         data = data.astype(np.complex64)
 
         # append zeros so there is space between packets
