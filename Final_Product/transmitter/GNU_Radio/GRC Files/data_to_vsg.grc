@@ -91,44 +91,6 @@ blocks:
     coordinate: [336, 236.0]
     rotation: 0
     state: enabled
-- name: blocks_throttle_0
-  id: blocks_throttle
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    ignoretag: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    samples_per_second: samp_rate
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [584, 268.0]
-    rotation: 0
-    state: enabled
-- name: blocks_throttle_0_0
-  id: blocks_throttle
-  parameters:
-    affinity: ''
-    alias: ''
-    comment: ''
-    ignoretag: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    samples_per_second: samp_rate
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [536, 444.0]
-    rotation: 0
-    state: enabled
 - name: soapy_bladerf_sink_0
   id: soapy_bladerf_sink
   parameters:
@@ -146,7 +108,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [792, 456.0]
+    coordinate: [616, 424.0]
     rotation: 0
     state: enabled
 - name: soapy_bladerf_source_0
@@ -168,7 +130,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [264, 436.0]
+    coordinate: [328, 412.0]
     rotation: 0
     state: enabled
 - name: vsg60_iqin_0
@@ -185,15 +147,13 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [808, 148.0]
+    coordinate: [608, 244.0]
     rotation: 0
     state: enabled
 
 connections:
-- [blocks_file_source_0, '0', blocks_throttle_0, '0']
-- [blocks_throttle_0, '0', vsg60_iqin_0, '0']
-- [blocks_throttle_0_0, '0', soapy_bladerf_sink_0, '0']
-- [soapy_bladerf_source_0, '0', blocks_throttle_0_0, '0']
+- [blocks_file_source_0, '0', vsg60_iqin_0, '0']
+- [soapy_bladerf_source_0, '0', soapy_bladerf_sink_0, '0']
 
 metadata:
   file_format: 1
