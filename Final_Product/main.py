@@ -1046,6 +1046,9 @@ def control_page():
     #initialize receiver
     #we want it to run all the time while the control page is open
     #when you press control c sets running flag to false 
+    #debug
+    print("Active children:", active_children())
+
     RTL_process = Process(target=start_rtl, daemon=True)
     #nice gui started the process twice
     if not start:
@@ -1100,8 +1103,9 @@ def control_page():
     def set_run():
         running = False
         start = False
-        if RTL_process.is_alive():
-            RTL_process.terminate()
+        for p in active_children():
+            p.terminate()
+
         print("Active children:", active_children())
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'), set_run())):
