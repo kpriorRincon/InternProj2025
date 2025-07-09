@@ -1023,6 +1023,7 @@ def control_page():
         
         #ZMQ request to the receiver (same LAN IP or host name)
         try: 
+            print('did we get here')
             context = zmq.asyncio.Context()
             Rx = context.socket(zmq.REQ)
             Rx.connect('tcp://10.232.62.2:5555') # Receiver IP + port 5555
