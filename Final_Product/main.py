@@ -255,7 +255,7 @@ with ui.element('div').classes('wrapper'):
 # Simulate Page-------------------------------------------------------------------------------------------------------------------
 @ui.page('/SIMULATE')
 def simulate_page():
-    inject_head_style()
+    inject_head_style('simulate')
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
             ui.icon('home')
@@ -358,7 +358,7 @@ def simulate_page():
 
     @ui.page('/Cesium_page')
     def Cesium_page():
-        inject_head_style()
+        inject_head_style('Cesium')
         with ui.element('div').classes('glass-bar'):
             with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
                 ui.icon('home')
@@ -483,7 +483,7 @@ def simulate_page():
 
         @ui.page('/simulation_page')
         def simulation_page(): 
-            inject_head_style()
+            inject_head_style('simulation_page')
             with ui.element('div').classes('glass-bar'):
                 with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
                     ui.icon('home')
@@ -902,7 +902,7 @@ def simulate_page():
 # Control Page----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
-    inject_head_style()
+    inject_head_style('Control')
 
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'))):
