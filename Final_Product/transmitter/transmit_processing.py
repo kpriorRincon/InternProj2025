@@ -216,7 +216,7 @@ class transmit_processing:
         # start_sequence, end_sequence = self.generate_markers()
 
         bits = self.message_to_bits(message)
-
+        
         bits_string = ''.join(str(b) for b in bits)
 
         symbols = self.qpsk_mapping(bits)
