@@ -117,6 +117,7 @@ class receive_processing:
         bits_string = ''.join(str(bit) for bit in bits)
 
         message = ''.join(chr(int(bits_string[i*8:i*8+8],2)) for i in range(len(bits)//8))
+        
 
         return message
     
@@ -147,5 +148,8 @@ class receive_processing:
         bits_string = ''.join(str(b) for b in bits)
 
         message = self.bits_to_message(bits)
+        print("Printing receiver stuff...")
+        print("Bits String: ", bits_string)
+        print("Message: ", message)
         
         return bits_string, message, symbols
