@@ -136,6 +136,6 @@ def main(top_block_cls=data_to_vsg, options=None):
 
 if __name__ == '__main__':
     start_time = time.time()
-    while(time.time - start_time < 3):
+    while(time.time() - start_time) < 3:
         main()
     sys.exit()
