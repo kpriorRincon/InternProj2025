@@ -1011,26 +1011,29 @@ def control_page():
         loading_dots.visible = True
         await asyncio.sleep(0.1)  # give the UI time to update
 
+        #tell the transmitter and repeater to transmit but don't wait on them to finish up
         try: 
             ssh_host = 'empire@empire'
             command = f'cd /home/empire/Documents/InternProj2025/Final_Product/transmitter && nohup ./transmit.bash "{message}" > output.log 2>&1 &'
             async with asyncssh.connect('empire', username = 'empire', password='password', known_hosts=None) as conn:
-                await conn.create_process()
+                await conn.create_process(command)
         except (OSError, asyncssh.Error) as e:
             ui.notify(f'SSH error: {e}')
             loading_dots.visible = False
             return
         
-        #ZMQ request to the receiver (same LAN IP or host name)
+        
+        # ZMQ request to the receiver (same LAN IP or host name)
         try: 
-            print('did we get here')
+            # print('did we get here')
             context = zmq.asyncio.Context()
             Rx = context.socket(zmq.REQ)
             Rx.connect('tcp://10.232.62.2:5555') # Receiver IP + port 5555
             await Rx.send_string("SEND")
+            #we'll asynchronously listen for a reply from the receiver computer
             decoded_message = await Rx.recv_string()
         except:
-            ui.notify(f'ZMQ error: {e}')
+            ui.notify(f'ZMQ error')
             loading_dots.visible = False
             return
         
@@ -1039,6 +1042,7 @@ def control_page():
         # put the message here
         received_bubble.text = f'{decoded_message}'  # Update received bubble
         received_bubble.visible = True
+
         #ui.notify('Message sent!')
         return
             
