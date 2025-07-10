@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import time
-import transmit_processing as tp
+import transmitter.transmit_processing as tp
 from RT_channel_correction import *
 from config import *
 from rtlsdr import *
@@ -150,6 +150,7 @@ def detector(samples, prev_cut):
         strt_t = time.time()
         received_message = channel_handler(signal)
         if received_message:
+            return received_message, signals_cut
             messages.append(received_message)
         #print(f"time for one channel handler: {time.time() - strt_t}")
         #input()
@@ -173,20 +174,22 @@ def callback_d(samples, rtlsdr_obj):
     global cut_sigs
     if running:
         strt_t = time.time()
-        messages, cut_sigs = detector(samples, cut_sigs)
-        if messages and listen:
-            try:
-                message_queue.put_nowait(messages.copy())
-            except queue.Full:
-                print("Warning dropped a block!")
-            if messages:
-                print(f"Total callback time: {time.time() - strt_t}")
-                print(messages)
-    
+        if listen:
+            message, cut_sigs = detector(samples, cut_sigs)
+            if message:
+                print("Am listenin")
+                try:
+                    message_queue.put_nowait(message)
+                except queue.Full:
+                    print("Warning dropped a block!")
+                if message:
+                    print(f"Total callback time: {time.time() - strt_t}")
+                    print(message)
+
     else:
         sdr.cancel_read_async()
         print("Closing sdr async read")
-
+    
 def writer_thread():
     with open('iq_dump.bin', 'ab') as f:
         while running:
@@ -207,7 +210,7 @@ def retrieve_message_thread():
     print("Exiting thread")
 
 def retrieve_valid_message():
-    while True:
+    while running:
         try:
             message = message_queue.get(timeout=0.5)
         except queue.Empty:
@@ -312,9 +315,9 @@ def zmq_rtlsdr():
 
     print("Server listening on port 5555...")
     global listening
-    listening = threading.Thread(init_RTL_SDR())
+    listening = threading.Thread(target=init_RTL_SDR)
     listening.start()
-
+    #print("Main thread continues", flush=True)
     # Have rtl-sdr listen entire time but will just flush out incoming data until this flag raised
     while running:
         try:
@@ -325,10 +328,20 @@ def zmq_rtlsdr():
         if command == "SEND":
             print(f"Request received: {command}")
             global listen
+            while not iq_queue.empty():
+                try:
+                    iq_queue.get_nowait()
+                except queue.Empty:
+                    break
             listen = True
             message = retrieve_valid_message()
             listen = False
-            socket.send_string(f'{message}')
+            socket.send_string(message)
+            while not iq_queue.empty():
+                try:
+                    iq_queue.get_nowait()
+                except queue.Empty:
+                    break
             # run block that checks queue, for messages
 
         else:
