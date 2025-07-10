@@ -44,7 +44,7 @@ def rrc_filter(beta, N, Ts, fs):
         # plt.plot(t, h, '.-')
         # #plt.plot(t, np.convolve(h, h, mode='same'), '.-')
         # plt.show()
-        return t, h/np.sqrt(np.sum(h**2))
+        return t, h#/np.sqrt(np.sum(h**2))
 
 class SigGen:
 

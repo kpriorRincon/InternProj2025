@@ -163,7 +163,7 @@ class transmit_processing:
                 numerator = np.sin(np.pi * t[i] * (1 - beta) / Ts) + 4 * beta * t[i] / Ts * np.cos(np.pi * t[i] * (1 + beta) / Ts)
                 denominator = np.pi * t[i] * (1 - (4 * beta * t[i] / Ts) ** 2) / Ts
                 h[i] = numerator / denominator
-        return t, h/np.sqrt(np.sum(h**2))  # Normalize to get unity gain
+        return t, h #/np.sqrt(np.sum(h**2))  # Normalize to get unity gain
     
     # function that modulates the start and end markers of the signal 
     def modulated_markers(self, beta, N):
