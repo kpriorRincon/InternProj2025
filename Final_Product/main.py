@@ -760,25 +760,25 @@ def simulate_page():
             
             # Transmitter image (clickable)
             with ui.link(target='/transmitter', new_tab = True).style('width: 10vw; position: fixed; bottom: 2vh; left: 36vw; z-index: 1000; cursor: pointer;'):
-                ui.image('../Phys_Sim/media/antenna_graphic.png').style('width: 100%;')
+                ui.image('media/antenna_graphic.png').style('width: 100%;')
             ui.label('Transmitter').style('position: fixed; bottom: 12vh; left: 38vw; z-index: 1005; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
             ui.label('15dBi').style('position: fixed; bottom: 12vh; left: 45vw; z-index: 1008; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
             # Channel 1 cloud (clickable)
             with ui.link(target='/channel1', new_tab = True).style('width: 10vw; position: fixed; bottom: 42vh; left: 43vw; z-index: 1001; cursor: pointer;'):
-                ui.image('../Phys_Sim/media/cloud.png').style('width: 100%;')
+                ui.image('media/cloud.png').style('width: 100%;')
 
             # Repeater satellite (clickable)
             with ui.link(target='/repeater', new_tab = True).style('width: 12vw; position: fixed; bottom: 64vh; left: 54vw; z-index: 1002; cursor: pointer;'):
-                ui.image('../Phys_Sim/media/sattelite.png').style('width: 100%;')
+                ui.image('media/sattelite.png').style('width: 100%;')
             ui.label('Repeater').style('position: fixed; bottom: 76vh; left: 57vw; z-index: 1006; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
             ui.label('10dBi').style('position: fixed; bottom: 76vh; left: 65vw; z-index: 1009; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
             # Channel 2 cloud (clickable)
             with ui.link(target='/channel2', new_tab = True).style('width: 10vw; position: fixed; bottom: 42vh; left: 67vw; z-index: 1003; cursor: pointer;'):
-                ui.image('../Phys_Sim/media/cloud.png').style('width: 100%;')
+                ui.image('media/cloud.png').style('width: 100%;')
 
             # Receiver image (clickable)
             with ui.link(target='/receiver', new_tab=True).style('width: 10vw; position: fixed; bottom: 2vh; left: 80vw; z-index: 1004; cursor: pointer;'):
-                ui.image('../Phys_Sim/media/antenna_graphic_flipped.png').style('width: 100%;')
+                ui.image('media/antenna_graphic_flipped.png').style('width: 100%;')
             ui.label('Receiver').style('position: fixed; bottom: 12vh; left: 84vw; z-index: 1007; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')        
             ui.label('15dBi').style('position: fixed; bottom: 12vh; left: 90vw; z-index: 1008; font-weight: bold; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 6px;')
 
@@ -1022,7 +1022,7 @@ def control_page():
             loading_dots.visible = False
             return
         
-        
+
         # ZMQ request to the receiver (same LAN IP or host name)
         try: 
             # print('did we get here')
