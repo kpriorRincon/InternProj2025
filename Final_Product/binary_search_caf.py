@@ -12,6 +12,8 @@ import time
 from scipy.signal import resample_poly, firwin, lfilter, fftconvolve
 from Sig_Gen import SigGen, rrc_filter
 from config import *
+#other files interpolate at a lower rate but here we use 16
+INTERPOLATION_VAL = 16
 DEBUG = 1
 freq_offset = 25
 time_delay = 0.00232
@@ -363,7 +365,7 @@ def cross_corr_caf(rx_signal):
 
     # Reslice signal
     print(f"Start: {start_idx} End: {end_idx}")
-    deci_signal = ip_signal[start_idx: end_idx:16]   
+    deci_signal = ip_signal[start_idx: end_idx:INTERPOLATION_VAL]   
     if DEBUG:
         plt.figure(figsize=(6, 6))
         plt.plot(np.real(deci_signal[1:]), np.imag(deci_signal[1:]), 'b-', zorder = 1, label = 'oversampled signal')
