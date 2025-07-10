@@ -209,30 +209,30 @@ class SigGen:
         #Pulse Shaped bits
         plt.figure(figsize = (10,6))
         plt.subplot(2, 1, 1)
-        plt.plot(t, np.real(self.pulse_shaped_symbols), 'b.-', label = 'Real')
-        plt.stem(
-            t[symbol_indices],
-            np.real(self.pulse_shaped_symbols[symbol_indices]),
-            linefmt='b--',
-            markerfmt=' ',  # No marker at the head
-            basefmt=" ",
-            label = "symbol times"
-            )
+        plt.plot(t, np.real(self.pulse_shaped_symbols), 'b-', label = 'Real')
+        # plt.stem(
+        #     t[symbol_indices],
+        #     np.real(self.pulse_shaped_symbols[symbol_indices]),
+        #     linefmt='b--',
+        #     markerfmt=' ',  # No marker at the head
+        #     basefmt=" ",
+        #     label = "symbol times"
+        #     )
 
         plt.legend()
         plt.title('Pulse Shaped I (Real Part)')
         plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
         plt.subplot(2,1,2)
-        plt.plot(t, np.imag(self.pulse_shaped_symbols), 'r.-', label = 'Imaginary')
-        plt.stem(
-            t[symbol_indices],
-            np.imag(self.pulse_shaped_symbols[symbol_indices]),
-            linefmt='r--',
-            markerfmt=' ',  # No marker at the head
-            basefmt=" ",
-            label = "symbol times"
-        )
+        plt.plot(t, np.imag(self.pulse_shaped_symbols), 'r-', label = 'Imaginary')
+        # plt.stem(
+        #     t[symbol_indices],
+        #     np.imag(self.pulse_shaped_symbols[symbol_indices]),
+        #     linefmt='r--',
+        #     markerfmt=' ',  # No marker at the head
+        #     basefmt=" ",
+        #     label = "symbol times"
+        # )
         plt.legend()
         plt.title('Pulse Shaped Q (Imaginary Part)')
         plt.xlabel("Time (s)")
