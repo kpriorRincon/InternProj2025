@@ -177,7 +177,7 @@ def callback_d(samples, rtlsdr_obj):
         if listen:
             message, cut_sigs = detector(samples, cut_sigs)
             if message:
-                print("Am listenin")
+                #print("Am listenin")
                 try:
                     message_queue.put_nowait(message)
                 except queue.Full:

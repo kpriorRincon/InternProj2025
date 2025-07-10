@@ -4,7 +4,7 @@ import time
 from scipy.signal import resample_poly, firwin, lfilter, fftconvolve
 from numpy.fft import fft, fftfreq, fftshift
 
-from Sig_Gen import SigGen, rrc_filter
+from Sig_Gen import rrc_filter
 from config import *
 from transmitter.transmit_processing import transmit_processing
 
@@ -475,7 +475,7 @@ def channel_handler(rx_signal):
     # CRC Check
     #print(decoded_string)
     #print(len(decoded_string))
-    strt_t = time.time()
+    #strt_t = time.time()
     message = crc_detection(bits_string)
-    print(f"TIme for crc: {time.time() - strt_t}")
+    #print(f"TIme for crc: {time.time() - strt_t}")
     return message
