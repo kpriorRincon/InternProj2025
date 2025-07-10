@@ -887,16 +887,19 @@ def simulate_page():
                     # show the final constellation plot after all corrections
                     zoomable_image('media/clean_signal.png')
 
-                # compute throughput
-                global bits
-                info_bit_ratio = (len(bits) - len(START_MARKER) - len(END_MARKER)) / len(bits)
-                throughput = 2 * SYMB_RATE * info_bit_ratio # 2 bits per symbol * symbols_per_second = bits/s * info_bit_ratio = useful_bits/s
-                #show the throughput image
-                
-                #
-                ui.label(f'Calculated throughput: {throughput} bps').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
-                #show the final recovered message 
-                ui.label(f'Recovered Message: {recovered_message}').style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+                    # compute throughput
+                    global bits
+                    info_bit_ratio = (len(bits) - len(START_MARKER) - len(END_MARKER)) / len(bits)
+                    throughput = 2 * SYMB_RATE * info_bit_ratio # 2 bits per symbol * symbols_per_second = bits/s * info_bit_ratio = useful_bits/s
+                    #show the throughput image
+                    
+                    #
+                    with ui.row().style('align-items: center; justify-content: center;'):
+                        with ui.column().style('align-items: center;'):
+                            ui.label(f'Calculated throughput: {throughput} bps') \
+                                .style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+                            ui.label(f'Recovered Message: {recovered_message}') \
+                                .style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
 
 
 # Control Page----------------------------------------------------------------------------------------------------------------------
