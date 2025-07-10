@@ -6,7 +6,7 @@ from numpy.fft import fft, fftfreq, fftshift
 from Sig_Gen import SigGen, rrc_filter
 from config import *
 DEBUG = 1
-freq_offset = 60000
+freq_offset = 25
 time_delay = 0.00232
 max_freq = 200
 min_freq = -200
@@ -148,14 +148,14 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.show()
         plt.close()
 
-        plt.plot(freqs, fft_vals)
+        plt.plot(freqs / 1e3, fft_vals)
         #plt.axvline(x=freq_tone * order, color='red', linestyle='--', label='Detected Tone')
         plt.legend()
-        plt.xlim(-10e3, 100e3)
+        plt.xlim(-10, 100)
         plt.annotate(
-            f'Frequency offset:\n{freq_tone * order:.2f} Hz',  # multi-line label in MHz
-            xy=(freq_tone * order, np.max(fft_vals)),         # annotation target (converted to MHz)
-            xytext=(freq_tone * order * 0.90, np.max(fft_vals) * 1.05 - 3),  # text to the left and slightly above
+            f'Frequency offset:\n{freq_tone * order / 1e3:.2f} kHz',  # multi-line label in MHz
+            xy=(freq_tone * order / 1e3, np.max(fft_vals)),         # annotation target (converted to MHz)
+            xytext=(freq_tone * order * 0.90 / 1e3, np.max(fft_vals) * 1.05 - 3),  # text to the left and slightly above
             fontsize=10,
             color='blue',
             ha='right',
@@ -308,10 +308,11 @@ def cross_corr_caf(rx_signal):
         # Binary search CAF convergence plot
         plt.figure(figsize=(10, 5))
         plt.plot(range(len(visited_freqs)), visited_freqs, marker='o')
-        plt.xlabel("Iteration")
+        plt.xlabel("Correlation Count")
         plt.ylabel("Frequency Offset (Hz or bins)")
         plt.title("Binary Search Convergence on Frequency Offset")
         plt.grid(True)
+        #plt.show()
         plt.savefig('media/binary_search_convergence.png')
         plt.close()
 
@@ -511,23 +512,23 @@ def main():
     #t, qpsk_wave = fractional_delay(t, qpsk_wave, time_delay)
 
     # Set frequency offset
-    #qpsk_wave = qpsk_wave * np.exp(1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
+    qpsk_wave = qpsk_wave * np.exp(1j* 2 * np.pi * freq_offset * t) # shifts down by freq offset
     
     # Uniformly random phase offset
     #qpsk_wave = phase_offset(qpsk_wave)
 
     # Adding AWGN
-    post_channel_wave = add_awgn(qpsk_wave)
+    #post_channel_wave = add_awgn(qpsk_wave)
 
     #Tune down to baseband
-    qpsk_base = post_channel_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
+    qpsk_base = qpsk_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
 
-    lpf_signal = lowpass_filter(qpsk_base)
+    #lpf_signal = lowpass_filter(qpsk_base)
     
-    coarse_fixed_sig = coarse_freq_recovery(lpf_signal)
+    #coarse_fixed_sig = coarse_freq_recovery(qpsk_base)
 
     # Run CAF and return frequency offset found with highest correlation
-    caf_fixed_sig = cross_corr_caf(coarse_fixed_sig)
+    caf_fixed_sig = cross_corr_caf(qpsk_base)
 
     #Down convert with offset
     final_fixed_sig = costas_loop(caf_fixed_sig)

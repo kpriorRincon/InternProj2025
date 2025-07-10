@@ -54,7 +54,6 @@ def detector(samples, prev_cut):
     # find the correlated signal
     # start cor
     cor_start = np.abs(signal.fftconvolve(coarse_fixed, np.conj(np.flip(marker_filter)), mode='same'))
-    # end cor
     cor_end = np.abs(signal.fftconvolve(coarse_fixed, np.conj(np.flip(end_filter)), mode='same'))
     
 
@@ -161,7 +160,6 @@ def detector(samples, prev_cut):
 # signals_cut is list of tuples (f or first half, s for second half, cut signal)
 message_queue = queue.Queue(maxsize=QUEUE_SIZE)
 iq_queue = queue.Queue(maxsize=QUEUE_SIZE)
-
 FORMAT = np.complex64
 
 def callback(samples, rtlsdr_obj):
@@ -170,20 +168,27 @@ def callback(samples, rtlsdr_obj):
     except queue.Full:
         print("WARNING: Dropped a block!")
 
+count = 0
+strt_t = 0
 def callback_d(samples, rtlsdr_obj):
-    global cut_sigs
+    global cut_sigs, count, strt_t
     if running:
-        strt_t = time.time()
+        dsp_t = time.time()
         if listen:
+            if strt_t == 0:
+                strt_t = time.time()
+            count += 1
             message, cut_sigs = detector(samples, cut_sigs)
             if message:
-                #print("Am listenin")
+                print(f"Time from REQ to finding signal: {time.time() - strt_t}")
+                #print(f"Number of signals before finding right one:{count}")
+                count = 0
                 try:
                     message_queue.put_nowait(message)
                 except queue.Full:
                     print("Warning dropped a block!")
                 if message:
-                    print(f"Total callback time: {time.time() - strt_t}")
+                    print(f"Total time for Detection + DSP: {time.time() - dsp_t}")
                     print(message)
 
     else:

@@ -453,7 +453,7 @@ def channel_handler(rx_signal):
     bits_string = demodulator(symbols)
 
     #print(len(bits_string))
-    decoded_string = ''.join(chr(int(bits_string[i*8:i*8+8],2)) for i in range(len(bits_string)//8))
+   # decoded_string = ''.join(chr(int(bits_string[i*8:i*8+8],2)) for i in range(len(bits_string)//8))
 
     temp = time.time()
     #print(f"Time for decode: {temp - strt_t}")

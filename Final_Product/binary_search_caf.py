@@ -13,7 +13,7 @@ from scipy.signal import resample_poly, firwin, lfilter, fftconvolve
 from Sig_Gen import SigGen, rrc_filter
 from config import *
 DEBUG = 1
-freq_offset = 2000
+freq_offset = 25
 time_delay = 0.00232
 max_freq = 200
 min_freq = -200
