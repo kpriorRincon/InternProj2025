@@ -1,20 +1,15 @@
 """
+file name 'main.py'
 Rincon Research Internship Project Red Mountain
 
 Authors: Skylar Harris, Jorge Hernandez, Kobe Prior, and Trevor Wiseman
-Date: July 2nd, 2025
+Date: July 11th, 2025
 
 File Description:
 This file, when run, creates a graphical user interface (GUI) that offers the user two main options:
 1. Simulate a bent pipe communication system involving a satellite and two ground stations.
 2. Command and control hardware to send messages in a similar manner at a smaller scale.
 """
-# Author: Kobe Prior
-# Date: June 10
-# Purpose: This file provides a NiceGUI-based web interface for selecting recently launched satellites,
-#          generating their TLE-based CZML data, and visualizing them in a Cesium viewer.
-
-#a comment to test push from vm 
 # import necessary libraries
 from nicegui import ui, app
 import os
@@ -24,25 +19,26 @@ import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
 import asyncssh
-
-
 from datetime import datetime, timezone, timedelta
-# function I made to get current TLE data
-from get_TLE import get_up_to_date_TLE
-# importing classes
-import Sig_Gen as SigGen
-import Channel as Channel
-from config import *
-from binary_search_caf import channel_handler
 from satellite_czml import satellite_czml # See Readme for mor information this class must be modified
 #downgrade pygeoif: pip install pygeoif==0.7.0
 from skyfield.api import load, wgs84, EarthSatellite
 import pathlib
 
+# function I made to get current TLE data
+from get_TLE import get_up_to_date_TLE
+
+# importing classes
+import Sig_Gen as SigGen
+import Channel as Channel
+from config import *
+from binary_search_caf import channel_handler
+
 saved_tles = get_up_to_date_TLE()  # get the most up to date TLE
 # define the position of the transmitter and receiver
 tx_pos = wgs84.latlon(39.586389, -104.828889, elevation_m=1600)  # Kobe's seat at Rincon
 rx_pos = wgs84.latlon(39.748056, -105.221667, elevation_m=1600)  # Kobe's dorm
+
 # we want to declare these globally so we can reset when needed
 selected = set()
 sat_buttons = {}
@@ -51,28 +47,32 @@ count = 0
 sat_for_sim = None # To start until we're ready to use it
 time_crossing = None
 recovered_message = None # this will be set in the simulation page when we recover the message
-required_rep_power = None # this will be set in the simulation page when we calculate the required repeater power  
 txFreq = None
 bits = None
-#matplotlib rc
-plt.rcParams.update({
-    'axes.titlesize': 20,
-    'axes.labelsize': 16,      # X and Y axis label size
-    'xtick.labelsize': 14,     # X tick label size
-    'ytick.labelsize': 14,     # Y tick label size
-    'legend.fontsize': 14,     # Legend font size
-    'figure.titlesize': 22     # Figure suptitle size
-})
-# get this files working directory
+
+# get this files working directory and make them available to the gui
 html_directory = os.path.dirname(__file__) #get the directory you're in
 # add the files available
 app.add_static_files('/static', html_directory)
 
 def inject_head_style(page_name):
-    with open('html_head.html') as f:
-        head =f"<script> document.title = '{page_name}';"
-        head = "'''" + head + f.read()
-        ui.add_head_html(head)
+    """
+    adds html header that's used for many pages
+
+    Args:
+        src (str): Path or URL to the image source.
+    """
+    try:
+        with open('html_head.html', 'r') as f:
+            head_content = f.read()
+            full_head = f"""
+                <script>document.title = '{page_name}';</script>
+                {head_content}
+            """
+            ui.add_head_html(full_head)
+    except FileNotFoundError:
+        ui.notify('html_head.html file not found')
+
 # Enhanced CSS for hover zoom effect in flex containers
 ui.add_css('''
 .thumbnail {
@@ -100,9 +100,16 @@ ui.add_css('''
 }
 ''', shared=True)
 
-def zoomable_image(src):
-    # input file path to the image
-    # returns an image that can be zoomed in on hover
+def zoomable_image(src: str):
+    """
+    Display a zoomable image with hover effect.
+
+    Args:
+        src (str): Path or URL to the image source.
+
+    Returns:
+        ui.element: A NiceGUI image component styled for hover zoom.
+    """
     return ui.image(src).classes('thumbnail').force_reload()
 
 
@@ -231,6 +238,7 @@ with ui.element('div').classes('glass-bar'):
     with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
         ui.icon('info')
         ui.label('About')
+
 #add some spacer to content doesn't go under the fixed bar
 ui.element('div').classes('spacer')
 
@@ -249,10 +257,7 @@ with ui.element('div').classes('wrapper'):
             ui.image('media/about.png').force_reload()  # Ensure the image is always fresh
             ui.label('Learn more about the project and its authors.').style('text-align: center;font-size: 1.3em;')
 
-# Add a footer with a link to the GitHub repository
-
-
-# Simulate Page-------------------------------------------------------------------------------------------------------------------
+# Simulate Page ---------------------------------------------------------------------------------------------------------------------
 @ui.page('/SIMULATE')
 def simulate_page():
     inject_head_style('simulate')
@@ -271,6 +276,7 @@ def simulate_page():
         with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/ABOUT')):
             ui.icon('info')
             ui.label('About')
+
     #add some spacer to content doesn't go under the fixed bar
     ui.element('div').classes('spacer')
 
@@ -313,6 +319,7 @@ def simulate_page():
                             n, sat_buttons[n])
                     ).props('color=primary')
                     sat_buttons[sat_name] = btn
+    
     def submit():
         """Handles the submit action: collects selected satellites' TLEs, generates CZML, writes it to a file, and navigates to the Cesium viewer page."""
         global selected
@@ -358,6 +365,7 @@ def simulate_page():
 
     @ui.page('/Cesium_page')
     def Cesium_page():
+        """shows the Cesium Globe with dynamic line of sight and options for which satellite to simulate and the time of its nearest crossing"""
         inject_head_style('Cesium')
         with ui.element('div').classes('glass-bar'):
             with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
@@ -482,7 +490,8 @@ def simulate_page():
         )
 
         @ui.page('/simulation_page')
-        def simulation_page(): 
+        def simulation_page():
+            """Here the user can step through each node and see how the signal changes through the channel and how it is receovered""" 
             inject_head_style('simulation_page')
             with ui.element('div').classes('glass-bar'):
                 with ui.element('div').classes('item').on('click', lambda: ui.navigate.to('/')):
@@ -502,13 +511,10 @@ def simulate_page():
             #add some spacer to content doesn't go under the fixed bar
             ui.element('div').classes('spacer')
 
-            #When the user clicks the start simulation button run the following
-
             global time_crossing, sat_for_sim
             #back button
             ui.button('Back', on_click = ui.navigate.back)
-            # we will navigate to here whenever a row is clicked of a specific satellite
-
+            
             dt_crossing = datetime.strptime(time_crossing, '%Y-%m-%d %H:%M:%S').replace(tzinfo = timezone.utc) # convert the string to a readable time object 
         
             time_crossing_skyfield = ts.from_datetime(dt_crossing)
@@ -535,10 +541,10 @@ def simulate_page():
             rx_v = rx_geocentric.velocity.m_per_s
 
             #debug prints
-            print(f'tx position: {tx_r}')
-            print(f'rx position: {rx_r}')
-            print(f'tx velocity: {tx_v}')
-            print(f'rx velocity: {rx_v}')
+            # print(f'tx position: {tx_r}')
+            # print(f'rx position: {rx_r}')
+            # print(f'tx velocity: {tx_v}')
+            # print(f'rx velocity: {rx_v}')
 
             
             #unit vector from transmitter to satellite
@@ -564,7 +570,7 @@ def simulate_page():
                     'width: 6em; font-size: 0.9em;'
                 )
 
-                # Bind values
+                # Bind values on slider
                 desired_transmit_freq.bind_value(freq_input)
                 freq_input.bind_value(desired_transmit_freq)
 
@@ -579,7 +585,7 @@ def simulate_page():
             ui.label('Desired SNR set to 20(dB)').style(
                 'margin-bottom: 1em; font-size: 1.1em; font-weight: bold;'
             )
-            # Bind values
+            # Bind values on slider
             noise_power.bind_value(noise_input)
             noise_input.bind_value(noise_power)
             
@@ -591,6 +597,7 @@ def simulate_page():
             progress_bar = ui.linear_progress(show_value=False).props('indeterminate color="primary"').style('margin-top:10px; order: 2;').classes('w-64')
             #hide right away
             progress_bar.visible = False
+            #needs to happen asynchronously so the loading bar can go and not pause the gui
             async def start_simulation():
                 '''This function runs when the start simulation button is clicked 
                 and runs handlers to produce plots for each page as necessary'''
@@ -675,23 +682,24 @@ def simulate_page():
                         p = |x(t)|^2
                     '''
                     h_up = np.sqrt(alpha_up) * np.exp(1j * THETA) # single tap block channel model
-                    
-                    print(f'alpha down: {alpha_up}')
-                    print(f'h_up: {h_up}')
+                    #debug:            
+                    # print(f'alpha down: {alpha_up}')
+                    # print(f'h_up: {h_up}')
 
                     #attenuation do to Friis
                     alpha_down = gain_rx * gain_sat *(lambda_down/(4*np.pi*np.linalg.norm(rx_r-sat_r)))**2 # path loss attenuation
-                    print(f'alpha down: {alpha_down}')
                     #pick theta uniformly at random from 0 to 180 degrees
                     THETA = np.random.uniform(0, np.pi)
                     h_down = np.sqrt(alpha_down) * np.exp(1j * THETA) # single tap block channel model
+                    #debug:
+                    print(f'alpha down: {alpha_down}')
                     print(f'hdown: {h_down}')
                     
                     #since Pr/Pt = alpha and Pr/noise = snr then Pt = N*SNR/alpha
                     noise = noise / 1000 # get noise into watts
-                    #noise is going to be small 
                     required_tx_power = (snr * noise) / alpha_up # power in watts
-                    #set a cap on power
+                    
+                    #set a cap on power of transmitter
                     if required_tx_power > 50:
                         required_tx_power = 50
                         ui.notify('Power limit on transmitter reached maximum of 50 Watts')
@@ -715,8 +723,7 @@ def simulate_page():
                         ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
 
 
-                #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
-                #decide the amplitude of the signal so that by the time it gets to the repeater it's very
+                # Decide the amplitude of the signal so that by the time it gets to the repeater it's SNR is chill
                 # Calculate amplitude scaling so that the QPSK signal has required_tx_power at the repeater
                 # QPSK average power is proportional to amp^2 (assuming unit average symbol energy)
                 # We'll set amp so that after channel attenuation, received power = required_tx_power
@@ -724,6 +731,7 @@ def simulate_page():
                 
                 tx_amp = np.sqrt(required_tx_power) #we want the amplitude
                 sig_gen = SigGen.SigGen(txFreq, amp = tx_amp)
+                
                 global bits
                 bits = sig_gen.message_to_bits(mes) #note that this will add prefix and postfix to the bits associated wtih the message
 
@@ -736,8 +744,10 @@ def simulate_page():
 
                 #define channel up
                 channel_up = Channel.Channel(qpsk_signal, h_up, noise, f_delta_up, up = True)
+                
                 #apply the channel: 
                 new_t, qpsk_signal_after_channel = channel_up.apply_channel(t, time_delay_up)
+                
                 #run the channel_up_handler:
                 channel_up.handler(t, new_t, txFreq, SAMPLE_RATE / SYMB_RATE) #generate all the plots we want to display
                 
@@ -750,7 +760,7 @@ def simulate_page():
 
                 #now we want to see if we actually got to the desired power
                 #debug:
-                print(f'does: {np.mean(np.abs(repeated_qpsk_signal)**2)} = {required_rep_power}')
+                #print(f'does: {np.mean(np.abs(repeated_qpsk_signal)**2)} = {required_rep_power}')
 
                 # run the signal through channel down
                 channel_down = Channel.Channel(repeated_qpsk_signal, h_down, noise, f_delta_down, up = False)
@@ -761,15 +771,16 @@ def simulate_page():
                 channel_down.handler(new_t, new_t2, txFreq + 10e6, SAMPLE_RATE / SYMB_RATE) #tune to tx + 10 MHz
                 
                 ###-----------------------------------
-                ##TODO add channel correction here 
                 #Very first step tune to what we THINK is baseband
                 tuned_signal = repeated_signal_after_channel * np.exp(-1j * 2 * np.pi * (txFreq + 10e6) * new_t2)
                 # run the handler for channel_correction
                 global recovered_message 
                 recovered_message = channel_handler(tuned_signal) # this will generate the plots we want to display on the receiver page
                 #### -------------------------------------
+
                 # channel_down = Channel.Channel()
                 ui.notify('Simulation Ready')
+                
                 #hide the loading bar
                 progress_bar.visible = False
                 return
@@ -808,9 +819,6 @@ def simulate_page():
                 # ui.button('Back', on_click=ui.navigate.back)
                 ui.label('Transmitter Page').style('font-size: 3em; font-weight: bold; text-align: center; display: block; width: 100%;')
                 with ui.element('div').classes('flex-container'):
-                    #bit sequence with prefix/postifx labeled
-                    #TODO
-
                     #show upsampled bits sub plot one on top of the other real and imaginary
                     zoomable_image('media/tx_upsampled_bits.png')
                     # ui.label('Notice that energy is very spread out in the spectrum because impulses in time are infinite in frequency').style('font-size: 1.5em; font-weight: bold;')
@@ -918,13 +926,13 @@ def simulate_page():
                                 .style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
                             ui.label(f'Recovered Message: {recovered_message}') \
                                 .style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
+# END SIM ---------------------------------------------------------------------------------------------------------------------------
 
-
-# Control Page----------------------------------------------------------------------------------------------------------------------
+# Control Page ----------------------------------------------------------------------------------------------------------------------
 @ui.page('/CONTROL')
 def control_page():
     inject_head_style('Control')
-
+    # Top bar:
     with ui.element('div').classes('glass-bar'):
         with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/'))):
             ui.icon('home')
@@ -940,11 +948,11 @@ def control_page():
         with ui.element('div').classes('item').on('click', lambda: (ui.navigate.to('/ABOUT'))):
             ui.icon('info')
             ui.label('About')
+
     #add some spacer to content doesn't go under the fixed bar
     ui.element('div').classes('spacer')
 
     with ui.row().style('justify-content: center; align-items: flex-end; width: 100%; gap: 5vw; margin-top: 4vh;'):
-        # Use a variable for min-height to ensure both columns match
         phone_min_height = "520px"
         phone_width = "340px"
         phone_style = f'background: #f5f5f7; border-radius: 32px; box-shadow: 0 4px 24px #bbb; width: {phone_width}; min-height: {phone_min_height}; height: {phone_min_height}; padding: 24px 16px 16px 16px; position: relative; display: flex; flex-direction: column; justify-content: flex-end;'
@@ -1042,17 +1050,15 @@ def control_page():
             ui.notify(f'SSH error: {e}')
             loading_dots.visible = False
             return
-        
 
-        # ZMQ request to the receiver (same LAN IP or host name)
+        # ZMQ request to repeater after I have assked transmitter and repeater to initialize
         try: 
-            # print('did we get here')
             context = zmq.asyncio.Context()
             Rx = context.socket(zmq.REQ)
             Rx.connect('tcp://10.232.62.2:5555') # Receiver IP + port 5555
             await Rx.send_string("SEND")
             #we'll asynchronously listen for a reply from the receiver computer
-            decoded_message = await Rx.recv_string()
+            decoded_message = await Rx.recv_string()#will wait here and the 3 dots will go until we get a string back
         except:
             ui.notify(f'ZMQ error')
             loading_dots.visible = False
@@ -1066,10 +1072,10 @@ def control_page():
 
         #ui.notify('Message sent!')
         return
-            
+#END CONTROL ------------------------------------------------------------------------------------------------------------------------            
 
 
-
+#ABOUT ------------------------------------------------------------------------------------------------------------------------------
 @ui.page('/ABOUT')
 def about_page():
     
@@ -1440,7 +1446,7 @@ def about_page():
 
     </div>
         ''')
-
+# END ABOUT -------------------------------------------------------------------------------------------------------------------------
 
 #run the GUI
 ui.run()

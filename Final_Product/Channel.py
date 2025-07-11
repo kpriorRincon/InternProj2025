@@ -1,4 +1,5 @@
 from config import *
+
 #helper function
 def fractional_delay(t, signal, delay_in_sec, Fs):
     """
@@ -89,9 +90,9 @@ class Channel:
         AWGN = np.sqrt(self.noise_power / 2) * (np.random.randn(*delayed_signal.shape) + 1j * np.random.randn(*delayed_signal.shape))
         signal_noisy = delayed_signal + AWGN
 
-        self.outgoing_signal = delayed_signal
+        self.outgoing_signal = signal_noisy
         
-        return new_t, delayed_signal
+        return new_t, signal_noisy
     
     def handler(self, t, new_t, tune_frequency, samples_per_symbol):
         """
