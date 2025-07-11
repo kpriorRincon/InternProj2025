@@ -15,6 +15,7 @@ from gnuradio.filter import firdes
 from gnuradio.fft import window
 import sys
 import signal
+import time
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
@@ -118,6 +119,10 @@ def main(top_block_cls=data_to_vsg, options=None):
 
     tb.start()
 
+    #run for the fixed duration
+    run_duration = 3 # in seconds
+    time.sleep(run_duration)
+    tb.stop()
     tb.wait()
 
 
