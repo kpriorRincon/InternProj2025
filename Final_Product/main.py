@@ -691,10 +691,28 @@ def simulate_page():
                     noise = noise / 1000 # get noise into watts
                     #noise is going to be small 
                     required_tx_power = (snr * noise) / alpha_up # power in watts
-                    required_rep_power = (snr * noise) / alpha_down #power in watts
+                    #set a cap on power
+                    if required_tx_power > 50:
+                        required_tx_power = 50
+                        ui.notify('Power limit on transmitter reached maximum of 50 Watts')
+                        ui.label(f'Desired SNR (transmitter -> repeater) not met: Max power = {required_tx_power:.2f} W').style(label_style)
+                        actual_snr_linear = (alpha_up * required_tx_power) / noise
+                        actual_snr = 10 * np.log10(actual_snr_linear)
+                        ui.label(f'Actual SNR = {actual_snr:.1f}dB').style(label_style)
+                    else:
+                        ui.label(f'Required power (transmitter -> repeater) to satisfy desired SNR: {required_tx_power:.2f} W').style(label_style)
 
-                    ui.label(f'Required power (transmitter -> repeater) to satisfy desired SNR: {required_tx_power:.2f} W').style(label_style)
-                    ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
+                    required_rep_power = (snr * noise) / alpha_down #power in watts
+                    #set a cap
+                    if required_rep_power > 5:
+                        required_rep_power = 5
+                        ui.notify('Power limit on repeater reached maximum of 5 Watts')
+                        ui.label(f'Desired SNR (repeater > receiver) not met: Max power = {required_rep_power:.2f} W').style(label_style)
+                        actual_snr_linear = (alpha_up * required_rep_power) / noise
+                        actual_snr = 10 * np.log10(actual_snr_linear)
+                        ui.label(f'Actual SNR = {actual_snr:.1f}dB').style(label_style)
+                    else:
+                        ui.label(f'Required power (repeater -> receiver) to satisfy desired SNR: {required_rep_power:.2f} W').style(label_style)
 
 
                 #TODO simply run all of the handlers here that produce desired graphs to be used in each individual page
@@ -896,7 +914,7 @@ def simulate_page():
                     #
                     with ui.row().style('align-items: center; justify-content: center;'):
                         with ui.column().style('align-items: center;'):
-                            ui.label(f'Calculated throughput: {throughput} bps') \
+                            ui.label(f'Calculated throughput: {throughput:.0f} bps') \
                                 .style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
                             ui.label(f'Recovered Message: {recovered_message}') \
                                 .style('font-size: 1.5em; font-weight: bold; margin-top: 1em;')
