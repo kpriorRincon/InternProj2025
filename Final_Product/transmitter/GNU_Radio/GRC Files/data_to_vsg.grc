@@ -19,7 +19,7 @@ options:
     realtime_scheduling: ''
     run: 'True'
     run_command: '{python} -u {filename}'
-    run_options: prompt
+    run_options: run
     sizing_mode: fixed
     thread_safe_setters: ''
     title: vsg experimentation
@@ -76,7 +76,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: /home/empire/Documents/InternProj2025/hardware/data_for_sighound.bin
+    file: /home/empire/Documents/InternProj2025/Final_Product/transmitter/data_for_sighound.bin
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'
