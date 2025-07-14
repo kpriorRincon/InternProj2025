@@ -6,7 +6,7 @@ from numpy.fft import fft, fftfreq, fftshift
 from Sig_Gen import SigGen, rrc_filter
 from config import *
 DEBUG = 1
-freq_offset = 25
+freq_offset = 20000
 time_delay = 0.00232
 max_freq = 200
 min_freq = -200
@@ -132,7 +132,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         plt.xlabel('In-Phase (I)')
         plt.ylabel('Quadrature (Q)')
         plt.title('Coarse Frequency Synchronization')
-        plt.savefig('media/coarse_correction.png')
+        #plt.savefig('media/coarse_correction.png')
         plt.close()
 
         plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'blue', zorder = 2, label = 'RX Signal')
@@ -518,14 +518,14 @@ def main():
     #qpsk_wave = phase_offset(qpsk_wave)
 
     # Adding AWGN
-    #post_channel_wave = add_awgn(qpsk_wave)
+    qpsk_wave = add_awgn(qpsk_wave)
 
     #Tune down to baseband
     qpsk_base = qpsk_wave * np.exp(-1j * 2 * np.pi * sig_gen.freq * t)
 
     #lpf_signal = lowpass_filter(qpsk_base)
     
-    #coarse_fixed_sig = coarse_freq_recovery(qpsk_base)
+    coarse_fixed_sig = coarse_freq_recovery(qpsk_base)
 
     # Run CAF and return frequency offset found with highest correlation
     caf_fixed_sig = cross_corr_caf(qpsk_base)

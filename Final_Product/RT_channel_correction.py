@@ -391,18 +391,19 @@ def cross_corr_caf(rx_signal, bscaf_flag):
     return fixed_signal
 
 def crc_detection(bit_string):
+    #rint(f"Length of bit_string {len(bit_string)}")
     byte_data = int(bit_string, 2).to_bytes((len(bit_string) + 7) // 8, 'big')# convert the bit string to bytes
     check = calculator.checksum(byte_data)
 
     #print("Remainder: ", check)
     if check == 0:
-        #print("Data is valid...")
+        #rint("Data is valid...")
         decoded_string = byte_data[:-1].decode()
         #print(f"Bits: {bit_string}")
         #print(f"Message: {decoded_string}")
         return decoded_string
     else:
-        #print("Data is invalid...\nAborting...")
+        #rint("Data is invalid...\nAborting...")
         return None
 
 def channel_handler(rx_signal):
