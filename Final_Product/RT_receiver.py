@@ -22,6 +22,7 @@ running = True
 cut_sigs = None # if cut_sigs has stuff, loop through, if first half, 
 sdr = None
 listen = False
+packet_count = 0
 def detector(samples, prev_cut):
     import scipy.signal as signal
 
@@ -145,9 +146,12 @@ def detector(samples, prev_cut):
     if signals_found:
         # print(f"Sig pairs: {sig_pairs}")
         pass
-    for signal in signals_found:
+    for sig in signals_found:
         strt_t = time.time()
-        received_message = channel_handler(signal)
+        #print(f"Sig pair going in: {sig}")
+        global packet_count
+        packet_count += 1
+        received_message = channel_handler(sig)
         if received_message:
             return received_message, signals_cut
             messages.append(received_message)
@@ -168,28 +172,20 @@ def callback(samples, rtlsdr_obj):
     except queue.Full:
         print("WARNING: Dropped a block!")
 
-count = 0
-strt_t = 0
 def callback_d(samples, rtlsdr_obj):
     global cut_sigs, count, strt_t
     if running:
         dsp_t = time.time()
         if listen:
-            if strt_t == 0:
-                strt_t = time.time()
-            count += 1
             message, cut_sigs = detector(samples, cut_sigs)
             if message:
-                print(f"Time from REQ to finding signal: {time.time() - strt_t}")
-                #print(f"Number of signals before finding right one:{count}")
-                count = 0
                 try:
                     message_queue.put_nowait(message)
                 except queue.Full:
                     print("Warning dropped a block!")
                 if message:
                     print(f"Total time for Detection + DSP: {time.time() - dsp_t}")
-                    print(message)
+                    #print(message)
 
     else:
         sdr.cancel_read_async()
@@ -245,37 +241,14 @@ def init_RTL_SDR():
     # Test SDR connection before main loop
     try:
         test_samples = sdr.read_samples(1024)
-        print(f"SDR test successful: read {len(test_samples)} samples")
+        #print(f"SDR test successful: read {len(test_samples)} samples")
     except Exception as e:
         print(f"SDR test failed: {e}")
         sdr.close()
         exit()
 
-    """
-    while True:
-        data = sdr.read_samples(N)
-        with open('iq_dump.bin', 'ab') as f:
-            f.write(data.astype(FORMAT).tobytes())
-    """
-    #find end idx in cut pairs, if sec half, find start idx in cut pairs
 
     sdr.read_samples_async(callback_d, N)
-
-    """
-    try:
-        sdr.read_samples_async(callback_d, N)
-    except KeyboardInterrupt:
-        global running
-        running = False
-        try:
-            sdr.cancel_read_async()
-        except Exception as e:
-            print(f"[WARN] Could not cancel read: {e}")
-    """
-        
-    #messages, cut_sigs = detector(samples, cut_sigs)
-
-    #sdr.read_samples_async(callback, 1024)
 
 
     sdr.close()
@@ -291,13 +264,6 @@ def signal_handler(sig, frame):
     global running
     running = False
 
-    #try: 
-    #    sdr.cancel_read_async()
-    #except Exception as e:
-     #   print(f"[WARN] Could not cancel read: {e}")
-    #sys.exit(0)
-
-
 def rtlsdr_handler():
     #signal_handler should close threads when page is left or exited out
     # all its really doing is setting running Flag to false
@@ -311,7 +277,7 @@ def rtlsdr_handler():
     init_RTL_SDR()
 
 def zmq_rtlsdr():
-    print("start")
+    #print("start")
     signal.signal(signal.SIGINT, signal_handler)
 
     context = zmq.Context()
@@ -331,8 +297,9 @@ def zmq_rtlsdr():
             continue
 
         if command == "SEND":
-            print(f"Request received: {command}")
-            global listen
+            print(f"ZMQ request received.")
+            print(f"Sampling RTL-SDR...")
+            global listen, packet_count
             while not iq_queue.empty():
                 try:
                     iq_queue.get_nowait()
@@ -340,7 +307,10 @@ def zmq_rtlsdr():
                     break
             listen = True
             message = retrieve_valid_message()
+            print(f"Decoded Message: {message}")
             listen = False
+            print(f"Packet count: {packet_count}")
+            packet_count = 0
             socket.send_string(message)
             while not iq_queue.empty():
                 try:
