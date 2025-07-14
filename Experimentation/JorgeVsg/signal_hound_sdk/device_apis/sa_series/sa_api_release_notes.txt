@@ -1,0 +1,116 @@
+Release Version Notes for the SA44/SA124 Programming Interface
+
+Support contact: support@signalhound.com
+
+- SA_API Version 3.2.4 (6/18/2021)
+* Bug fix: Fixed measurement error for sweeps between 300kHz-1MHz with preamplifier enabled.
+
+- SA_API Version 3.2.3 (2/17/2021)
+* Internal changes only.
+
+- SA_API Version 3.2.2 (10/1/2020)
+* Bug fix: Attempt to recover from hang for certain sweep configurations.
+
+- SA_API Version 3.2.1 (8/19/2020)
+* The API will detect a recently adjusted SA44/SA124/TG44/TG124 device and update the calibration data on disk when opened.
+  Calibration data is located at C:/ProgramData/SignalHound/cal_files
+
+- SA_API Version 3.2.0 (7/21/2020)
+* saGetRealTimeFrame parameter list changed.
+* Min detector sweeps now available through saGetRealTimeFrame function.
+
+- SA_API Version 3.1.4 (11/6/2019)
+* Bug fix: Corrected output frequency when using manual TG controls with external 10MHz reference out enabled.
+* Bug fix: Measurement results no longer invalid when standard temperature range SA44B's are in sub 0 degree Celsius ambient temperature environments.
+
+- SA_API Version 3.1.3 (10/1/2018)
+* Bug fix: Resolved device disconnection error for certain scalar network sweep configurations.
+
+- SA_API Version 3.1.2 (8/27/2018)
+* Updated third party static libraries. (Side effect of increased binary size)
+
+- SA_API Version 3.1.1 (6/21/2018)
+* Now only throws a warning when VBW > RBW.
+
+- SA_API Version 3.1.0 (5/8/2018)
+* Added alpha frame component to real-time frame acquisitions. Used for persistence decay. 
+  saGetRealTimeFrame() function prototype changed to accomodate this change.
+* Made the saOpenDeviceBySerial/saCloseDevice functions thread safe.
+  This means you should be able to open N devices in N threads safely. Use the 
+  saOpenDeviceBySerial over saOpenDevice for this purpose.
+
+- SA_API Version 3.0.22 (3/19/2018)
+* Bug fix, querying device voltage for SA124A devices was causing
+
+- SA_API Version 3.0.21 (11/3/2017)
+* Low frequency amplitude accuracy fix.
+
+- SA_API Version 3.0.20 (9/27/2017)
+* Adds additional 3 seconds of wait time for SA124B start up, to improve startup stability.
+* Checks that the SA124B option 2 OCXO is fully warmed up before opening the device.
+
+- SA_API Version 3.0.19 (8/2/2017)
+* Resolved issue calling saOpenDevice() with 8 receivers connected to the PC.
+
+- SA_API Version 3.0.18 (2/8/2017)
+* Bug fixes
+* Added the saGetIQUnpacked() function to aid in non-C programming language bindings.
+
+- SA_API Version 3.0.17 (12/14/2016)
+* Fixed issue where low frequency SNA sweeps did not function properly due to high amplitude 0Hz feed through.
+
+- SA_API Version 3.0.16 (11/10/2016)
+* Integration for TG timebase adjustments through the Signal Hound Calibration software.
+
+- SA_API Version 3.0.15 (10/24/2016)
+* Improved pre-amp response time at maximum sensitivity.
+
+- SA_API Version 3.0.14 (10/11/2016)
+* Fixed issues with CW mode for audio streaming.
+* Improved filter rolloff for low/high pass audio filters.
+* Modified AGC characteristics for SSB/CW audio streaming.
+
+- SA_API Version 3.0.13 (9/2/2016)
+* Internal changes to support timebase adjustments made in the Field Calibration Software.
+
+- SA_API Version 3.0.12 (8/26/2016)
+* Bug fixes related to audio streaming.
+* Bug fixes relating to 200-500kHz spans for SA124B.
+
+- SA_API Version 3.0.11 (6/1/2016)
+* Added new saGetIQData() function, provides more flexibility for IQ data streaming.
+  See the API manual for more information on this function.
+
+- SA_API Version 3.0.10 (3/2/2016)
+* Added saConfigRBWShape() function which allows the selection of RBW filter. 
+  The two choices are a 3dB Flattop(default) and 6dB Gaussian filter.
+
+- SA_API Version 3.0.9 (11/9/2015)
+* Added functions for configuring the real-time overlap rate and retrieving the probability of intercept in real-time mode.
+* Added functions for configuring the TG44/TG124 timebase reference.
+* Added functions for configuring the SA124 10MHz timeout out.
+* The timebase reference setting will now reset when you close the device through the saCloseDevice function. 
+
+- SA_API Version 3.0.8 (10/26/2015)
+* Resolved frequency discrepency issues present at 70MHz center frequency and some low multiples of 70MHz.
+
+- SA_API Version 3.0.7
+* Added support for SA44/SA44B 5MHz RBW
+* Resolved issue where calling saAbort would sometimes hang after initializing large spans.
+
+- SA_API Version 3.0.6 (7/22/2015)
+* Added saGetTgFreqAmpl function to retrieve last set TG output configuration.
+* Fixed bug with audio IF bandwidth selection.
+
+- SA_API Version 3.0.5
+* Added the ability to set the calibration folder file path. See the saSetCalFilePath() function in the SA API manual for more information.
+
+- SA_API Version 3.0.4
+* Fixed memory leak on saCloseDevice()
+
+- SA_API Version 3.0.3
+* Replaced functionality believed to cause crashes on a select few types of laptops and PCs.
+* Resolved an issue which caused crashes on sweep spans of less than 200kHz. 
+
+- SA_API Version 3.0.2
+* New real-time functionality exposed through API

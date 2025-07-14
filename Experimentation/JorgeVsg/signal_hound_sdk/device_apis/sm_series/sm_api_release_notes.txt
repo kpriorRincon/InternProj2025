@@ -1,0 +1,197 @@
+Release Version Notes for the SM435/SM200 Programming Interface
+
+Support contact: support@signalhound.com
+
+- SM_API Version 2.3.7 (4/14/2025)
+* Support for MacOS (M4)
+  - Supports subset of functionality. Details in README in SDK.
+* Support for Jetson AGX Orin
+  - Supports subset of functionality. Detailed in README in SDK.
+
+- SM_API Version 2.3.6 (3/12/2025)
+* Bug Fix: Signal not present with preselector enabled, while I/Q streaming, ~645MHz center frequency.
+
+- SM_API Version 2.3.5 (10/3/2024)
+* Reduce USB transfer memory usage for real-time measurements with spans <= 40MHz.
+  Fixes crash on Linux.
+
+- SM_API Version 2.3.4 (1/5/2023)
+* Bug fix: Enabled video triggering for full band I/Q captures for the SM435 devices.
+* Bug fix: Real-time frequency accuracy improvement. Was improperly calculating the first bin frequency in the sweep.
+
+- SM_API Version 2.3.3 (4/3/2023)
+* Added support for SM435 hardware revision.
+
+- SM_API Version 2.3.2 (11/14/2022)
+* Increased maximum number of devices that can be interfaces in one process to 16.
+* Fixed bug that occurred in sweep mode using 3MHz RBW and Nuttall window. 
+  Sweep has off by 1 indexing issue.
+
+- SM_API Version 2.3.1 (10/17/2022)
+* Better timestamping for VRT data packets.
+* Bug fix: Fractional component of VRT packet timestamps now renders on Linux.
+* Bug fix: Fractional component of VRT context packet's latitude, longitude, and altitude GPS fields now conforms to documented format.
+
+- SM_API Version 2.3.0 (9/7/2022)
+* Support for SM435C.
+* Support for hardware revision. 
+* For 10GbE devices, when using decimation <= 8 
+  - Increased maximum I/Q streaming bandwidth for 10GbE devices to 165MHz from 160MHz.
+  - Resolved issued where bandwidth was rolling off slightly too early.
+* Improved phase continuity for successive captures using segmented I/Q functionality.
+
+- SM_API Version 2.2.1 (6/6/2022)
+* Added support for inter-sweep GPIO changes.
+  Perform GPIO changes in-between sweeps with fast sweep mode queued sweeps.
+
+- SM_API Version 2.2.0 (5/4/2022)
+* Support for SM435B.
+* Added smNetworkConfig** functions for configuring the 10GbE network settings over USB, for SM200C devices.
+* Added smSetIQTriggerSentinel function. Changes the sentinel value used to populate the unused I/Q trigger buffer.
+* Bug fix: I/Q time stamp issues when using system clock.
+
+- SM_API Version 2.1.18 (3/18/2022)
+* Internal release.
+
+- SM_API Version 2.1.15 (6/21/2021)
+* Added new function to retrieve USB device type when querying all USB devices.
+
+- SM_API Version 2.1.14 (6/16/2021)
+* Added I/Q sweep list measurements.
+  Provide frequency lists to perform high speed frequency hopping I/Q acquisition.
+
+- SM_API Version 2.1.13 (5/20/2021)
+* Added full support for SM200B, SM200C, and SM435B to VRT (VITA 49) functions.
+
+- SM_API Version 2.1.12 (4/12/2021)
+* Changes to full band I/Q capture functions.
+  - Modified existing full band I/Q functions into separate configuration and acquisition functions.
+  - Added video trigger type for non-swept full band I/Q acquisitions and trigger timeout. These new parameters
+    are only available for SM200C devices with FW version 7.7.5.
+
+- SM_API Version 2.1.11 (4/2/2021)
+* Added full band I/Q sweep measurement function smGetIQFullBandSweep().
+  See API manual for more details.
+
+- SM_API Version 2.1.10 (3/26/2021)
+* Bug fix: Timestamping for fast sweeps when the GPS was not locked was broken in version 2.1.7. This is now fixed.
+* Bug fix: I/Q time stamping, absolute accuracy off GPS lock.
+* Improved timestamping for sweeps.
+  - More accurate relative timestamps for normal and fast sweeps on and off GPS lock.
+  - When GPS lock is lost, sweep timestamps continue to increase at the nominal rate and do not revert to system time.
+    Only when the device is closed or loses power do sweep timestamps revert to system time.
+
+- SM_API Version 2.1.7 (3/10/2021)
+* Improved timestamping for I/Q streaming and segmented I/Q captures.
+  - I/Q timestamps now increase at the nominal rate when off GPS.
+  - When GPS lock is lost, timestamps continue to increase at nominal rate and do not revert to system time.
+  - Timestamps are coherent between multiple configurations when off GPS lock.
+    Only when the device is closed or loses power do the timestamps reset.
+  - Improve intermittent timestamp jumps when on/off GPS lock.
+
+- SM_API Version 2.1.6 (11/2/2020)
+* Added GPS write functionality. Using the new smWriteToGPS function, users can write UBX messages and more to the the internal GPS for additional configuration.
+  Requires updated firmware. See SM firwmare updater release notes.
+  See API manual for more information.
+
+- SM_API Version 2.1.5 (7/21/2020)
+* Bug fix: Real-time measurements with span of <= 40MHz could produce NAN results.
+* For real-time measurements with spans below 40MHz, the min sweep array is now calculated when min/max detector is selected.
+  Prior to this, the min sweep array was simply the max array duplicated.
+* Added smSyncErr status code.
+
+- SM_API Version 2.1.4 (6/1/2020)
+* Fixed bug associated with 1THz sweep speeds for the SM200C. Will work with firmware version 4.4.2.
+  Download firmware updater at https://signalhound.com/support/product-downloads/sm200a-downloads/
+* Added network error logging for the SM200C (Windows).
+
+- SM_API Version 2.1.3 (5/8/2020)
+* Increased socket SO_RCVBUF size on Linux. Should reduce intermittent data loss and connection issues.
+* Timestamping improvements for low sample rate configurations.
+* Defaults to 160MHz bandwidth for SM200C I/Q streaming.
+* Added network error logging for the SM200C (Linux).
+
+- SM_API Version 2.1.2 (4/8/2020)
+* Additional support for firmware updates.
+
+- SM_API Version 2.1.1 (4/2/2020)
+* Bug fix: Properly handle nmeaLen parameter in smGetGPSInfo function.
+
+- SM_API Version 2.1.0 (3/13/2020)
+* Support for the SM200C.
+* Device now reports GPS disciplined immediately after disciplining begins.
+* Improved stability on GPS timestamping through improved PPS disciplining for long I/Q captures.
+  - Using an SM200A with FW version 4.5.9 or greater.
+  - Using an SM200B with FW version 4.5.12 or greater.
+* Bug fix: Resolved issue where occassionally the GPS time would be reported ~17 seconds off.
+
+- SM_API Version 2.0.2 (9/30/2019)
+* Added support for SM200A/B LTE streaming I/Q sample rates (61.44MS/s).
+  - See smSetIQBaseSampleRate().
+  - Requires firmware update 4.5.8 for SM200A and 4.5.11 for SM200B
+* Improved GPS timestamping for streaming I/Q
+* Bug fix: No longer undefined behavior when calling certain functions (such as GetGPSInfo) when
+  there are actively queued sweeps.
+
+- SM_API Version 2.0.1 (9/9/2019)
+* Official support for SM200B.
+  - Added 160MHz I/Q capture functions for SM200B. See SegIQ functions in API. (Segmented I/Q)
+
+_ SM_API Version 2.0.0 (Internal build)
+* Initial support for SM200B.
+  - Includes support for segmented I/Q captures.
+* Added support for 16-bit complex short I/Q data. See smSetIQDataType().
+* Added smGetIQScale() needed to convert full scale 16-bit complex shorts to calibrated 32-bit complex floats.
+* smGetIQ() parameter 'iqBuf' has been changed to void* data type.
+  - Will not break existing code that uses this function with 32-bit complex floats.
+  - Required for new 16-bit complex short I/Q data acquisition.
+* Removed smSetIQCaptureType() function.
+* Bug fix: Linux connection issue hangs.
+
+- SM_API Version 1.1.7 (12/5/2018)
+* Improved timing on external triggering.
+* In conjunction with firmware version 4.5.6 external trigger timings in IQ acquisition will be more accurate and repeatable.
+
+- SM_API Version 1.1.6 (11/20/2018)
+* Increase thread priority for USB acquisition threads to 'TIME_CRITICAL' on Windows operating systems. This should help alleviate USB data loss in high CPU conditions.
+
+- SM_API Version 1.1.5 (9/25/2018)
+* Reduced IQ streaming reconfiguration time.
+
+- SM_API Version 1.1.4 (9/17/2018)
+* Support for firmware version 4.5.5 which improves USB transfer reliability on newer Windows 10 computers.
+
+- SM_API Version 1.1.3 (9/6/2018)
+* Compiled with -fvisibility=hidden on Linux, should reduce global symbol collisions, particularly when linking with the bb_api as well on Linux.
+* Bug fix: On Linux, forcing sweep speed to normal for certain sweeps should no longer segfault.
+* Bug fix: On Linux, calling smGetIQParameters or smGetIQCenterFreq should no longer segfault when the device is not actively I/Q streaming.
+
+- SM_API Version 1.1.2 (7/11/2018)
+* Supports libusb backend for Linux.
+* Ported to 64-bit Linux (Ubuntu 18.04LTS).
+* Increase in DLL size due to third party static libraries.
+* Bug fix for real-time measurement mode.
+
+- SM_API Version 1.1.1 (6/21/18)
+* Bug fix for narrow span, spur reject enabled sweeps.
+
+- SM_API Version 1.1.0 (5/7/18)
+* Added alpha frame component to real-time frame acquisitions. Used for persistence decay.
+* smGetRealTimeFrame() function prototype changed to accomodate new functionality.
+* Bug fix for real-time analysis.
+
+- SM_API Version 1.0.4 (3/15/2018)
+* Added functionality for retrieving information about the GPS holdover correction.
+* Increased the number of target-able devices to 9, primarily for internal calibration purposes.
+* IQ streaming optimizations for decimations 1,2,4
+* Bug fix for <= 40MHz span real-time measurements.
+
+- SM_API Version 1.0.3 (2/12/2018)
+* Official release
+
+- SM_API Version 1.0.1 (9/27/2017)
+* Pre-release for serial numbers 17249003 and 17249006.
+
+- SM_API Version 1.0.0 (8/30/2017)
+* Initial release.
+* Pre-release for serial numbers 17249001 and 17249002.

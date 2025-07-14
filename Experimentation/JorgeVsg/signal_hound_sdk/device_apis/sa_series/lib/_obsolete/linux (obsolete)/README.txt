@@ -1,0 +1,6 @@
+- This API is provided ‘as is’ without warranty or support. 
+- For full software support, use the Windows APIs. 
+- Perform sweeps, stream I/Q data, and perform real-time analysis on a Linux Operating System
+- Port of the SA44/SA124 Windows API
+- Tested and built on Ubuntu 14.04 (64-bit) (Requires low-latency kernel)
+- Includes README, API manual, examples, and setup files.

@@ -1,0 +1,2 @@
+This folder contains examples for the 250MS/s I/Q capture present on the SM200B and SM435B. (USB models)
+Models that have the 10GbE data link do not have this functionality. For those devices, see the I/Q streaming examples.

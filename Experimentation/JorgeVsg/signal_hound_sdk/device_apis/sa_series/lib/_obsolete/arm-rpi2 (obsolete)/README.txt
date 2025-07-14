@@ -1,0 +1,6 @@
+- This API is provided ‘as is’ without warranty or support. 
+- For full software support, use the Windows APIs. 
+- Tested using a Raspberry Pi 2
+- Requires firmware version 2.11 (SA44B) or 3.12 (SA124B). 
+- Contact us if you need to upgrade.
+- See complete details in the Notes

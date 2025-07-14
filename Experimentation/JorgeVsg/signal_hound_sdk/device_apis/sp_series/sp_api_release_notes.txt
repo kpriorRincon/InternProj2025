@@ -1,0 +1,29 @@
+Release Version Notes for the SP145 Programming Interface
+
+Support contact: support@signalhound.com
+
+- SP_API Version 1.0.6 (4/29/2025)
+* Bug fix, fixed issue with I/Q sweep list. Was throwing assertions.
+
+- SP_API Version 1.0.5 (4/14/2025)
+* Support for MacOSX (M4)
+  - Supports subset of functionality. Details in README in SDK.
+
+- SP_API Version 1.0.4 (9/19/2024)
+* Support for Jetson AGX Orin
+  - Supports subset of functionality. Detailed in README in SDK.
+* Additional error handling on spOpenDevice functions.
+
+- SP_API Version 1.0.3 (8/29/2024)
+* Added spSetGPSPlatformModel(). 
+  - Supports ability to change GPS dynamic platform model. 
+  - This allows GPS to maintain lock in different velocity + acceleration combinations. 
+
+- SP_API Version 1.0.2 (6/6/2024)
+* Bug fix, removed assertions.
+
+- SP_API Version 1.0.1 (5/7/2024)
+* Bug fix, removed assertions relating to use of non-Intel processors.
+
+- SP_API Version 1.0.0 (10/1/23)
+* Initial release.

@@ -1,0 +1,163 @@
+Release notes for the Spike SCPI command set.
+
+- Spike Version 4.0.0
+* Support for VCO Characterization measurements.
+* Support for Phase Noise Cross-Correlation measurements.
+
+- Spike Version 3.9.6
+* Added support for DDEMOD wide carrier estimation.
+
+- Spike Version 3.9.0
+* Added support for 8/16 FSK
+
+- Spike Version 3.8.9
+* FETCh:DDEMod? can now return constellation plot/traces for both PSK/QAM and FSK type signals.
+
+- Spike Version 3.8.4
+* Support for Noise Figure measurements.
+
+- Spike Version 3.8.0
+* FETCH:ZS? now returns average power.
+* Added commands to retrieve spectrum plot in digital demod mode.
+  - See DDEMOD:TRACE:SWEEP commands.
+* Added commands to retrieve GPS position of LTE measurements in LTE mode.
+* Added commands to configure LTE correlation threshold.
+* Added commands to control and configure the audio player.
+
+- Spike Version 3.5.22
+* Support for new limit line functionality
+* Added commands to hide the Spike application
+  - DISPlay:HIDE <bool>
+  - DISPlay:HIDE?
+
+- Spike Version 3.5.21
+* Support for LTE measurements.
+* Added SCPI log utility.
+
+- Spike Version 3.5.17
+* Support for BLE measurements.
+* Added command to retrieve current average trace count in sweep mode.
+  - TRACe:AVERage:CURRent?
+* Added commands for configuring maximum peak count in peak table.
+  - [:SENSe]:PEAK:TABLE:MAX
+  - [:SENSe]:PEAK:TABLE:MAX?
+
+- Spike Version 3.5.15
+* Added command to retrieve connection string for currently active device.
+  - SYSTem:DEVice:CURRent?
+  - Useful for reconnects
+
+- Spike Version 3.5.14
+* Added commands for new marker functions
+  - CALCulate:MARKer:MAXimum:NEXT
+  - CALCulate:MARKer:MINimum
+* Added commands for new marker types
+  - CALCulate:MARKer:MODE POSition|NOISE|CHPower|NDB
+  - CALCulate:MARKer:CHPower:WIDth <freq>
+  - CALCulate:MARKer:CHPower:WIDth?
+  - CALCulate:MARKer:NDB[:OFFset] <double>
+  - CALCulate:MARKer:NDB[:OFFset]?
+  - CALCulate:MARKer:NDB:BANDwidth?
+  - CALCulate:MARKer:NDB:RLEFt?
+  - CALCulate:MARKer:NDB:RRIGht?
+* Added a third reference oscillator state for output
+  - SENSe:ROSCillator:SOURce INTernal|EXTernal|OUTput
+
+- Spike Version 3.5.12
+* Added ability to list and connect SM200C devices with the SYSTEM:DEVICE SCPI functions.
+
+- Spike Version 3.5.7
+* Added MIN and MAX options to sweep detector command.
+  - [:SENSe]:SWEep:DETector:UNITs[?]
+* Added trace copy command.
+  - TRACe:COPY <int>
+* Added trace math commands.
+  - CALCulate:MATH[:STATe][?] <bool>
+  - CALCulate:MATH:FIRST[?] <int>
+  - CALCulate:MATH:SECond[?] <int>
+  - CALCulate:MATH:RESult[?] <int>
+  - CALCulate:MATH:OP[?]
+  - CALCulate:MATH:OFFSet[?] <double>
+* Added display line commands.
+  - TRACe:DLINe[:STATe][?] <bool>
+  - TRACe:DLINe:LEVel[?] <ampl>
+
+- Spike Version 3.5.6
+* Added SCPI compatibility for Zero-Span measurement mode.
+  - Includes IQ data fetch.
+
+- Spike Version 3.5.0
+* Added SCPI commands for saving and loading user presets from a file.
+  - SYSTem:PRESet[:USER]:SAVE
+  - SYSTem:PRESet[:USER]:LOAD
+
+- Spike Version 3.4.2
+* Support for DDemod sync search.
+* Support for DDemod equalization.
+* Removed DDemod pattern trigger type.
+* :TRIGger:DDEMod:IF:DELay command changed to :TRIGger:DDEMod:DELay
+* Removed the following channel power commands:
+  - :SENSe:CHPower:SPACing[?]
+  - :SENSe:CHPower:COUNt[?]
+  - :SENSe:CHPower:CENTer? <int>
+  - :SENSe:CHPower:CHPower? <int>
+  - :SENSe:CHPower:ACPower? <int>
+* Added the following channel power commands:
+  - :SENSe:CHPower:CHANnel:STATe[?] <int>
+  - :SENSe:CHPower:CHANnel:OFFSet[?] <int>
+  - :SENSe:CHPower:CHANnel:WIDth[?] <int>
+  - :SENSe:CHPower:CHPower?
+  - :SENSe:CHPower:CHPower:LOWer? <int>
+  - :SENSe:CHPower:CHPower:UPPer? <int>
+  - :SENSe:CHPower:ACPower:LOWer? <int>
+  - :SENSe:CHPower:ACPower:UPPer? <int>
+
+- Spike Version 3.3.3
+* Support for WLAN measurements.
+
+- Spike Version 3.3.2
+* Added SCPI commands
+  - SENSe:ROSCillator:SOURce for device timebase control
+  - SYSTem:COMMunicate:GTLocal for putting Spike in local mode
+  - SENSe:POWer:RF:RLEVel:UNIT? for checking amplitude units of ref level in Sweep mode
+* Bug fix for :SYSTem:VERsion?
+
+- Spike Version 3.3.1
+* Support for spectrum emission mask (SEM) measurements.
+
+- Spike Version 3.2.9
+* Support for Path Loss Tables.
+* Bug fixes
+  - Capitalization should now be respected for string arguments (titles/names).
+
+- Spike Version 3.2.5
+* Support for Digital Demodulation custom constellations.
+
+- Spike Version 3.2.4
+* Support for Scalar Network Analysis measurements.
+* Support for limit lines.
+* Bug fixes
+  - SYSTEM:IMAGE:SAVE command is now implemented.
+
+- Spike Version 3.2.3
+* Support for digital demodulation measurements.
+
+- Spike Version 3.2.2
+* Bug fixes
+  - Fixed crashes on the following SCPI commands
+    TRACE:XSTART?
+    TRACE:XINCREMENT?
+    TRACE:POINTS?
+  - Fixed SENSE:POWER:RF:RLEVEL[?], short form did not match manual.
+  - Fixed SENSE:SWEEP:TIME. Command was non-responsive.
+* Updated examples to use the comma operator for querying comma separated lists.
+
+- Spike Version 3.2.1
+* Support for phase noise measurements. (SM200 and SA44/124 devices only)
+* Support for harmonic measurements.
+
+- Spike Version 3.2.0
+* Initial release
+* Support for sweep mode configuration, traces and markers.
+* Support for channel power.
+* Support for occupied bandwidth.

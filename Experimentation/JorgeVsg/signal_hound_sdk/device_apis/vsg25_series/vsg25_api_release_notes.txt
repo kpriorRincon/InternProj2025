@@ -1,0 +1,26 @@
+Release Version Notes for the VSG25 Programming Interface
+
+For support, contact aj@signalhound.com
+
+- Version 1.0.6 (6/5/2020)
+* Bug fix: Fixed LO lock issues that occur at certain frequencies.
+
+- Version 1.0.5 (4/15/2019)
+* Added typedefs for all declared enums in the header file.
+* Fixed high sample rate ASK logic.
+
+- Version 1.0.4
+* Increased the number of devices able to be managed by the API to 16.
+* sgGetDeviceList() no longer returns devices which have already been opened through the API.
+
+- Version 1.0.3
+* Allow setting max frequency up to 2.55GHz from 2.5GHz.
+
+- Version 1.0.2
+* Resolved issue with AM clipping
+
+- Version 1.0.1
+* Initial release
+
+- Version 1.0.0
+* Beta release

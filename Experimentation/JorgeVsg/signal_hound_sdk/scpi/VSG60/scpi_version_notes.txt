@@ -1,0 +1,49 @@
+Release notes for the VSG60 SCPI command set.
+
+- Software Version 1.0.15
+* Added commands for all WLAN output modes.
+
+- Software Version 1.0.14
+* Added commands for
+  - Configuring the channel impairment filter taps.
+* Bug fix for AGWN bandwidth SCPI command.
+
+- Software Version 1.0.12
+* Added commands for saving loading user presets.
+
+- Software Version 1.0.10
+* Added commands for setting a custom constellation in digital modulation.
+
+- Software Version 1.0.9
+* Added commands for
+  - I/Q imbalance
+  - Channel / Phase noise impairment enabling
+  - Custom digital modulation controls
+    - Half sine filter
+    - Custom bit sequence
+    - Idle period
+  - Hiding the application
+
+- Software Version 1.0.8
+* Added commands for new impairment controls
+  Level Offset
+  Spectrum Inversion
+
+- Software Version 1.0.7
+* Added commands for streaming mode
+* Added command to load .wav files in Arb mode.
+
+- Software Version 1.0.6
+* Changed commands for loading binary Arb files
+* Added commands for the Arb I/Q scale controls.
+
+- Software Version 1.0.5
+* Added Arb commands.
+
+- Software Version 1.0.1
+* Updated AM and FM commands.
+* Added *OPC
+* Added *ESR?
+
+- Software Version 1.0.0
+* Initial release.

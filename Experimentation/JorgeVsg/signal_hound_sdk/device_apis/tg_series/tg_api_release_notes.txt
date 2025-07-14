@@ -1,0 +1,25 @@
+Release Version Notes for the TG44A/TG124A Programming Interface
+
+Support contact: support@signalhound.com
+
+- TG_API Version 1.1.3 (5/1/2020)
+* Fix bug in TG124 interpolation
+
+- TG_API Version 1.1.2 (4/1/2018)
+* Fix bug in band selection depending on 10 MHz timebase offset
+
+- TG_API Version 1.1.1 (10/31/2017)
+* Fix bug in EEPROM reading
+
+- TG_API Version 1.1.0 (2/8/2017)
+* Add Linux support
+
+- TG_API Version 1.0.1 (11/8/2016)
+* Add support for timebase correction
+    - Store in EEPROM
+    - Allow adjustment & retrieval
+* Add status check
+* Add 10 MHz reference handling
+
+- TG_API Version 1.0.0 (4/28/2016)
+* Conform to Signal Hound API conventions

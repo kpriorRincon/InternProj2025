@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['sp_5fauto_5fatten_0',['SP_AUTO_ATTEN',['../sp__api_8h.html#affbc984e615126ff8f403e7c0aaa8115',1,'sp_api.h']]],
+  ['sp_5ffalse_1',['SP_FALSE',['../sp__api_8h.html#adf68f6336f5d7cce4882c19fe2fd21eb',1,'sp_api.h']]],
+  ['sp_5fmax_5fatten_2',['SP_MAX_ATTEN',['../sp__api_8h.html#aedcd785a140e00db8d159cdfbe5ec379',1,'sp_api.h']]],
+  ['sp_5fmax_5fdevices_3',['SP_MAX_DEVICES',['../sp__api_8h.html#a1633827c260dc0563719d5aef62adeb9',1,'sp_api.h']]],
+  ['sp_5fmax_5ffan_5fset_5fpoint_4',['SP_MAX_FAN_SET_POINT',['../sp__api_8h.html#ae6851ef74bbff5c86e73f49cc4a9a816',1,'sp_api.h']]],
+  ['sp_5fmax_5ffreq_5',['SP_MAX_FREQ',['../sp__api_8h.html#a0f6b9f966b5ffd16a25fc489a4885c30',1,'sp_api.h']]],
+  ['sp_5fmax_5fiq_5fdecimation_6',['SP_MAX_IQ_DECIMATION',['../sp__api_8h.html#a8127ba7f1d78e3e3d43812471a99c5c1',1,'sp_api.h']]],
+  ['sp_5fmax_5fiq_5fsweep_5fsteps_7',['SP_MAX_IQ_SWEEP_STEPS',['../sp__api_8h.html#aafd55e04d5ad6ff28477d0080652a669',1,'sp_api.h']]],
+  ['sp_5fmax_5fref_5flevel_8',['SP_MAX_REF_LEVEL',['../sp__api_8h.html#abe9b5f0c3b4be8d6f7f30004b80cb11d',1,'sp_api.h']]],
+  ['sp_5fmax_5fsweep_5fqueue_5fsz_9',['SP_MAX_SWEEP_QUEUE_SZ',['../sp__api_8h.html#a2ecacd7c2a7198ecf77a2a91f96e450d',1,'sp_api.h']]],
+  ['sp_5fmax_5fsweep_5ftime_10',['SP_MAX_SWEEP_TIME',['../sp__api_8h.html#a1d1670fb1296257d102c2ea81199ab13',1,'sp_api.h']]],
+  ['sp_5fmin_5ffan_5fset_5fpoint_11',['SP_MIN_FAN_SET_POINT',['../sp__api_8h.html#a52b8f7921e35a9e9ceb224d62a9d8b69',1,'sp_api.h']]],
+  ['sp_5fmin_5ffreq_12',['SP_MIN_FREQ',['../sp__api_8h.html#a48d3677fb430d63a42f193433e1d50ae',1,'sp_api.h']]],
+  ['sp_5fmin_5fsweep_5ftime_13',['SP_MIN_SWEEP_TIME',['../sp__api_8h.html#af15b61bb1f06ea1ed44df805bc911877',1,'sp_api.h']]],
+  ['sp_5freal_5ftime_5fmax_5frbw_14',['SP_REAL_TIME_MAX_RBW',['../sp__api_8h.html#a40c2c0bceb92215550679f2f63c26d08',1,'sp_api.h']]],
+  ['sp_5freal_5ftime_5fmax_5fspan_15',['SP_REAL_TIME_MAX_SPAN',['../sp__api_8h.html#ab626c5cfd4172483318705c3d5c41b43',1,'sp_api.h']]],
+  ['sp_5freal_5ftime_5fmin_5frbw_16',['SP_REAL_TIME_MIN_RBW',['../sp__api_8h.html#a34afdb0a3fc23d0ac9b949cad0cd713c',1,'sp_api.h']]],
+  ['sp_5freal_5ftime_5fmin_5fspan_17',['SP_REAL_TIME_MIN_SPAN',['../sp__api_8h.html#a00d81543c87a14d247ec3ef1051b3c87',1,'sp_api.h']]],
+  ['sp_5ftrue_18',['SP_TRUE',['../sp__api_8h.html#a85dd5d93fa9714c33b36c832ec0b5412',1,'sp_api.h']]]
+];
