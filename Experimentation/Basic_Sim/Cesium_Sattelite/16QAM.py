@@ -1,3 +1,6 @@
+import numpy as np
+
+
 #helper function:
 from config import *
 
@@ -56,25 +59,40 @@ class SigGen:
         self.amp = amp    # Amplitude
         self.upsampled_symbols = None
         self.pulse_shaped_symbols = None
-        self.qpsk_signal = None
-        # Map bit pairs to complex symbols
+        self.qam_signal = None
+
+        #note we divided by sqrt(10) to normalize divide by average magnitude: 
+        '''
+        s in {-3,-1,1,3}+j{-3,-1,1,3}
+        expected magnitude = sqrt(E[Re^2 +Im^2])
+        so divide by sqrt(10)
+        '''
         self.mapping = {
-            (0, 0): (1 + 1j) / np.sqrt(2),
-            (0, 1): (-1 + 1j) / np.sqrt(2),
-            (1, 1): (-1 - 1j) / np.sqrt(2),
-            (1, 0): (1 - 1j) / np.sqrt(2)
-        } 
-        
+        (0,0,0,0): (-3 + 3j)/np.sqrt(10),
+        (0,0,0,1): (-3 + 1j)/np.sqrt(10), 
+        (0,0,1,0): (-3 - 1j)/np.sqrt(10),
+        (0,0,1,1): (-3 - 3j)/np.sqrt(10), 
+        (0,1,0,0): (-1 + 3j)/np.sqrt(10),
+        (0,1,0,1): (-1 - 1j)/np.sqrt(10),
+        (0,1,1,0): (-1 - 1j)/np.sqrt(10),
+        (0,1,1,1): (-1 - 1j)/np.sqrt(10),
+        (1,0,0,0): (1 + 3j)/np.sqrt(10),
+        (1,0,0,1): (1 + 1j)/np.sqrt(10),
+        (1,0,1,0): (1 - 1j)/np.sqrt(10),
+        (1,0,1,1): (1 - 3j)/np.sqrt(10),
+        (1,1,0,0): (3 + 3j)/np.sqrt(10),
+        (1,1,0,1): (3 + 1j)/np.sqrt(10),
+        (1,1,1,0): (3 - 1j)/np.sqrt(10),
+        (1,1,1,1): (3 - 3j)/np.sqrt(10)
+        }
 
         
-    def generate_qpsk(self, bits):
+    def generate_16QAM(self, bits):
         """
         Generate a QPSK signal from a sequence of bits.
 
         Parameters:
-            bits (list): List of bits (0s and 1s) len(bits) % 2 == 0.
-            sample_rate (int): Number of samples per second.
-            symbol_rate (int): Number of symbols per second.
+            bits (list): List of bits (0s and 1s) len(bits) % 4 == 0.
 
         Returns:
             np.ndarray: Time vector.
@@ -83,12 +101,12 @@ class SigGen:
         import numpy as np
         from scipy.signal import resample_poly, fftconvolve
         # Convert bits to symbols
-        if len(bits) % 2 != 0:
+        if len(bits) % 4 != 0:
             raise ValueError("Bit sequence must have an even length.")
 
         # Map bit pairs to complex symbols
-        symbols = [self.mapping[(bits[i], bits[i + 1])]
-                   for i in range(0, len(bits), 2)]
+        symbols = [self.mapping[(bits[i], bits[i + 1], bits[i + 2], bits[i + 3])]
+                   for i in range(0, len(bits), 4)]
 
         # Calculate samples per symbol
         samples_per_symbol = int(self.sample_rate / self.symbol_rate)
@@ -98,14 +116,14 @@ class SigGen:
         # create a time vector that is total symbols long
         t = np.arange(total_samples) / self.sample_rate
         # Upsample symbols to match sampling rate
-        #this will make an array like [(1+1j)/root2, 0, 0, 0, 0, 0, 0, 0,..., (1-1j)/root2, ]
+        #this will make an array like [(1+1j)/root10, 0, 0, 0, 0, 0, 0, 0,..., (3-1j)/root10,... ]
         upsampled_symbols = np.zeros(len(symbols)*samples_per_symbol, dtype = complex)
         upsampled_symbols[::samples_per_symbol] = symbols
         self.upsampled_symbols = upsampled_symbols
         
         # Root raised cosine filter implementation
-        beta = 0.4
-        _, pulse_shape = rrc_filter(beta, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
+        beta = BETA 
+        _, pulse_shape = rrc_filter(BETA, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
         #print(f"Length of filter {len(pulse_shape)}")
 
         #print(len(upsampled_symbols))
@@ -123,9 +141,9 @@ class SigGen:
         t = np.arange(len(signal))/self.sample_rate
         phasor = np.exp(1j * 2 * np.pi * self.freq * t)
         # Modulate: multiply pulse shaped upsampled symbols with the complex carrier
-        qpsk_waveform = signal * phasor * self.amp
-        self.qpsk_signal = qpsk_waveform
-        return t, qpsk_waveform
+        qam_waveform = signal * phasor * self.amp
+        self.qam_signal = qam_waveform
+        return t, qam_waveform
 
     def message_to_bits(self, message):
         """
@@ -177,8 +195,8 @@ class SigGen:
         plt.title('Upsampled Bits Q (Imaginary Part)')
 
         plt.tight_layout()
-        plt.savefig('media/tx_upsampled_bits.png', dpi=300)
-        plt.close()
+        #plt.savefig('media/tx_upsampled_bits.png', dpi=300)
+        #plt.close()
 
         # Compute FFT of the upsampled bits (before pulse shaping)
         upsampled = self.upsampled_symbols
@@ -193,8 +211,9 @@ class SigGen:
         plt.title("FFT of Upsampled Bits (Baseband)")
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig('media/tx_upsampled_bits_fft.png', dpi=300)
-        plt.close()
+        #plt.savefig('media/tx_upsampled_bits_fft.png', dpi=300)
+        plt.show() 
+        #plt.close()
         
         #pulse shaping impulse response:
         plt.figure(figsize=(5,5))
@@ -204,8 +223,9 @@ class SigGen:
         plt.ylabel("Amplitude")
         plt.title("RRC Filter Impulse Response")
         plt.tight_layout()
-        plt.savefig('media/tx_rrc.png', dpi = 300)
-        plt.close()
+        #plt.savefig('media/tx_rrc.png', dpi = 300)
+        plt.show() 
+        #plt.close()
         #Pulse Shaped bits
         plt.figure(figsize = (10,6))
         plt.subplot(2, 1, 1)
@@ -238,8 +258,9 @@ class SigGen:
         plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
         plt.tight_layout()
-        plt.savefig('media/tx_pulse_shaped_bits.png', dpi=300)
-        plt.close()
+        #plt.savefig('media/tx_pulse_shaped_bits.png', dpi=300)
+        plt.show() 
+        #plt.close()
         # Compute FFT of the baseband pulseshaped signal
         # Compute FFT of the baseband pulse-shaped signal
         pulse_shaped = self.pulse_shaped_symbols
@@ -254,8 +275,9 @@ class SigGen:
         plt.title("FFT of Pulse Shaped Baseband Signal")
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig('media/tx_pulse_shaped_fft.png', dpi=300)
-        plt.close()
+        #plt.savefig('media/tx_pulse_shaped_fft.png', dpi=300)
+        plt.show() 
+        #plt.close()
         
         # Plot the constellation diagram of the pulse-shaped symbols
         plt.figure(figsize=(6, 6))
@@ -270,9 +292,28 @@ class SigGen:
         plt.grid(True)
         plt.axis('equal')
         plt.tight_layout()
-        plt.savefig('media/tx_constellation.png', dpi=300)
-        plt.close()
-        
+        #plt.savefig('media/tx_constellation.png', dpi=300)
+        plt.show() 
+        #plt.close()
+
+        _, pulse_shape = rrc_filter(BETA, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
+        RC = np.convolve(self.pulse_shaped_symbols, pulse_shape, mode = "same") 
+         
+        plt.figure(figsize=(6, 6))
+        plt.plot(
+            np.real(RC[::samples_per_symbol]),
+            np.imag(RC[::samples_per_symbol]),
+            'bo'
+        )
+        plt.xlabel("In-phase (I)")
+        plt.ylabel("Quadrature (Q)")
+        plt.title("Constellation Diagram (Pulse Shaped Symbols full RC)")
+        plt.grid(True)
+        plt.axis('equal')
+        plt.tight_layout()
+        #plt.savefig('media/tx_constellation.png', dpi=300)
+        plt.show() 
+        #plt.close()
         #plot the modulated signal 
         # plt.figure(figsize=(10, 6))
         # plt.plot(t, np.real(self.qpsk_signal))
@@ -283,8 +324,12 @@ class SigGen:
         # plt.savefig('media/tx_waveform_snippet.png', dpi=300)
         # plt.close()
 
-        
-        #
+def main():
+    message = "Hello"
+    sig_gen = SigGen(910e6, 1)
+    bits = sig_gen.message_to_bits(message)
+    t,qam_sig = sig_gen.generate_16QAM(bits)
+    sig_gen.handler(t)     
 
-
-        #
+if __name__ == "__main__":
+    main()
