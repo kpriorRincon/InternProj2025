@@ -21,5 +21,4 @@ Example Usage:
 """
 
 # Library Imports
-import os
-import sys
+import pyaudio

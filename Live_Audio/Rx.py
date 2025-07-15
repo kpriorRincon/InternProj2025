@@ -1,8 +1,8 @@
 """
 ===============================================================================
-File Name     : Tx.py
-Description   : collect audio samples modulate them using 16-bit QAM and transmit them
-Authors       : Skylar Harris, Jorge Hernandez, Kobe Prior, Trevor Wiseman=
+File Name     : Rx.py
+Description   : Receive and demodulate audio to listen
+Authors       : Skylar Harris, Jorge Hernandez, Kobe Prior, Trevor Wiseman
 Created       : 2025-07-15
 Last Modified : 2025-07-18
 Version       : 1.0
