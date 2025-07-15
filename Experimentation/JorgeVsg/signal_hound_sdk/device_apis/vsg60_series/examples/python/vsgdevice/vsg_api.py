@@ -7,7 +7,7 @@ from ctypes import *
 import numpy
 from sys import exit
 
-vsglib = CDLL("vsgdevice/vsg_api.dll")
+vsglib = CDLL("vsgdevice/libvsg_api.so.1.0.9")
 
 
 # ---------------------------------- Defines -----------------------------------
