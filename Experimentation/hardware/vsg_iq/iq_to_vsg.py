@@ -3,7 +3,7 @@
 # This example generates a basic CW signal.
   
 from vsgdevice.vsg_api import *
-from time import sleep
+import time
 import transmit_processing as transmit_processing
 import numpy as np
   
@@ -26,7 +26,11 @@ def generate_iq():
     # Getting IQ Data
     message = input("Enter your message: \n")
     tp = transmit_processing.transmit_processing(sps, sample_rate)
+    start = time.time()
     _, data = tp.work(message, beta, N)
+    end = time.time()
+    total_time = end - start
+    print("Modulation Time: ", total_time)
 
     # Output CW, single I/Q value of {1,0}
     # This is equivalent to calling vsgOutputCW
@@ -36,7 +40,7 @@ def generate_iq():
     vsg_repeat_waveform(handle, iq, len(iq));
 
     # Will transmit until you close the device or abort
-    sleep(25);
+    time.sleep(25);
 
     # Stop waveform
     vsg_abort(handle);
