@@ -5,7 +5,7 @@ import numpy as np
 import scipy.signal as signal
 import Detector as d
 import time
-import RS_Transmit_Processing as tp
+import transmit_processing as tp
 from channel_correction import *
 from config import *
 from reedsolo import RSCodec, ReedSolomonError
@@ -69,11 +69,10 @@ strt_t = time.time()                                                        # ho
 bits_string, decoded_message = channel_handler(data)                        # process the signal and decode the message
 total_t = time.time() - strt_t
 print(f"Time to run rest of RX chain to till demod: {total_t} s")
+byte_data = int(bits_string, 2).to_bytes((len(bits_string) + 7) // 8, 'big')# convert the bit string to bytes
+print("Bytes: ", byte_data)
 
 # RS Check
-byte_data = int(bits_string, 2).to_bytes((len(bits_string) + 7) // 8, 'big')# convert the bit string to bytes
-
-# error check
 timer = time.time()
 decoded_msg, decoded_msgecc, errata_pos = rsc.decode(byte_data)
 print("Time to run Reed-Solomon Correction ", time.time() - timer)
