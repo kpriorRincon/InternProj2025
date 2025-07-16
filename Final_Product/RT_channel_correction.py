@@ -319,7 +319,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
 
     # Reslice signal
     #print(f"Start: {start_idx} End: {end_idx}")
-    deci_signal = ip_signal[start_idx: end_idx:INTERPOLATION_VAL]   
+    deci_signal = ip_signal[start_idx: end_idx: INTERPOLATION_VAL]   
     if DEBUG:
         plt.figure(figsize=(6, 6))
         plt.plot(np.real(deci_signal[1:]), np.imag(deci_signal[1:]), 'b-', zorder = 1, label = 'oversampled signal')
@@ -340,6 +340,8 @@ def cross_corr_caf(rx_signal, bscaf_flag):
     #print(f'Phase offset found: {np.rad2deg(np.angle(h_norm))}')
 
     deci_signal /= h_norm
+
+        
 
     t = np.arange(len(deci_signal)) / SAMPLE_RATE
     fixed_signal = deci_signal * np.exp(-1j * 2 * np.pi * freq_found * t)
