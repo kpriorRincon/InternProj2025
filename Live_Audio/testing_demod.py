@@ -24,6 +24,7 @@ with wv.open('output.wav', 'rb') as wave_file:
         # Modulate
         t, qam_sig = sig_gen.generate_16QAM(d_bits)
 
+        #at receiver
         # Mix to baseband
         baseband_signal = qam_sig * np.exp(-1j * 910e6 * 2 * np.pi * t)
         rrc_added = fftconvolve(baseband_signal, sig_gen.h, mode='same')
