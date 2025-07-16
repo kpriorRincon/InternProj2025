@@ -1,7 +1,7 @@
 """
 ===============================================================================
 File Name     : Rx.py
-Description   : Receive and demodulate audio to listen
+Description   : Receive and demodulate RF to audio to listen
 Authors       : Skylar Harris, Jorge Hernandez, Kobe Prior, Trevor Wiseman
 Created       : 2025-07-15
 Last Modified : 2025-07-18
