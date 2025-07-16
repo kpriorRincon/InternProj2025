@@ -111,7 +111,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     freqs = np.linspace(-SAMPLE_RATE/2, SAMPLE_RATE/2, len(fft_vals))
 
     freq_tone = freqs[np.argmax(fft_vals)] / order 
-    print(f'frequency offset(coarse freq): {freq_tone}')
+    # print(f'frequency offset(coarse freq): {freq_tone}')
     
     t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
