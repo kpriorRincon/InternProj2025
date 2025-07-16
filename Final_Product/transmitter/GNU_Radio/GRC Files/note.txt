@@ -1,0 +1,6 @@
+in the data_to_vsg file for a timer
+    tb.start()
+    run_duration = 3 # run duration in seconds
+    time.sleep(run_duration)
+    tb.stop()
+    tb.wait()

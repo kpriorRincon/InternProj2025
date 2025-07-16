@@ -110,7 +110,7 @@ blocks:
     bus_structure: null
     coordinate: [616, 424.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: soapy_bladerf_source_0
   id: soapy_bladerf_source
   parameters:
@@ -132,7 +132,7 @@ blocks:
     bus_structure: null
     coordinate: [328, 412.0]
     rotation: 0
-    state: disabled
+    state: enabled
 - name: vsg60_iqin_0
   id: vsg60_iqin
   parameters:
