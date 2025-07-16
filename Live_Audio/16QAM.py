@@ -64,25 +64,7 @@ class SigGen:
         expected magnitude = sqrt(E[Re^2 +Im^2])
         so divide by sqrt(10)
         '''
-        self.mapping = {
-        (0,0,0,0): (-3 + 3j)/np.sqrt(10),
-        (0,0,0,1): (-3 + 1j)/np.sqrt(10), 
-        (0,0,1,0): (-3 - 1j)/np.sqrt(10),
-        (0,0,1,1): (-3 - 3j)/np.sqrt(10), 
-        (0,1,0,0): (-1 + 3j)/np.sqrt(10),
-        (0,1,0,1): (-1 - 1j)/np.sqrt(10),
-        (0,1,1,0): (-1 - 1j)/np.sqrt(10),
-        (0,1,1,1): (-1 - 1j)/np.sqrt(10),
-        (1,0,0,0): (1 + 3j)/np.sqrt(10),
-        (1,0,0,1): (1 + 1j)/np.sqrt(10),
-        (1,0,1,0): (1 - 1j)/np.sqrt(10),
-        (1,0,1,1): (1 - 3j)/np.sqrt(10),
-        (1,1,0,0): (3 + 3j)/np.sqrt(10),
-        (1,1,0,1): (3 + 1j)/np.sqrt(10),
-        (1,1,1,0): (3 - 1j)/np.sqrt(10),
-        (1,1,1,1): (3 - 3j)/np.sqrt(10)
-        }
-
+        self.mapping = MAPPING
         
     def generate_16QAM(self, bits):
         """
