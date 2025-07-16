@@ -215,9 +215,9 @@ class transmit_processing:
         - bits : Modulated bits
         - data : IQ data to be sent to transmitter
         """
-        # start_sequence, end_sequence = self.generate_markers()
+        #start_sequence, end_sequence = self.generate_markers()
 
-        # add CRC to the message
+        # add RS to the message
         bits_string = ''.join(format(byte, '08b') for byte in message)
         bits = self.message_to_bits(bits_string)
 
