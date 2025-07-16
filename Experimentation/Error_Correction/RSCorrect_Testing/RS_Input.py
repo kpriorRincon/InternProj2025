@@ -6,10 +6,11 @@ import reedsolo as rs
 import time
 
 # Initialize RS codec with GF(2^8) primitive polynomial
-rs.init_tables(0x11d)
+rsc = rs.RSCodec(12)
 
 # get user input
 message = input('Enter your message: \n')
+message = rsc.encode(message.encode('utf-8'))
 
 # initialize tx and rx parameters
 sps = 20
@@ -32,16 +33,6 @@ print("Bytes: ", byte_data)
 
 # error check
 timer = time.time()
-check = calculator.checksum(byte_data)
-print("Time to run CRC check: ", time.time() - timer)
-print("Remainder: ", check)
-if check == 0:
-    print("Data is valid...")
-    # print the results
-    print("Message Sent: ", message)
-    print("Message Received: ", byte_data[:-1].decode('utf-8'))
-    print("Bits Sent: ", bits_out)
-    print("Bits Received: ", bits_in)
-else:
-    print("Message Received: ", byte_data.decode('utf-8'))
-    print("Data is invalid...\nAborting...")
+decoded_msg, decoded_msgecc, errata_pos = rsc.decode(byte_data)
+print("Time to run Reed-Solomon Correction ", time.time() - timer)
+print("Retrieved Message: ", decoded_msg.decode('utf-8'))

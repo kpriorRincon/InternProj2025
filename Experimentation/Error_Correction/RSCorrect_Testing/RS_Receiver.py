@@ -8,7 +8,7 @@ import time
 import hardware.CRC_Testing.CRC_Transmit_Processing as tp
 from channel_correction import *
 from config import *
-from crc import Calculator, Crc8
+from reedsolo import RSCodec, ReedSolomonError
 
 # configure RTL-SDR
 sdr = RtlSdr()
@@ -18,7 +18,7 @@ sdr.freq_correction = PPM # PPM
 sdr.gain = 'auto'
 
 # initialize the CRC
-calculator = Calculator(Crc8.CCITT)
+rsc = RSCodec(12)
 
 # sleep
 time.sleep(1)
@@ -72,16 +72,12 @@ print(f"Time to run rest of RX chain to till demod: {total_t} s")
 
 # RS Check
 byte_data = int(bits_string, 2).to_bytes((len(bits_string) + 7) // 8, 'big')# convert the bit string to bytes
-check = calculator.checksum(byte_data)
 
-print("Remainder: ", check)
-if check == 0:
-    data = byte_data[:-2].decode('ascii')
-    print("Data is valid...")
-    print(f"Bits: {bits_string}")
-    print(f"Message: {data}")
-else:
-    print("Data is invalid...\nAborting...")
+# error check
+timer = time.time()
+decoded_msg, decoded_msgecc, errata_pos = rsc.decode(byte_data)
+print("Time to run Reed-Solomon Correction ", time.time() - timer)
+print("Retrieved Message: ", decoded_msg.decode('utf-8'))
 
 # close sdr
 sdr.close()
