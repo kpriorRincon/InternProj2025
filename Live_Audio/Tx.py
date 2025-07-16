@@ -10,12 +10,11 @@ Python Version: 3.x
 ===============================================================================
 
 Notes:
-- Any additional context or usage instructions.
-- External dependencies (e.g., numpy, matplotlib).
-- Reference links or documentation sources if applicable.
 
 Example Usage:
     $ python Tx.py
+    Connect VSG60 to computer running the program
+    Co
 
 ===============================================================================
 """
