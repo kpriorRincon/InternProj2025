@@ -12,3 +12,4 @@ Authors: Skylar Harris, Jorge Hernandez, Kobe Prior, and Trevor Wiseman
 ## 🔧 Key Components
 - **`Final_Product/`**: Contains everything needed to run the project
 - **`Experimentation/`**: Contains every file created during the course of the summer. Includes: code that made it to the final product and code that didn't
+- **`Live_Audio/`**: Side quest to achieve live audio transmission last 3 days of internship experment with 16 bit qam
