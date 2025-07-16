@@ -72,7 +72,7 @@ with wave.open('transmit.wav', 'rb') as wave_file:
 
         # Modulate
         _, qam_sig = sig_gen.generate_16QAM(d_bits)
-        IQ_data.append(qam_sig)
+        IQ_data = np.concatenate((IQ_data, qam_sig))
 print('Signal Ready to Transmit')
 
 #Send IQ data with the VSG
@@ -80,12 +80,14 @@ print('Signal Ready to Transmit')
 iq = np.empty(IQ_data.size * 2, dtype=np.float32)
 iq[0::2] = IQ_data.real
 iq[1::2] = IQ_data.imag
+print('Transmitting...')
 vsg_repeat_waveform(handle, iq, len(iq));
 
 # Will transmit until you close the device or abort
 time.sleep(25)
 # Stop waveform
 vsg_abort(handle);
+print('Done Transmitting')
 
 # Done with device
 vsg_close_device(handle);
