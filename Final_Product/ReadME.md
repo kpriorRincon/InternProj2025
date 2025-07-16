@@ -39,9 +39,23 @@ Hardware Driver/CLI Dependencies:
 - BladeRF
 - RTL-SDR
 
-TODO Skylar knows the setup for vsg 60
-sudo dnf install rtl-sdr
-download software development kit and the gnu radio block for VSG and the driver
+RTL-SDR
+- sudo dnf install rtl-sdr
+- sudo pip install pyrtlsdr
+
+VSG60
+- Install GNU Radio
+- Install the VSG60 software and ensure the device works with it: https://signalhound.com/software/vsg60-software/
+- Download the Software Development Kit from Signal Hound: https://signalhound.com/software/signal-hound-software-development-kit-sdk/
+- Follow the directions in the SDK from device_apis/vsg60_series/lib/linux/README.txt
+- Clone this repository to download the GNU Radio block: https://github.com/SignalHound/gr-vsg60.git
+- From the root directory of the repository run the following commands 
+    $ mkdir build
+    $ cd build
+    $ cmake ..
+    $ make
+    $ sudo make install
+    $ sudo ldconfig
 
 Additional Software Requirements:
 - GNU Radio
