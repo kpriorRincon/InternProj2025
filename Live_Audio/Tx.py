@@ -25,7 +25,8 @@ import wave
 import pyaudio
 import numpy as np
 import SigGen as SigGen
-
+from vsgdevice.vsg_api import *
+import time
 #defining Constants
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -33,6 +34,10 @@ CHANNELS = 1 # if sys.platform == 'darwin' else 2
 RATE = 44100
 RECORD_SECONDS = 5
 sig_gen = SigGen.SigGen(910e6, 1)
+#initialize the VSG device
+print('Opening VSG Device...')
+# Open device
+handle = vsg_open_device()["handle"]
 
 #Record the Audio
 with wave.open('transmit.wav', 'wb') as wf:
@@ -71,3 +76,16 @@ with wave.open('transmit.wav', 'rb') as wave_file:
 print('Signal Ready to Transmit')
 
 #Send IQ data with the VSG
+
+iq = np.empty(IQ_data.size * 2, dtype=np.float32)
+iq[0::2] = IQ_data.real
+iq[1::2] = IQ_data.imag
+vsg_repeat_waveform(handle, iq, len(iq));
+
+# Will transmit until you close the device or abort
+time.sleep(25)
+# Stop waveform
+vsg_abort(handle);
+
+# Done with device
+vsg_close_device(handle);
