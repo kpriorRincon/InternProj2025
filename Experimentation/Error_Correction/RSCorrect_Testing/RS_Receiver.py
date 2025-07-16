@@ -70,7 +70,7 @@ bits_string, decoded_message = channel_handler(data)                        # pr
 total_t = time.time() - strt_t
 print(f"Time to run rest of RX chain to till demod: {total_t} s")
 
-# CRC Check
+# RS Check
 byte_data = int(bits_string, 2).to_bytes((len(bits_string) + 7) // 8, 'big')# convert the bit string to bytes
 check = calculator.checksum(byte_data)
 

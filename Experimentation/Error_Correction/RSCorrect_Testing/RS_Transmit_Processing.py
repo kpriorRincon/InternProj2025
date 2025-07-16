@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.signal import fftconvolve,  max_len_seq
-from crc import Calculator, Crc8
+import reedsolo as rs
 
 class transmit_processing:
     

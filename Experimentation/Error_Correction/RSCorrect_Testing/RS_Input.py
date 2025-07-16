@@ -2,11 +2,11 @@ import RS_Transmit_Processing as RS_Transmit_Processing
 import RS_Receive_Processing as RS_Receive_Processing 
 import numpy as np
 from config import *
-from crc import Calculator, Crc8
+import reedsolo as rs
 import time
 
-# initialize the CRC calculator
-calculator = Calculator(Crc8.CCITT, optimized=True)
+# Initialize RS codec with GF(2^8) primitive polynomial
+rs.init_tables(0x11d)
 
 # get user input
 message = input('Enter your message: \n')
