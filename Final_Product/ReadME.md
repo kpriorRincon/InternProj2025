@@ -12,6 +12,6 @@ also replace both instances of datetime.utcnow() with datetime.now(timezone.utc)
 
 
 Hardware Dependencies
-TODO Skylar knows the setup for vsg 360
+TODO Skylar knows the setup for vsg 60
 sudo dnf install rtl-sdr
 download software development kit and the gnu radio block for VSG and the driver

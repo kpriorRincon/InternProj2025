@@ -10,8 +10,11 @@ def normalize_16QAM(signal):
     return normalized_signal
 
 def demodulate(ready_sig):
-    #here we need to create a decision rule 
+    #here we need to create a decision rules
     a = np.array([-3,-1,1,3])/np.sqrt(10)
-    
+    boundaries = {
+        'real':[(a[i] + a[i+1])/2 for i in range(len(a)-1)],
+        'imag':[(a[i] + a[i+1])/2 for i in range(len(a)-1)]
+    }
     
     return bits
