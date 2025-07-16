@@ -19,7 +19,6 @@ beautifulsoup4==4.13.4
 bidict==0.23.1
 bleach==6.2.0
 bottle==0.13.3
-Brlapi==0.8.2
 certifi==2025.4.26
 cffi==1.17.1
 chardet==4.0.0
@@ -190,7 +189,6 @@ selinux==3.6
 Send2Trash==1.8.3
 sepolicy==3.6
 setools==4.4.4
-setroubleshoot @ file:///builddir/build/BUILD/setroubleshoot-3.3.32/src
 sgp4==2.24
 shapely==2.0.7
 simple-websocket==1.1.0
