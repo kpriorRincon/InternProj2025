@@ -7,11 +7,11 @@ def decimate(signal):
 def normalize_16QAM(signal):
     #plots are for debug
 
-    # plt.plot(np.real(signal), np.imag(signal), 'o')
+    plt.plot(np.real(signal), np.imag(signal), 'o')
     avg_power = np.mean(np.abs(signal) ** 2)
     normalized_signal = signal / avg_power
-    # plt.plot(np.real(normalized_signal), np.imag(normalized_signal), 'o')
-    # plt.show()
+    plt.plot(np.real(normalized_signal), np.imag(normalized_signal), 'o')
+    plt.show()
     return normalized_signal
 
 def decide(ready_sig):
@@ -43,6 +43,7 @@ def demodulate(decisions):
 
 def signal_to_bits(signal):
     decimated = decimate(signal)
-    normalized_sig = normalize_16QAM(decimated)
-    decided_symbols = decide(normalized_sig)
+    #normalization doesn't seem to work
+    # normalized_sig = normalize_16QAM(decimated)
+    decided_symbols = decide(decimated)
     return demodulate(decided_symbols)

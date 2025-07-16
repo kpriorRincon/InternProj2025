@@ -8,7 +8,7 @@ import wave as wv
 
 CHUNK = 1024
 sample_rate = 44100
-sig_gen = SigGen.SigGen(910e6, 1)
+sig_gen = SigGen.SigGen(910e6, .4)
 
 reconstructed_bytes = bytearray()
 
