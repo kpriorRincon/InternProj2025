@@ -338,10 +338,8 @@ def cross_corr_caf(rx_signal, bscaf_flag):
     h =  sig_start / marker_filter
     h_norm = np.mean(h / np.abs(h))
     #print(f'Phase offset found: {np.rad2deg(np.angle(h_norm))}')
-
     deci_signal /= h_norm
 
-        
 
     t = np.arange(len(deci_signal)) / SAMPLE_RATE
     fixed_signal = deci_signal * np.exp(-1j * 2 * np.pi * freq_found * t)
