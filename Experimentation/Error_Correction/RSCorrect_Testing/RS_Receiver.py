@@ -5,7 +5,7 @@ import numpy as np
 import scipy.signal as signal
 import Detector as d
 import time
-import hardware.CRC_Testing.CRC_Transmit_Processing as tp
+import RS_Transmit_Processing as tp
 from channel_correction import *
 from config import *
 from reedsolo import RSCodec, ReedSolomonError

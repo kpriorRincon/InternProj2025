@@ -6,8 +6,8 @@ from numpy.fft import fft, fftfreq, fftshift
 
 from Sig_Gen import SigGen, rrc_filter
 from config import *
-from transmit_processing import transmit_processing
-from receive_processing import receive_processing
+from RS_Transmit_Processing import transmit_processing
+from RS_Receive_Processing import receive_processing
 DEBUG = False
 freq_offset = 20000
 time_delay = 0.00232
