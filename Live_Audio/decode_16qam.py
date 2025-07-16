@@ -32,4 +32,6 @@ def demodulate(decisions):
 
 def signal_to_bits(signal):
     decimated = decimate(signal)
-    
+    normalized_sig = normalize_16QAM(decimated)
+    decided_symbols = decide(normalized_sig)
+    return demodulate(decided_symbols)
