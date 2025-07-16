@@ -8,7 +8,7 @@ import wave as wv
 
 CHUNK = 1024
 sample_rate = 44100
-sig_gen = SigGen.SigGen(910e6, .4)
+sig_gen = SigGen.SigGen(910e6, 40)
 
 reconstructed_bytes = bytearray()
 
@@ -35,7 +35,8 @@ with wv.open('output.wav', 'rb') as wave_file:
         # Pack bits into bytes
         byte_array_out = np.packbits(bits_out)
         reconstructed_bytes.extend(byte_array_out.tobytes())
-
+plt.plot(np.real(rrc_added[0:1000]))
+plt.show()
 # Convert accumulated bytes to int16 samples
 samples = np.frombuffer(reconstructed_bytes, dtype='<i2')
 
