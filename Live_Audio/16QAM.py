@@ -1,6 +1,3 @@
-import numpy as np
-
-
 #helper function:
 from config import *
 
@@ -60,7 +57,7 @@ class SigGen:
         self.upsampled_symbols = None
         self.pulse_shaped_symbols = None
         self.qam_signal = None
-
+        _, self.h = rrc_filter(BETA, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
         #note we divided by sqrt(10) to normalize divide by average magnitude: 
         '''
         s in {-3,-1,1,3}+j{-3,-1,1,3}
@@ -108,33 +105,18 @@ class SigGen:
         symbols = [self.mapping[(bits[i], bits[i + 1], bits[i + 2], bits[i + 3])]
                    for i in range(0, len(bits), 4)]
 
-        # Calculate samples per symbol
-        samples_per_symbol = int(self.sample_rate / self.symbol_rate)
-
         # Create time vector for the entire waveform
-        total_samples = len(symbols) * samples_per_symbol
+        total_samples = len(symbols) * SPS
         # create a time vector that is total symbols long
         t = np.arange(total_samples) / self.sample_rate
         # Upsample symbols to match sampling rate
         #this will make an array like [(1+1j)/root10, 0, 0, 0, 0, 0, 0, 0,..., (3-1j)/root10,... ]
-        upsampled_symbols = np.zeros(len(symbols)*samples_per_symbol, dtype = complex)
-        upsampled_symbols[::samples_per_symbol] = symbols
+        upsampled_symbols = np.zeros(len(symbols) * SPS, dtype = complex)
+        upsampled_symbols[::SPS] = symbols
         self.upsampled_symbols = upsampled_symbols
         
-        # Root raised cosine filter implementation
-        beta = BETA 
-        _, pulse_shape = rrc_filter(BETA, NUMTAPS, 1/self.symbol_rate, self.sample_rate)
-        #print(f"Length of filter {len(pulse_shape)}")
-
-        #print(len(upsampled_symbols))
-        signal = fftconvolve(upsampled_symbols, pulse_shape, mode='full')
-        delay = (NUMTAPS - 1) // 2 
-
-        signal = signal[delay: delay + len(upsampled_symbols)]
-        #signal = np.pad(signal, (0, delay), mode='constant')
-        #signal = signal[delay:]
-        #signal = np.roll(signal, -delay)
-        #signal = signal[delay: -delay or None]
+        #pusleshape 
+        signal = fftconvolve(upsampled_symbols, self.h, mode='same')
         self.pulse_shaped_symbols = signal
 
         # Generate complex phasor at carrier frequency
@@ -156,9 +138,6 @@ class SigGen:
         Returns:
             list: List of bits (0s and 1s).
         """
-      
-
-
 
         message_binary = ''.join(format(ord(x), '08b') for x in message)
 
@@ -323,13 +302,12 @@ class SigGen:
         # plt.tight_layout()
         # plt.savefig('media/tx_waveform_snippet.png', dpi=300)
         # plt.close()
-
-def main():
-    message = "Hello"
-    sig_gen = SigGen(910e6, 1)
-    bits = sig_gen.message_to_bits(message)
-    t,qam_sig = sig_gen.generate_16QAM(bits)
+def work(bits, freq, amp):
+    sig_gen = SigGen(freq, amp)
+    t, qam_sig = sig_gen.generate_16QAM(bits)
+    #create the file? with the iq data
     sig_gen.handler(t)     
 
 if __name__ == "__main__":
-    main()
+    bits = SigGen.message_to_bits('hello')
+    work(bits, 910e6, 1)
