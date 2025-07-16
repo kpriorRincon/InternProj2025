@@ -528,7 +528,7 @@ def main():
     coarse_fixed_sig = coarse_freq_recovery(qpsk_base)
 
     # Run CAF and return frequency offset found with highest correlation
-    caf_fixed_sig = cross_corr_caf(qpsk_base)
+    caf_fixed_sig = cross_corr_caf(coarse_fixed_sig)
 
     #Down convert with offset
     final_fixed_sig = costas_loop(caf_fixed_sig)
