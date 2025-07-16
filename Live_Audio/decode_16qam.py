@@ -21,6 +21,9 @@ def decide(ready_sig):
 
 def demodulate(decisions):
     #we need to get our decisions into bits
-    bits = 
-    
+    INV_Map = {v: k for k, v in MAPPING.item()}
+    bit_list = [INV_Map[sym] for sym in decisions]
+    bits = []
+    for sub_tuple in bit_list:
+        bits.extend(sub_tuple)
     return bits
