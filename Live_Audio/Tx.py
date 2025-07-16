@@ -58,7 +58,7 @@ with wave.open('transmit.wav', 'wb') as wf:
 
 
 #Convert the Audio to IQ data
-IQ_data = []
+IQ_data = np.array([], dtype=np.complex64)
 #iterates through everything in transmit.wav and puts it into iq ready for transmission
 with wave.open('transmit.wav', 'rb') as wave_file:
     print('Converting to IQ...')
