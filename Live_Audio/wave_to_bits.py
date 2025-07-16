@@ -5,5 +5,5 @@ CHUNK = 1024
 
 with wv.open('output.wav', 'rb') as wave_file:
     # Get file parameters
-    d = wave_file.readframes(1024)
+    d = wave_file.readframes(CHUNK)
     print(d)
