@@ -18,7 +18,9 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+from gnuradio import soapy
 import vsg60
+import time
 
 
 
@@ -39,7 +41,33 @@ class data_to_vsg(gr.top_block):
         # Blocks
         ##################################################
         self.vsg60_iqin_0 = vsg60.iqin(freq_tx, 0, samp_rate, False)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/empire/Documents/InternProj2025/Experimentation/Error_Correction/RSCorrect_Testing/data_for_sighound.bin', True, 0, 0)
+        self.soapy_bladerf_source_0 = None
+        dev = 'driver=bladerf'
+        stream_args = ''
+        tune_args = ['']
+        settings = ['']
+
+        self.soapy_bladerf_source_0 = soapy.source(dev, "fc32", 1, '',
+                                  stream_args, tune_args, settings)
+        self.soapy_bladerf_source_0.set_sample_rate(0, samp_rate)
+        self.soapy_bladerf_source_0.set_bandwidth(0, 0.0)
+        self.soapy_bladerf_source_0.set_frequency(0, freq_tx)
+        self.soapy_bladerf_source_0.set_frequency_correction(0, 0)
+        self.soapy_bladerf_source_0.set_gain(0, min(max(30.0, -1.0), 60.0))
+        self.soapy_bladerf_sink_0 = None
+        dev = 'driver=bladerf'
+        stream_args = ''
+        tune_args = ['']
+        settings = ['']
+
+        self.soapy_bladerf_sink_0 = soapy.sink(dev, "fc32", 1, '',
+                                  stream_args, tune_args, settings)
+        self.soapy_bladerf_sink_0.set_sample_rate(0, samp_rate)
+        self.soapy_bladerf_sink_0.set_bandwidth(0, 0.0)
+        self.soapy_bladerf_sink_0.set_frequency(0, freq_rx)
+        self.soapy_bladerf_sink_0.set_frequency_correction(0, 0)
+        self.soapy_bladerf_sink_0.set_gain(0, min(max(40, 17.0), 73.0))
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, '/home/empire/Documents/InternProj2025/Final_Product/transmitter/data_for_sighound.bin', True, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
 
 
@@ -47,6 +75,7 @@ class data_to_vsg(gr.top_block):
         # Connections
         ##################################################
         self.connect((self.blocks_file_source_0, 0), (self.vsg60_iqin_0, 0))
+        self.connect((self.soapy_bladerf_source_0, 0), (self.soapy_bladerf_sink_0, 0))
 
 
     def get_samp_rate(self):
@@ -54,6 +83,8 @@ class data_to_vsg(gr.top_block):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
+        self.soapy_bladerf_sink_0.set_sample_rate(0, self.samp_rate)
+        self.soapy_bladerf_source_0.set_sample_rate(0, self.samp_rate)
         self.vsg60_iqin_0.set_srate(self.samp_rate)
 
     def get_freq_tx(self):
@@ -61,6 +92,7 @@ class data_to_vsg(gr.top_block):
 
     def set_freq_tx(self, freq_tx):
         self.freq_tx = freq_tx
+        self.soapy_bladerf_source_0.set_frequency(0, self.freq_tx)
         self.vsg60_iqin_0.set_frequency(self.freq_tx)
 
     def get_freq_rx(self):
@@ -68,6 +100,7 @@ class data_to_vsg(gr.top_block):
 
     def set_freq_rx(self, freq_rx):
         self.freq_rx = freq_rx
+        self.soapy_bladerf_sink_0.set_frequency(0, self.freq_rx)
 
 
 
@@ -85,7 +118,9 @@ def main(top_block_cls=data_to_vsg, options=None):
     signal.signal(signal.SIGTERM, sig_handler)
 
     tb.start()
-
+    run_duration = 3 # run duration in seconds
+    time.sleep(run_duration)
+    tb.stop()
     tb.wait()
 
 
