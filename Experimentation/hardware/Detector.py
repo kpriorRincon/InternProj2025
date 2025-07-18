@@ -24,7 +24,6 @@ class Detector:
 
         print("Length of samples: ", len(samples))
         # normalize the samples
-        # samples = (samples - np.min(samples)) / (np.max(np.abs(samples)) - np.min(samples))
         coarse_fixed = coarse_freq_recovery(samples)
         # default returns 
         start = 0
@@ -34,6 +33,7 @@ class Detector:
         # find the correlated signal
         # start cor
         cor_start = np.abs(sig.fftconvolve(coarse_fixed, np.conj(np.flip(match_start)), mode='same'))
+        
         # end cor
         cor_end = np.abs(sig.fftconvolve(coarse_fixed, np.conj(np.flip(match_end)), mode='same'))
         
@@ -42,8 +42,6 @@ class Detector:
         start_idx = np.argmax(cor_start)
         end = np.argmax(cor_end) + int(len(match_end) / 2)
         end_idx = np.argmax(cor_end)
-        
-    
         print("Start index: ", start)
         print("End index: ", end)
         
@@ -83,8 +81,6 @@ class Detector:
                 #plt.savefig('raw_iq_samples.png')
                 plt.show()
 
-                #plt.plot(np.fft.fftfreq(len(cor_start), 0/self.fs), 20*np.log10(np.fft.fft(cor_start)), label='Start Correlation')
-                #plt.plot(np.fft.fftfreq(len(cor_end), 0/self.fs), 20*np.log10(np.fft.fft(cor_end)), label='End Correlation')
                 plt.subplot(2, 1, 1)
                 plt.title('Correlation of the Matched Filters')
                 plt.plot(np.abs(cor_start), label='start')
