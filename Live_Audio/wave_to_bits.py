@@ -1,3 +1,4 @@
+#Experimental code to get bits from wav file.
 import wave as wv
 
 # how many samples to read at a time
