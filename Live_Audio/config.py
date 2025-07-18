@@ -1,10 +1,14 @@
+#This is a configuration file to keep constants across files
 SAMPLE_RATE = 2.88e6
 SPS = 20
 SYMB_RATE = SAMPLE_RATE / SPS
+#taps for all filters
 NUMTAPS = 201
+#roll off factor for RRC
 BETA = 0.35
 INTERPOLATION_VAL = 4
 RX_REC_FREQ = 920e6
+#for RTL SDR to correct for any constant frequency drift
 PPM = 60
 START_MARKER =[1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
             0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1,
@@ -16,6 +20,7 @@ END_MARKER = [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 
             1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0,
             1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1]
 import numpy as np
+#gray mapping for 16 QAM
 MAPPING = {
         (0,0,0,0): (-3 + 3j)/np.sqrt(10),
         (0,0,0,1): (-3 + 1j)/np.sqrt(10), 

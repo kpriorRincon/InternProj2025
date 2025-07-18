@@ -33,9 +33,10 @@ CHANNELS = 1 # if sys.platform == 'darwin' else 2
 RATE = 44100
 RECORD_SECONDS = 5
 sig_gen = SigGen.SigGen(910e6, 1)
+
 #initialize the VSG device
 print('Opening VSG Device...')
-# Open device
+# Open VSG
 handle = vsg_open_device()["handle"]
 
 #Record the Audio
@@ -49,6 +50,7 @@ with wave.open('transmit.wav', 'wb') as wf:
 
     print('Recording...')
     for _ in range(0, RATE // CHUNK * RECORD_SECONDS):
+        #writes audio to stream
         wf.writeframes(stream.read(CHUNK))
     print('Done')
 
@@ -77,6 +79,7 @@ print('Signal Ready to Transmit')
 #Send IQ data with the VSG
 
 iq = np.empty(IQ_data.size * 2, dtype=np.float32)
+#interweves IQ data alternating I,Q,I,Q (this is how SIG Hound API likes it)
 iq[0::2] = IQ_data.real
 iq[1::2] = IQ_data.imag
 print('Transmitting...')

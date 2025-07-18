@@ -111,7 +111,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     freqs = np.linspace(-SAMPLE_RATE/2, SAMPLE_RATE/2, len(fft_vals))
 
     freq_tone = freqs[np.argmax(fft_vals)] / order 
-    #print(f'frequency offset(coarse freq): {freq_tone}')
+    # print(f'frequency offset(coarse freq): {freq_tone}')
     
     t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
@@ -319,7 +319,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
 
     # Reslice signal
     #print(f"Start: {start_idx} End: {end_idx}")
-    deci_signal = ip_signal[start_idx: end_idx:INTERPOLATION_VAL]   
+    deci_signal = ip_signal[start_idx: end_idx: INTERPOLATION_VAL]   
     if DEBUG:
         plt.figure(figsize=(6, 6))
         plt.plot(np.real(deci_signal[1:]), np.imag(deci_signal[1:]), 'b-', zorder = 1, label = 'oversampled signal')
@@ -338,8 +338,8 @@ def cross_corr_caf(rx_signal, bscaf_flag):
     h =  sig_start / marker_filter
     h_norm = np.mean(h / np.abs(h))
     #print(f'Phase offset found: {np.rad2deg(np.angle(h_norm))}')
-
     deci_signal /= h_norm
+
 
     t = np.arange(len(deci_signal)) / SAMPLE_RATE
     fixed_signal = deci_signal * np.exp(-1j * 2 * np.pi * freq_found * t)

@@ -1,3 +1,5 @@
+#Plays audio
+#usage python play_test.py 'filename.wav'
 import wave
 import sys
 

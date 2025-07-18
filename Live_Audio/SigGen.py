@@ -1,6 +1,6 @@
-#helper function:
 from config import *
 
+#helper function:
 def rrc_filter(beta, N, Ts, fs):
         """
         Generate a Root Raised-Cosine (RRC) filter (FIR) impulse response

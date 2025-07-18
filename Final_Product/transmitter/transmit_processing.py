@@ -259,7 +259,7 @@ class transmit_processing:
         symbol_rate = self.sample_rate / self.sps
         Ts = 1 / symbol_rate
         _, h = self.rrc_filter(beta, N, Ts, self.sample_rate)
-        data = np.convolve(upsampled_symbols, h, 'same')
+        data = fftconvolve(upsampled_symbols, h, mode = 'same')
         print(f'length of data: {len(data)}')
         data = data.astype(np.complex64)
 
