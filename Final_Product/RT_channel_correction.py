@@ -111,7 +111,7 @@ def coarse_freq_recovery(qpsk_wave, order=4):
     freqs = np.linspace(-SAMPLE_RATE/2, SAMPLE_RATE/2, len(fft_vals))
 
     freq_tone = freqs[np.argmax(fft_vals)] / order 
-    # print(f'frequency offset(coarse freq): {freq_tone}')
+    #print(f'frequency offset(coarse freq): {freq_tone}')
     
     t = np.arange(len(qpsk_wave)) / SAMPLE_RATE
     fixed_qpsk = qpsk_wave * np.exp(-1j*2*np.pi*freq_tone*t)
@@ -232,7 +232,7 @@ def binary_search(rx_signal, match_filter, l_freq, r_freq):
     return freq
 
 def cross_corr_caf(rx_signal, bscaf_flag):
-    print(f"Length of rx signal {len(rx_signal)}")
+    #print(f"Length of rx signal {len(rx_signal)}")
     # Generate QPSK wave of start marker
     #sig_gen = SigGen(0, 1.0)    
     #_, marker_filter = sig_gen.generate_qpsk(START_MARKER)
