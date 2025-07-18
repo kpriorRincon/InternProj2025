@@ -14,7 +14,7 @@ from crc import Calculator, Crc8
 sdr = RtlSdr()
 sdr.sample_rate = SAMPLE_RATE # Hz
 sdr.center_freq = RX_REC_FREQ # Hz
-sdr.freq_correction = PPM # PPM
+sdr.freq_correction = 0 # PPM
 sdr.gain = 'auto'
 
 # initialize the CRC
