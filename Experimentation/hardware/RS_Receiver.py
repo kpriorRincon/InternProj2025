@@ -43,7 +43,7 @@ detect_obj = d.Detector(sdr.sample_rate)
 total_t = 0
 # run detection
 count = 0   # count cycles until detected
-open('test_data.bin', 'a')
+# open('test_data.bin', 'a')
 while detected == False:
     count += 1  # increment cycle count
     # read samples from RTL-SDR
@@ -51,12 +51,11 @@ while detected == False:
     samples = sdr.read_samples(N)
 
     # save samples to an external file (optional) 
-    np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+    # np.array(samples, dtype=np.complex64).tofile("test_data.bin")
     strt_t = time.time()
     # run detection
-    
-    total_t = time.time() - strt_t
     detected, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
+    total_t = time.time() - strt_t
 
 print(f"Time to run detection on buffer: {total_t} s")
 # take signal from the samples
