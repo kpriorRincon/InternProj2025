@@ -540,6 +540,7 @@ def channel_handler(rx_signal):
     return decoded_message
 
 def main():
+    #main used to debug in this file alone
     #Generate QPSK at Carrier Frequency
     sig_gen = SigGen(freq=900e6, amp=1)
     bits = sig_gen.message_to_bits('hello there ' * 3)
