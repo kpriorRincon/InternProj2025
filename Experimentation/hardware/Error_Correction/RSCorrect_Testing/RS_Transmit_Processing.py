@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.signal import fftconvolve,  max_len_seq
+from crc import Calculator, Crc8
 import reedsolo as rs
 
 class transmit_processing:
@@ -40,7 +41,8 @@ class transmit_processing:
                              0, 1, 1, 1, 0, 1, 0, 1,
                              0, 1, 0, 1, 0, 1, 1, 0,
                              0, 0, 1, 1, 0, 1, 0, 1]
-        rs.init_tables(0x11d)
+        # Initialize RS codec with GF(2^8) primitive polynomial
+        self.rsc = rs.RSCodec(12)
             
     def generate_markers(self):
         """
@@ -165,6 +167,36 @@ class transmit_processing:
                 h[i] = numerator / denominator
         return t, h/np.sqrt(np.sum(h**2))  # Normalize to get unity gain
     
+    def add_crc(self, message):
+        """
+        Add CRC-8 to the message
+        
+        Parameters:
+        - message: String message to which CRC-8 will be added
+        
+        Returns:
+        - to_send: Byte data with CRC-8 appended
+        """
+        
+        # user input to bytes
+        byte_data = message.encode('utf-8')
+        print("Message in bytes: ", byte_data)
+
+        # calculate CRC-8 for the message
+        calculator = Calculator(Crc8.CCITT)
+        crc_code = calculator.checksum(byte_data)
+        print("CRC-8: ", crc_code)
+
+        # append the crc-8 to the message
+        to_send = byte_data + bytes([crc_code])
+        print("Data with CRC-8 appended: ", to_send)
+        message = self.rsc.encode(message.encode('utf-8'))
+
+        # turn into a bit string
+        bit_string = ''.join(format(byte, '08b') for byte in to_send)
+
+        return bit_string
+    
     # function that modulates the start and end markers of the signal 
     def modulated_markers(self, beta, N):
         """
@@ -215,10 +247,10 @@ class transmit_processing:
         - bits : Modulated bits
         - data : IQ data to be sent to transmitter
         """
-        #start_sequence, end_sequence = self.generate_markers()
+        # start_sequence, end_sequence = self.generate_markers()
 
-        # add RS to the message
-        bits_string = ''.join(format(byte, '08b') for byte in message)
+        # add CRC to the message
+        bits_string = self.add_crc(message)
         bits = self.message_to_bits(bits_string)
 
         # map to QPSK symbols
