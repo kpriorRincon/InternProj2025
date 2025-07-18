@@ -5,10 +5,10 @@ import numpy as np
 import scipy.signal as signal
 import Detector as d
 import time
-import Error_Correction.RSCorrect_Testing.RS_Transmit_Processing as tp
+import CRC_Testing.CRC_Transmit_Processing as tp
 from channel_correction import *
 from config import *
-from reedsolo import RSCodec, ReedSolomonError
+from crc import Calculator, Crc8
 
 # configure RTL-SDR
 sdr = RtlSdr()
@@ -18,7 +18,7 @@ sdr.freq_correction = PPM # PPM
 sdr.gain = 'auto'
 
 # initialize the CRC
-rsc = RSCodec(12)
+calculator = Calculator(Crc8.CCITT)
 
 # sleep
 time.sleep(1)
@@ -43,7 +43,7 @@ detect_obj = d.Detector(sdr.sample_rate)
 total_t = 0
 # run detection
 count = 0   # count cycles until detected
-# open('test_data.bin', 'a')
+open('test_data.bin', 'a')
 while detected == False:
     count += 1  # increment cycle count
     # read samples from RTL-SDR
@@ -51,9 +51,11 @@ while detected == False:
     samples = sdr.read_samples(N)
 
     # save samples to an external file (optional) 
-    # np.array(samples, dtype=np.complex64).tofile("test_data.bin")
-
+    np.array(samples, dtype=np.complex64).tofile("test_data.bin")
+    strt_t = time.time()
     # run detection
+    
+    total_t = time.time() - strt_t
     detected, coarse_fixed = detect_obj.detector(samples, match_start=match_start, match_end=match_end)
 
 print(f"Time to run detection on buffer: {total_t} s")
@@ -67,14 +69,19 @@ strt_t = time.time()                                                        # ho
 bits_string, decoded_message = channel_handler(data)                        # process the signal and decode the message
 total_t = time.time() - strt_t
 print(f"Time to run rest of RX chain to till demod: {total_t} s")
-byte_data = int(bits_string, 2).to_bytes((len(bits_string) + 7) // 8, 'big')# convert the bit string to bytes
-print("Bytes: ", byte_data)
 
-# RS Check
-timer = time.time()
-decoded_msg, decoded_msgecc, errata_pos = rsc.decode(byte_data)
-print("Time to run Reed-Solomon Correction ", time.time() - timer)
-print("Retrieved Message: ", decoded_msg.decode('utf-8'))
+# CRC Check
+byte_data = int(bits_string, 2).to_bytes((len(bits_string) + 7) // 8, 'big')# convert the bit string to bytes
+check = calculator.checksum(byte_data)
+
+print("Remainder: ", check)
+if check == 0:
+    data = byte_data[:-2].decode('ascii')
+    print("Data is valid...")
+    print(f"Bits: {bits_string}")
+    print(f"Message: {data}")
+else:
+    print("Data is invalid...\nAborting...")
 
 # close sdr
 sdr.close()

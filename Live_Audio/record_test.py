@@ -1,3 +1,4 @@
+#Records audio
 import wave
 
 import pyaudio

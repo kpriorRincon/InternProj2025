@@ -1,3 +1,4 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams.update({
@@ -15,6 +16,7 @@ from config import *
 #other files interpolate at a lower rate but here we use 16
 INTERPOLATION_VAL = 16
 DEBUG = 1
+PRESENT_PLOTS = 0
 freq_offset = 25
 time_delay = 0.00232
 max_freq = 200
@@ -128,46 +130,46 @@ def coarse_freq_recovery(qpsk_wave, order=4):
         
         plt.savefig('media/coarse_correction.png', dpi = 300, bbox_inches='tight')
         plt.close()
+        if PRESENT_PLOTS:
+            plt.figure(figsize=(6, 6))
+            plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'blue', zorder = 2, label = 'RX Signal')
+            plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]**2), s=10, color= 'green', zorder = 2, label = 'Signal at 2nd Power')
+            plt.scatter(np.real(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'red', zorder = 2, label = 'Signal at 4th Power')
+            plt.legend()
+            plt.xlabel('In-Phase (I)')
+            plt.ylabel('Quadrature (Q)')
+            plt.title('Raising Signals to Nth Power')
+            plt.axis('equal')
+            plt.grid()
+            
+            plt.savefig('media/Nth_Order.png', dpi = 300, bbox_inches='tight')
+            plt.close()
 
-        plt.figure(figsize=(6, 6))
-        plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'blue', zorder = 2, label = 'RX Signal')
-        plt.scatter(np.real(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave[::int(SAMPLE_RATE/SYMB_RATE)]**2), s=10, color= 'green', zorder = 2, label = 'Signal at 2nd Power')
-        plt.scatter(np.real(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]),np.imag(qpsk_wave_r[::int(SAMPLE_RATE/SYMB_RATE)]), s=10, color= 'red', zorder = 2, label = 'Signal at 4th Power')
-        plt.legend()
-        plt.xlabel('In-Phase (I)')
-        plt.ylabel('Quadrature (Q)')
-        plt.title('Raising Signals to Nth Power')
-        plt.axis('equal')
-        plt.grid()
-        
-        plt.savefig('media/Nth_Order.png', dpi = 300, bbox_inches='tight')
-        plt.close()
 
-
-        plt.figure(figsize=(10, 6))
-        plt.plot(freqs, fft_vals)
-        plt.axvline(x=freq_tone * order, color='red', linestyle='--', label='Detected Tone')
-        plt.legend()
-        plt.xlim(-10e3, 100e3)
-        plt.annotate(
-            f'Frequency offset:\n{freq_tone * order:.2f} Hz',  # multi-line label in MHz
-            xy=(freq_tone * order, np.max(fft_vals)),         # annotation target (converted to MHz)
-            xytext=(freq_tone * order * 0.90, np.max(fft_vals) * 1.05 - 3),  # text to the left and slightly above
-            fontsize=10,
-            color='blue',
-            ha='right',
-            va='bottom',
-            arrowprops=dict(facecolor='blue', arrowstyle='->', lw=1.5),
-            bbox=dict(boxstyle='round,pad=0.3', fc='lightyellow', ec='blue', alpha=0.8)
-        )
-        plt.xlabel('Frequency (kHz)')
-        plt.grid()
-        plt.ylabel('Magnitude')
-        plt.title('FFT of Signal Raised to 4th')
-        # label at freq_tone
-        
-        plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300)
-        plt.close()
+            plt.figure(figsize=(10, 6))
+            plt.plot(freqs, fft_vals)
+            plt.axvline(x=freq_tone * order, color='red', linestyle='--', label='Detected Tone')
+            plt.legend()
+            plt.xlim(-10e3, 100e3)
+            plt.annotate(
+                f'Frequency offset:\n{freq_tone * order:.2f} Hz',  # multi-line label in MHz
+                xy=(freq_tone * order, np.max(fft_vals)),         # annotation target (converted to MHz)
+                xytext=(freq_tone * order * 0.90, np.max(fft_vals) * 1.05 - 3),  # text to the left and slightly above
+                fontsize=10,
+                color='blue',
+                ha='right',
+                va='bottom',
+                arrowprops=dict(facecolor='blue', arrowstyle='->', lw=1.5),
+                bbox=dict(boxstyle='round,pad=0.3', fc='lightyellow', ec='blue', alpha=0.8)
+            )
+            plt.xlabel('Frequency (kHz)')
+            plt.grid()
+            plt.ylabel('Magnitude')
+            plt.title('FFT of Signal Raised to 4th')
+            # label at freq_tone
+            
+            plt.savefig('media/FFT_Signal_Raised_to_4th.png', dpi = 300)
+            plt.close()
 
 
 
@@ -319,7 +321,7 @@ def cross_corr_caf(rx_signal):
     start_map = fftconvolve(ip_signal, np.conj(np.flip(up_mixed_filter)), mode = 'same')
     start_idx = np.argmax(np.abs(start_map)) - int((32) * (SAMPLE_RATE * INTERPOLATION_VAL / SYMB_RATE))
 
-    if DEBUG:
+    if DEBUG and PRESENT_PLOTS:
         # Start marker correlation graph
         plt.figure(figsize = (10, 6))
         plt.title('Start Correlation')
@@ -337,16 +339,17 @@ def cross_corr_caf(rx_signal):
     end_idx = np.argmax(np.abs(end_map)) + int((32) * (SAMPLE_RATE * INTERPOLATION_VAL / SYMB_RATE))
 
     if DEBUG:
-        # End marker correlation graph
-        plt.figure(figsize=(10, 6))
-        plt.title('End Correlation')
-        plt.xlabel('Sample Index')
-        plt.ylabel('Correlation Magnitude')
-        plt.plot(np.abs(end_map))
-        plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
-        plt.ylabel('Correlation Magnitude')
-        plt.savefig('media/end_correlation.png', dpi = 300, bbox_inches='tight')
-        plt.close()
+        if PRESENT_PLOTS:
+            # End marker correlation graph
+            plt.figure(figsize=(10, 6))
+            plt.title('End Correlation')
+            plt.xlabel('Sample Index')
+            plt.ylabel('Correlation Magnitude')
+            plt.plot(np.abs(end_map))
+            plt.xlabel(f'Fractional Sample Index (interpolation rate: {INTERPOLATION_VAL})')
+            plt.ylabel('Correlation Magnitude')
+            plt.savefig('media/end_correlation.png', dpi = 300, bbox_inches='tight')
+            plt.close()
 
         # Plot both correlations on top of the signal 
         plt.figure(figsize=(10, 6))
@@ -537,6 +540,7 @@ def channel_handler(rx_signal):
     return decoded_message
 
 def main():
+    #main used to debug in this file alone
     #Generate QPSK at Carrier Frequency
     sig_gen = SigGen(freq=900e6, amp=1)
     bits = sig_gen.message_to_bits('hello there ' * 3)
