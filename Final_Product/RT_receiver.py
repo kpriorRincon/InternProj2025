@@ -58,8 +58,10 @@ def detector(samples, prev_cut):
     cor_end = np.abs(signal.fftconvolve(coarse_fixed, np.conj(np.flip(end_filter)), mode='same'))
     
 
-    start_peaks = signal.find_peaks(cor_start, distance=distance, height=50)[0]
-    end_peaks = signal.find_peaks(cor_end, distance=distance, height=50)[0]
+
+
+    start_peaks = signal.find_peaks(cor_start, distance=distance, height=400)[0]
+    end_peaks = signal.find_peaks(cor_end, distance=distance, height=400)[0]
 
     #print(f"Start peaks {start_peaks}")
     #print(f"End peaks {end_peaks}")
@@ -144,8 +146,25 @@ def detector(samples, prev_cut):
 
     messages = []
     if signals_found:
-        # print(f"Sig pairs: {sig_pairs}")
         pass
+        print(f"Sig pairs: {sig_pairs}")
+        plt.figure(figsize=(10, 4))
+        plt.plot(cor_start)
+        plt.title("FFT-based Correlation Output")
+        plt.xlabel("Sample Index")
+        plt.ylabel("Magnitude")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+        plt.figure(figsize=(10, 4))
+        plt.plot(cor_end)
+        plt.title("FFT-based Correlation Output")
+        plt.xlabel("Sample Index")
+        plt.ylabel("Magnitude")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+        
     for sig in signals_found:
         strt_t = time.time()
         #print(f"Sig pair going in: {sig}")

@@ -232,6 +232,7 @@ def binary_search(rx_signal, match_filter, l_freq, r_freq):
     return freq
 
 def cross_corr_caf(rx_signal, bscaf_flag):
+    print(f"Length of rx signal {len(rx_signal)}")
     # Generate QPSK wave of start marker
     #sig_gen = SigGen(0, 1.0)    
     #_, marker_filter = sig_gen.generate_qpsk(START_MARKER)
@@ -334,6 +335,7 @@ def cross_corr_caf(rx_signal, bscaf_flag):
         plt.close()
 
     # Fix phase offset
+    print(f"Length of non-interp signal: {len(deci_signal)}")
     sig_start = deci_signal[0: int(64 * SAMPLE_RATE / SYMB_RATE)]
     h =  sig_start / marker_filter
     h_norm = np.mean(h / np.abs(h))
